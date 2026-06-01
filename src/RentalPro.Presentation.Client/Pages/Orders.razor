@@ -1,0 +1,394 @@
+﻿@page "/orders"
+@layout AdminLayout
+
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+
+<div class="orders-page">
+
+    <div class="page-actions">
+        <button class="primary-button" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg"></i>
+            Создать заказ
+        </button>
+    </div>
+
+    <div class="orders-stats">
+        <StatCard Title="Всего заказов"
+                  Value="@_orders.Count.ToString()"
+                  Icon="bi bi-receipt"
+                  Color="blue" />
+
+        <StatCard Title="Активные"
+                  Value="@_orders.Count(x => x.Status == "Активен").ToString()"
+                  Icon="bi bi-play-circle"
+                  Color="green" />
+
+        <StatCard Title="Завершенные"
+                  Value="@_orders.Count(x => x.Status == "Завершен").ToString()"
+                  Icon="bi bi-check-circle"
+                  Color="cyan" />
+
+        <StatCard Title="Просроченные"
+                  Value="@_orders.Count(x => x.Status == "Просрочен").ToString()"
+                  Icon="bi bi-exclamation-circle"
+                  Color="red" />
+    </div>
+
+    <div class="orders-table-card">
+
+        <div class="orders-filters">
+
+            <div class="orders-filters-top">
+
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input placeholder="Поиск по номеру заказа, клиенту или инструменту..." />
+                </div>
+
+            </div>
+
+            <div class="orders-filters-bottom">
+
+                <select class="filter-select">
+                    <option>Все статусы</option>
+                    <option>Активен</option>
+                    <option>Завершен</option>
+                    <option>Просрочен</option>
+                    <option>Отменен</option>
+                </select>
+
+                <div class="date-range-block">
+                    <label>Начало аренды</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+
+                <div class="date-range-block">
+                    <label>Окончание аренды</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+
+                <div class="orders-export">
+                    <button class="secondary-button">
+                        <i class="bi bi-download"></i>
+                        Экспорт
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <table class="orders-table">
+            <thead>
+            <tr>
+                <th class="sortable-column">Номер <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Клиент <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Инструмент <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Начало аренды <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Окончание аренды <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Сумма <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var order in PagedOrders)
+            {
+                <tr>
+                    <td><strong>@order.Number</strong></td>
+                    <td>@order.CustomerName</td>
+                    <td>@order.ToolName</td>
+                    <td>@order.StartDate.ToString("dd.MM.yyyy")</td>
+                    <td>@order.EndDate.ToString("dd.MM.yyyy")</td>
+                    <td>@order.TotalAmount.ToString("N0") ₽</td>
+
+                    <td>
+                        <span class="@GetOrderStatusClass(order.Status)">
+                            @order.Status
+                        </span>
+                    </td>
+
+                    <td class="actions-cell">
+                        <button class="icon-button" @onclick="() => OpenActionsMenu(order.Number)">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="TotalPages"
+                    TotalItems="_orders.Count"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage" />
+    </div>
+
+    @if (_isActionsMenuOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия с заказом</h3>
+                        <p>@_selectedOrderNumber</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick='() => ExecuteOrderAction("Просмотр")'>
+                    <i class="bi bi-eye"></i>
+                    Просмотр
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteOrderAction("Редактирование")'>
+                    <i class="bi bi-pencil"></i>
+                    Редактировать
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteOrderAction("Продление аренды")'>
+                    <i class="bi bi-calendar-plus"></i>
+                    Продлить аренду
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteOrderAction("Завершение заказа")'>
+                    <i class="bi bi-check-circle"></i>
+                    Завершить заказ
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteOrderAction("История изменений")'>
+                    <i class="bi bi-clock-history"></i>
+                    История изменений
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick='() => ExecuteOrderAction("Удаление")'>
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseCreateModal">
+            <div class="order-create-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Создать заказ</h3>
+                        <p>Заполните данные аренды</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="order-form-grid">
+                    <div class="order-form-field">
+                        <label>Клиент <span>*</span></label>
+                        <select>
+                            <option>Петров Александр Сергеевич</option>
+                            <option>Сидоров Иван Петрович</option>
+                            <option>Кузнецова Мария Викторовна</option>
+                        </select>
+                    </div>
+
+                    <div class="order-form-field">
+                        <label>Инструмент <span>*</span></label>
+                        <select>
+                            <option>Перфоратор Bosch GBH 2-26</option>
+                            <option>Шуруповерт Makita DF331D</option>
+                            <option>Болгарка DeWalt DWE4217</option>
+                        </select>
+                    </div>
+
+                    <div class="order-form-field">
+                        <label>Дата начала <span>*</span></label>
+                        <input type="date" />
+                    </div>
+
+                    <div class="order-form-field">
+                        <label>Дата окончания <span>*</span></label>
+                        <input type="date" />
+                    </div>
+
+                    <div class="order-form-field">
+                        <label>Стоимость аренды</label>
+                        <input value="2 100 ₽" readonly />
+                    </div>
+
+                    <div class="order-form-field">
+                        <label>Залог</label>
+                        <input value="5 000 ₽" readonly />
+                    </div>
+
+                    <div class="order-form-field wide">
+                        <label>Комментарий</label>
+                        <textarea placeholder="Комментарий к заказу"></textarea>
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="CreateOrder">
+                        <i class="bi bi-check-lg"></i>
+                        Создать заказ
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code
+{
+    private const int PageSize = 5;
+
+    private int _currentPage = 1;
+    private bool _isActionsMenuOpen;
+    private bool _isCreateModalOpen;
+    private string? _selectedOrderNumber;
+
+    private readonly List<OrderRow> _orders =
+    [
+        new()
+        {
+            Number = "ORD-2026-001",
+            CustomerName = "Петров А.С.",
+            ToolName = "Перфоратор Bosch GBH 2-26",
+            StartDate = new DateOnly(2026, 6, 1),
+            EndDate = new DateOnly(2026, 6, 3),
+            TotalAmount = 2100,
+            Status = "Активен"
+        },
+        new()
+        {
+            Number = "ORD-2026-002",
+            CustomerName = "Сидоров И.П.",
+            ToolName = "Шуруповерт Makita DF331D",
+            StartDate = new DateOnly(2026, 5, 20),
+            EndDate = new DateOnly(2026, 5, 25),
+            TotalAmount = 3500,
+            Status = "Завершен"
+        },
+        new()
+        {
+            Number = "ORD-2026-003",
+            CustomerName = "Кузнецова М.В.",
+            ToolName = "Болгарка DeWalt DWE4217",
+            StartDate = new DateOnly(2026, 5, 15),
+            EndDate = new DateOnly(2026, 5, 18),
+            TotalAmount = 1950,
+            Status = "Просрочен"
+        }
+    ];
+
+    private IEnumerable<OrderRow> PagedOrders =>
+        _orders
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling(_orders.Count / (double)PageSize);
+
+    private int PageStart =>
+        _orders.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+
+    private int PageEnd =>
+        Math.Min(_currentPage * PageSize, _orders.Count);
+
+    private void OpenActionsMenu(string orderNumber)
+    {
+        _selectedOrderNumber = orderNumber;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+        _selectedOrderNumber = null;
+    }
+
+    private void ExecuteOrderAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedOrderNumber))
+            return;
+
+        NotificationService.Info($"{action}: {_selectedOrderNumber}");
+
+        CloseActionsMenu();
+    }
+
+    private void OpenCreateModal()
+    {
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+    }
+
+    private void CreateOrder()
+    {
+        NotificationService.Success("Заказ успешно создан");
+        _isCreateModalOpen = false;
+    }
+
+    private void GoToPage(int page)
+    {
+        _currentPage = page;
+    }
+
+    private static string GetOrderStatusClass(string status)
+    {
+        return status switch
+        {
+            "Активен" => "status-badge available",
+            "Завершен" => "status-badge info",
+            "Просрочен" => "status-badge danger",
+            "Отменен" => "status-badge neutral",
+            _ => "status-badge"
+        };
+    }
+
+    private sealed class OrderRow
+    {
+        public string Number { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string ToolName { get; set; } = string.Empty;
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+}

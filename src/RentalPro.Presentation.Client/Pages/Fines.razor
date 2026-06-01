@@ -1,0 +1,400 @@
+﻿@page "/fines"
+@layout AdminLayout
+
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+
+<div class="fines-page">
+
+    <div class="page-actions">
+        <button class="primary-button" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg"></i>
+            Добавить штраф
+        </button>
+    </div>
+
+    <div class="fines-stats">
+        <StatCard Title="Всего штрафов"
+                  Value="@_fines.Count.ToString()"
+                  Icon="bi bi-exclamation-triangle"
+                  Color="blue" />
+
+        <StatCard Title="Не оплачено"
+                  Value="@_fines.Count(x => x.Status == "Не оплачено").ToString()"
+                  Icon="bi bi-x-circle"
+                  Color="red" />
+
+        <StatCard Title="Оплачено"
+                  Value="@_fines.Count(x => x.Status == "Оплачено").ToString()"
+                  Icon="bi bi-check-circle"
+                  Color="green" />
+
+        <StatCard Title="Сумма штрафов"
+                  Value="@TotalFinesAmount"
+                  Icon="bi bi-cash-coin"
+                  Color="orange" />
+    </div>
+
+    <div class="fines-table-card">
+
+        <div class="fines-filters">
+
+            <div class="fines-filters-top">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input placeholder="Поиск по номеру штрафа, клиенту или заказу..." />
+                </div>
+
+                <button class="secondary-button">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+            </div>
+
+            <div class="fines-filters-bottom">
+
+                <select class="filter-select">
+                    <option>Все статусы</option>
+                    <option>Не оплачено</option>
+                    <option>Оплачено</option>
+                    <option>Отменен</option>
+                </select>
+
+                <select class="filter-select">
+                    <option>Все причины</option>
+                    <option>Просрочка возврата</option>
+                    <option>Повреждение инструмента</option>
+                    <option>Утеря инструмента</option>
+                    <option>Отсутствие комплектующих</option>
+                    <option>Нарушение условий аренды</option>
+                    <option>Другое</option>
+                </select>
+
+                <div class="date-range-block">
+                    <label>Период штрафов</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <table class="fines-table">
+            <thead>
+            <tr>
+                <th class="sortable-column">№ штрафа <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Клиент <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Заказ <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Причина <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Дата <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Сумма <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var fine in PagedFines)
+            {
+                <tr>
+                    <td><strong>@fine.Number</strong></td>
+                    <td>@fine.CustomerName</td>
+                    <td>@fine.OrderNumber</td>
+                    <td>@fine.Reason</td>
+                    <td>@fine.FineDate.ToString("dd.MM.yyyy")</td>
+                    <td>@fine.Amount.ToString("N0") ₽</td>
+
+                    <td>
+                        <span class="@GetFineStatusClass(fine.Status)">
+                            @fine.Status
+                        </span>
+                    </td>
+
+                    <td class="actions-cell">
+                        <button class="icon-button" @onclick="() => OpenActionsMenu(fine.Number)">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="TotalPages"
+                    TotalItems="_fines.Count"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage" />
+    </div>
+
+    @if (_isActionsMenuOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия со штрафом</h3>
+                        <p>@_selectedFineNumber</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick='() => ExecuteFineAction("Просмотр")'>
+                    <i class="bi bi-eye"></i>
+                    Просмотр
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteFineAction("Редактирование")'>
+                    <i class="bi bi-pencil"></i>
+                    Редактировать
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteFineAction("Открытие заказа")'>
+                    <i class="bi bi-receipt"></i>
+                    Открыть заказ
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteFineAction("Открытие клиента")'>
+                    <i class="bi bi-person"></i>
+                    Открыть клиента
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteFineAction("Оплата штрафа")'>
+                    <i class="bi bi-check-circle"></i>
+                    Отметить как оплаченный
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick='() => ExecuteFineAction("Удаление")'>
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseCreateModal">
+            <div class="fine-create-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Добавить штраф</h3>
+                        <p>Заполните данные начисления</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="fine-form-grid">
+                    <div class="fine-form-field">
+                        <label>Клиент <span>*</span></label>
+                        <select>
+                            <option>Петров Александр Сергеевич</option>
+                            <option>Сидоров Иван Петрович</option>
+                            <option>Кузнецова Мария Викторовна</option>
+                        </select>
+                    </div>
+
+                    <div class="fine-form-field">
+                        <label>Заказ <span>*</span></label>
+                        <select>
+                            <option>ORD-2026-001</option>
+                            <option>ORD-2026-002</option>
+                            <option>ORD-2026-003</option>
+                        </select>
+                    </div>
+
+                    <div class="fine-form-field">
+                        <label>Причина <span>*</span></label>
+                        <select>
+                            <option>Просрочка возврата</option>
+                            <option>Повреждение инструмента</option>
+                            <option>Утеря инструмента</option>
+                            <option>Отсутствие комплектующих</option>
+                            <option>Нарушение условий аренды</option>
+                            <option>Другое</option>
+                        </select>
+                    </div>
+
+                    <div class="fine-form-field">
+                        <label>Дата штрафа <span>*</span></label>
+                        <input type="date" />
+                    </div>
+
+                    <div class="fine-form-field">
+                        <label>Сумма <span>*</span></label>
+                        <input placeholder="Например: 1500" />
+                    </div>
+
+                    <div class="fine-form-field">
+                        <label>Статус</label>
+                        <select>
+                            <option>Не оплачено</option>
+                            <option>Оплачено</option>
+                            <option>Отменен</option>
+                        </select>
+                    </div>
+
+                    <div class="fine-form-field wide">
+                        <label>Комментарий</label>
+                        <textarea placeholder="Комментарий к штрафу"></textarea>
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="CreateFine">
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить штраф
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code
+{
+    private const int PageSize = 5;
+
+    private int _currentPage = 1;
+    private bool _isActionsMenuOpen;
+    private bool _isCreateModalOpen;
+    private string? _selectedFineNumber;
+
+    private readonly List<FineRow> _fines =
+    [
+        new()
+        {
+            Number = "FINE-2026-001",
+            CustomerName = "Петров А.С.",
+            OrderNumber = "ORD-2026-001",
+            Reason = "Просрочка возврата",
+            FineDate = new DateOnly(2026, 6, 5),
+            Amount = 1500,
+            Status = "Не оплачено"
+        },
+        new()
+        {
+            Number = "FINE-2026-002",
+            CustomerName = "Сидоров И.П.",
+            OrderNumber = "ORD-2026-002",
+            Reason = "Повреждение инструмента",
+            FineDate = new DateOnly(2026, 6, 3),
+            Amount = 5000,
+            Status = "Оплачено"
+        },
+        new()
+        {
+            Number = "FINE-2026-003",
+            CustomerName = "Кузнецова М.В.",
+            OrderNumber = "ORD-2026-003",
+            Reason = "Отсутствие комплектующих",
+            FineDate = new DateOnly(2026, 6, 7),
+            Amount = 800,
+            Status = "Не оплачено"
+        }
+    ];
+
+    private string TotalFinesAmount =>
+        $"{_fines.Sum(x => x.Amount):N0} ₽";
+
+    private IEnumerable<FineRow> PagedFines =>
+        _fines
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling(_fines.Count / (double)PageSize);
+
+    private int PageStart =>
+        _fines.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+
+    private int PageEnd =>
+        Math.Min(_currentPage * PageSize, _fines.Count);
+
+    private void OpenActionsMenu(string fineNumber)
+    {
+        _selectedFineNumber = fineNumber;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+        _selectedFineNumber = null;
+    }
+
+    private void ExecuteFineAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedFineNumber))
+            return;
+
+        NotificationService.Info($"{action}: {_selectedFineNumber}");
+
+        CloseActionsMenu();
+    }
+
+    private void OpenCreateModal()
+    {
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+    }
+
+    private void CreateFine()
+    {
+        NotificationService.Success("Штраф успешно сохранен");
+        _isCreateModalOpen = false;
+    }
+
+    private void GoToPage(int page)
+    {
+        _currentPage = page;
+    }
+
+    private static string GetFineStatusClass(string status)
+    {
+        return status switch
+        {
+            "Оплачено" => "status-badge available",
+            "Не оплачено" => "status-badge danger",
+            "Отменен" => "status-badge neutral",
+            _ => "status-badge"
+        };
+    }
+
+    private sealed class FineRow
+    {
+        public string Number { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string OrderNumber { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+        public DateOnly FineDate { get; set; }
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+}

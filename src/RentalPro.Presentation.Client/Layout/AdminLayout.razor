@@ -1,0 +1,304 @@
+﻿@using RentalPro.Presentation.Client.Shared
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<div class="admin-layout @(isSidebarCollapsed ? "sidebar-collapsed" : "")">
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo">
+                <i class="bi bi-tools"></i>
+            </div>
+
+            <div>
+                <div class="sidebar-title">Rental<span>Pro</span></div>
+                <div class="sidebar-subtitle">Система проката<br />инструментов</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <NavLink href="/dashboard" class="sidebar-link" Match="NavLinkMatch.All">
+                <i class="bi bi-house-door"></i>
+                <span>Обзор</span>
+            </NavLink>
+
+            <NavLink href="/tools" class="sidebar-link">
+                <i class="bi bi-tools"></i>
+                <span>Инструменты</span>
+            </NavLink>
+
+            <NavLink href="/customers" class="sidebar-link">
+                <i class="bi bi-people"></i>
+                <span>Клиенты</span>
+            </NavLink>
+
+            <NavLink href="/orders" class="sidebar-link">
+                <i class="bi bi-receipt"></i>
+                <span>Заказы</span>
+            </NavLink>
+
+            <NavLink href="/payments" class="sidebar-link">
+                <i class="bi bi-credit-card"></i>
+                <span>Оплаты</span>
+            </NavLink>
+
+            <NavLink href="/fines" class="sidebar-link">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Штрафы</span>
+            </NavLink>
+
+            <NavLink href="/maintenance" class="sidebar-link">
+                <i class="bi bi-wrench-adjustable"></i>
+                <span>Ремонт и обслуживание</span>
+            </NavLink>
+
+            <NavLink href="/purchases" class="sidebar-link">
+                <i class="bi bi-briefcase"></i>
+                <span>Закупки</span>
+            </NavLink>
+
+            <NavLink href="/suppliers" class="sidebar-link">
+                <i class="bi bi-boxes"></i>
+                <span>Поставщики</span>
+            </NavLink>
+
+            <NavLink href="/reports" class="sidebar-link">
+                <i class="bi bi-bar-chart"></i>
+                <span>Отчеты</span>
+            </NavLink>
+
+            <NavLink href="/dictionaries" class="sidebar-link">
+                <i class="bi bi-book"></i>
+                <span>Справочники</span>
+            </NavLink>
+
+            <NavLink href="/users" class="sidebar-link">
+                <i class="bi bi-person-gear"></i>
+                <span>Пользователи</span>
+            </NavLink>
+        </nav>
+    </aside>
+
+    <section class="admin-main">
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button"
+                        class="topbar-menu-button"
+                        @onclick="ToggleSidebar">
+
+                    <i class="bi @(isSidebarCollapsed
+                                     ? "bi-chevron-right"
+                                     : "bi-list")"></i>
+
+                </button>
+
+                <div>
+                    <h1>@PageTitle</h1>
+                    <p>@PageDescription</p>
+                </div>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="topbar-profile-wrapper">
+                    <button type="button"
+                            class="topbar-profile"
+                            @onclick="ToggleProfileMenu">
+
+                        <div class="topbar-avatar">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+
+                        <div class="topbar-user">
+                            <strong>Иванов И.И.</strong>
+                            <span>Администратор</span>
+                        </div>
+
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+
+                    @if (_isProfileMenuOpen)
+                    {
+                        <div class="profile-dropdown">
+                            <div class="profile-dropdown-header">
+                                <strong>Иванов И.И.</strong>
+                                <span>Администратор</span>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <button class="dropdown-item" @onclick="OpenProfileModal">
+                                <i class="bi bi-person"></i>
+                                Мой профиль
+                            </button>
+
+                            <button class="dropdown-item">
+                                <i class="bi bi-key"></i>
+                                Сменить пароль
+                            </button>
+
+                            <div class="dropdown-divider"></div>
+
+                            <button class="dropdown-item danger">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Выйти
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-content">
+            @Body
+        </main>
+    </section>
+    <NotificationContainer />
+    
+    @if (_isProfileModalOpen)
+{
+    <div class="actions-backdrop" @onclick="CloseProfileModal">
+        <div class="profile-modal" @onclick:stopPropagation="true">
+            <div class="profile-modal-header">
+                <div>
+                    <h3>Мой профиль</h3>
+                    <p>Данные текущего пользователя</p>
+                </div>
+
+                <button type="button" @onclick="CloseProfileModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="profile-modal-body">
+                <div class="profile-modal-avatar">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+
+                <div class="profile-info-grid">
+                    <div class="profile-info-item">
+                        <span>ФИО</span>
+                        <strong>Иванов Иван Иванович</strong>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span>Логин</span>
+                        <strong>ivanov</strong>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span>Email</span>
+                        <strong>ivanov@rentalpro.ru</strong>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span>Телефон</span>
+                        <strong>+7 900 111-22-33</strong>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span>Роль</span>
+                        <strong>Администратор</strong>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span>Статус</span>
+                        <strong>Активен</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-modal-footer">
+                <button class="secondary-button" type="button">
+                    <i class="bi bi-key"></i>
+                    Сменить пароль
+                </button>
+
+                <button class="primary-button" type="button" @onclick="CloseProfileModal">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+}
+</div>
+
+@code {
+    private bool isSidebarCollapsed;
+
+    private string PageTitle => NavigationManager.Uri switch
+    {
+        var uri when uri.Contains("/dashboard") => "Обзор",
+        var uri when uri.Contains("/tools") => "Инструменты",
+        var uri when uri.Contains("/customers") => "Клиенты",
+        var uri when uri.Contains("/orders") => "Заказы",
+        var uri when uri.Contains("/payments") => "Оплаты",
+        var uri when uri.Contains("/fines") => "Штрафы",
+        var uri when uri.Contains("/maintenance") => "Ремонт и обслуживание",
+        var uri when uri.Contains("/purchases") => "Закупки",
+        var uri when uri.Contains("/suppliers") => "Поставщики",
+        var uri when uri.Contains("/reports") => "Отчеты",
+        var uri when uri.Contains("/dictionaries") => "Справочники",
+        var uri when uri.Contains("/users") => "Пользователи",
+        var uri when uri.Contains("/settings") => "Настройки",
+        _ => "RentalPRO"
+    };
+
+    private string PageDescription => NavigationManager.Uri switch
+    {
+        var uri when uri.Contains("/dashboard") => "Панель управления",
+        var uri when uri.Contains("/tools") => "Учет и управление инструментами",
+        var uri when uri.Contains("/customers") => "База клиентов компании",
+        var uri when uri.Contains("/orders") => "Управление заказами аренды",
+        var uri when uri.Contains("/payments") => "Учет платежей и возвратов",
+        var uri when uri.Contains("/fines") => "Штрафы и начисления",
+        var uri when uri.Contains("/maintenance") => "Ремонт и обслуживание оборудования",
+        var uri when uri.Contains("/purchases") => "Закупка инструментов и оборудования",
+        var uri when uri.Contains("/suppliers") => "Работа с поставщиками",
+        var uri when uri.Contains("/reports") => "Аналитика и отчетность",
+        var uri when uri.Contains("/dictionaries") => "Справочные данные системы",
+        var uri when uri.Contains("/users") => "Управление пользователями",
+        var uri when uri.Contains("/settings") => "Настройки системы",
+        _ => ""
+    };
+    
+    private bool _isProfileMenuOpen;
+
+    private bool _isProfileModalOpen;
+
+    private void ToggleProfileMenu()
+    {
+        _isProfileMenuOpen = !_isProfileMenuOpen;
+    }
+
+    private void OpenProfileModal()
+    {
+        _isProfileMenuOpen = false;
+        _isProfileModalOpen = true;
+    }
+
+    private void CloseProfileModal()
+    {
+        _isProfileModalOpen = false;
+    }
+    
+    private void ToggleSidebar()
+    {
+        isSidebarCollapsed = !isSidebarCollapsed;
+    }
+    
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender,
+        Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

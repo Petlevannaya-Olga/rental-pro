@@ -1,0 +1,65 @@
+﻿@using RentalPro.Presentation.Client.Services
+@implements IDisposable
+@inject NotificationService NotificationService
+
+<div class="notification-container">
+
+    @foreach (var notification in _notifications)
+    {
+        <div class="notification @GetClass(notification.Type)">
+            <i class="@GetIcon(notification.Type)"></i>
+            <span>@notification.Text</span>
+        </div>
+    }
+
+</div>
+
+@code
+{
+    private readonly List<NotificationMessage> _notifications = [];
+
+    protected override void OnInitialized()
+    {
+        NotificationService.OnNotification += ShowNotification;
+    }
+
+    private async void ShowNotification(NotificationMessage notification)
+    {
+        _notifications.Add(notification);
+
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(3000);
+
+        _notifications.Remove(notification);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string GetClass(NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.Success => "notification-success",
+            NotificationType.Error => "notification-error",
+            NotificationType.Warning => "notification-warning",
+            _ => "notification-info"
+        };
+    }
+
+    private static string GetIcon(NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.Success => "bi bi-check-circle-fill",
+            NotificationType.Error => "bi bi-x-circle-fill",
+            NotificationType.Warning => "bi bi-exclamation-triangle-fill",
+            _ => "bi bi-info-circle-fill"
+        };
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnNotification -= ShowNotification;
+    }
+}

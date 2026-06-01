@@ -1,0 +1,115 @@
+﻿<div class="table-paging">
+
+    <span>
+        @($"Показано {StartItem}-{EndItem} из {TotalItems}")
+    </span>
+
+    @if (TotalPages > 1)
+    {
+        <div class="paging-actions">
+
+            <button class="paging-button"
+                    disabled="@(CurrentPage == 1)"
+                    @onclick="PreviousClicked">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            @foreach (var page in VisiblePages)
+            {
+                if (page is null)
+                {
+                    <span class="paging-dots">...</span>
+                }
+                else
+                {
+                    var currentPage = page.Value;
+
+                    <button class="paging-button @(currentPage == CurrentPage ? "active" : "")"
+                            @onclick="() => PageChanged.InvokeAsync(currentPage)">
+                        @currentPage
+                    </button>
+                }
+            }
+
+            <button class="paging-button"
+                    disabled="@(CurrentPage == TotalPages)"
+                    @onclick="NextClicked">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public int CurrentPage { get; set; }
+
+    [Parameter]
+    public int TotalPages { get; set; }
+
+    [Parameter]
+    public int TotalItems { get; set; }
+
+    [Parameter]
+    public int StartItem { get; set; }
+
+    [Parameter]
+    public int EndItem { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PageChanged { get; set; }
+
+    private Task PreviousClicked()
+    {
+        if (CurrentPage > 1)
+            return PageChanged.InvokeAsync(CurrentPage - 1);
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextClicked()
+    {
+        if (CurrentPage < TotalPages)
+            return PageChanged.InvokeAsync(CurrentPage + 1);
+
+        return Task.CompletedTask;
+    }
+
+    private IEnumerable<int?> VisiblePages
+    {
+        get
+        {
+            const int delta = 2;
+
+            var pages = new List<int?>();
+
+            if (TotalPages <= 7)
+            {
+                for (var i = 1; i <= TotalPages; i++)
+                    pages.Add(i);
+
+                return pages;
+            }
+
+            pages.Add(1);
+
+            var start = Math.Max(2, CurrentPage - delta);
+            var end = Math.Min(TotalPages - 1, CurrentPage + delta);
+
+            if (start > 2)
+                pages.Add(null);
+
+            for (var i = start; i <= end; i++)
+                pages.Add(i);
+
+            if (end < TotalPages - 1)
+                pages.Add(null);
+
+            pages.Add(TotalPages);
+
+            return pages;
+        }
+    }
+}

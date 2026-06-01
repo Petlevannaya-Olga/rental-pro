@@ -1,0 +1,324 @@
+﻿@page "/customers"
+@layout AdminLayout
+
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+
+<div class="customers-page">
+
+    <div class="page-actions">
+        <button class="primary-button" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg"></i>
+            Добавить клиента
+        </button>
+    </div>
+
+    <div class="customers-stats">
+        <div class="customers-stat-card">
+            <span class="customers-stat-icon blue">
+                <i class="bi bi-people"></i>
+            </span>
+
+            <div>
+                <p>Всего клиентов</p>
+                <strong>@_customers.Count</strong>
+            </div>
+        </div>
+
+        <div class="customers-stat-card">
+            <span class="customers-stat-icon green">
+                <i class="bi bi-person-check"></i>
+            </span>
+
+            <div>
+                <p>Активные</p>
+                <strong>@_customers.Count(x => x.Status == "Активен")</strong>
+            </div>
+        </div>
+
+        <div class="customers-stat-card">
+            <span class="customers-stat-icon orange">
+                <i class="bi bi-receipt"></i>
+            </span>
+
+            <div>
+                <p>С заказами</p>
+                <strong>@_customers.Count(x => x.OrdersCount > 0)</strong>
+            </div>
+        </div>
+
+        <div class="customers-stat-card">
+            <span class="customers-stat-icon red">
+                <i class="bi bi-exclamation-triangle"></i>
+            </span>
+
+            <div>
+                <p>С задолженностью</p>
+                <strong>@_customers.Count(x => x.HasDebt)</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="customers-table-card">
+
+        <div class="table-toolbar">
+            <div class="toolbar-filters">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input placeholder="Поиск по ФИО, телефону, email или паспорту..." />
+                </div>
+
+                <select class="filter-select">
+                    <option>Все статусы</option>
+                    <option>Активен</option>
+                    <option>Заблокирован</option>
+                </select>
+
+                <select class="filter-select">
+                    <option>Все клиенты</option>
+                    <option>С заказами</option>
+                    <option>С задолженностью</option>
+                </select>
+            </div>
+
+            <button class="secondary-button">
+                <i class="bi bi-download"></i>
+                Экспорт
+            </button>
+        </div>
+
+        <table class="customers-table">
+            <thead>
+            <tr>
+                <th class="sortable-column">Клиент <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Телефон <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Email <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Паспорт <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Заказов <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var customer in PagedCustomers)
+            {
+                <tr>
+                    <td>
+                        <div class="customer-cell">
+                            <div class="customer-avatar">
+                                @customer.Initials
+                            </div>
+
+                            <div>
+                                <strong>@customer.FullName</strong>
+                                <span>@customer.Address</span>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>@customer.PhoneNumber</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.Passport</td>
+                    <td>@customer.OrdersCount</td>
+
+                    <td>
+                        <span class="@GetStatusClass(customer.Status)">
+                            @customer.Status
+                        </span>
+                    </td>
+
+                    <td class="actions-cell">
+                        <button class="icon-button" @onclick="() => OpenActionsMenu(customer.FullName)">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <Pagination
+            CurrentPage="_currentPage"
+            TotalPages="TotalPages"
+            TotalItems="_customers.Count"
+            StartItem="PageStart"
+            EndItem="PageEnd"
+            PageChanged="GoToPage" />
+    </div>
+
+    @if (_isActionsMenuOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия с клиентом</h3>
+                        <p>@_selectedCustomerName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick='() => ExecuteCustomerAction("Просмотр")'>
+                    <i class="bi bi-eye"></i>
+                    Просмотр
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteCustomerAction("Редактирование")'>
+                    <i class="bi bi-pencil"></i>
+                    Редактировать
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteCustomerAction("История заказов")'>
+                    <i class="bi bi-clock-history"></i>
+                    История заказов
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteCustomerAction("Создание заказа")'>
+                    <i class="bi bi-receipt"></i>
+                    Создать заказ
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick='() => ExecuteCustomerAction("Удаление")'>
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code
+{
+    private const int PageSize = 5;
+
+    private int _currentPage = 1;
+
+    private bool _isActionsMenuOpen;
+
+    private string? _selectedCustomerName;
+
+    private readonly List<CustomerRow> _customers =
+    [
+        new()
+        {
+            FullName = "Петров Александр Сергеевич",
+            Initials = "ПА",
+            PhoneNumber = "+7 900 111-22-33",
+            Email = "petrov@example.com",
+            Passport = "4512 345678",
+            Address = "Москва, ул. Ленина, 10",
+            OrdersCount = 3,
+            Status = "Активен",
+            HasDebt = false
+        },
+        new()
+        {
+            FullName = "Сидоров Иван Петрович",
+            Initials = "СИ",
+            PhoneNumber = "+7 900 222-33-44",
+            Email = "sidorov@example.com",
+            Passport = "4513 111222",
+            Address = "Москва, ул. Мира, 25",
+            OrdersCount = 1,
+            Status = "Активен",
+            HasDebt = true
+        }
+    ];
+
+    private IEnumerable<CustomerRow> PagedCustomers =>
+        _customers
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling(_customers.Count / (double)PageSize);
+
+    private int PageStart =>
+        _customers.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+
+    private int PageEnd =>
+        Math.Min(_currentPage * PageSize, _customers.Count);
+
+    private void OpenCreateModal()
+    {
+        NotificationService.Info("Открытие формы добавления клиента");
+    }
+
+    private void OpenActionsMenu(string customerName)
+    {
+        _selectedCustomerName = customerName;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+        _selectedCustomerName = null;
+    }
+
+    private void ExecuteCustomerAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedCustomerName))
+            return;
+
+        NotificationService.Info($"{action}: {_selectedCustomerName}");
+
+        CloseActionsMenu();
+    }
+
+    private void PreviousPage()
+    {
+        if (_currentPage > 1)
+            _currentPage--;
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage < TotalPages)
+            _currentPage++;
+    }
+
+    private void GoToPage(int page)
+    {
+        _currentPage = page;
+    }
+
+    private static string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Активен" => "status-badge available",
+            "Заблокирован" => "status-badge repair",
+            _ => "status-badge"
+        };
+    }
+
+    private sealed class CustomerRow
+    {
+        public string FullName { get; set; } = string.Empty;
+
+        public string Initials { get; set; } = string.Empty;
+
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
+        public string Passport { get; set; } = string.Empty;
+
+        public string Address { get; set; } = string.Empty;
+
+        public int OrdersCount { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+
+        public bool HasDebt { get; set; }
+    }
+}

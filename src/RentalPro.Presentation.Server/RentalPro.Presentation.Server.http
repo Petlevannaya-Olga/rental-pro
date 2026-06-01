@@ -1,0 +1,6 @@
+@RentalPro.Presentation.Server_HostAddress = http://localhost:5082
+
+GET {{RentalPro.Presentation.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

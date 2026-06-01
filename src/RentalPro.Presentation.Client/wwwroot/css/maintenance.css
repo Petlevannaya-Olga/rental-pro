@@ -1,0 +1,176 @@
+﻿/* Maintenance page */
+
+.maintenance-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.maintenance-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.maintenance-table-card {
+    border: 1px solid #e7ecf5;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    padding: 18px;
+}
+
+.maintenance-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.maintenance-filters-top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.maintenance-filters-top .search-box {
+    flex: 1;
+}
+
+.maintenance-filters-bottom {
+    display: flex;
+    align-items: flex-end;
+    gap: 28px;
+    flex-wrap: wrap;
+}
+
+.maintenance-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.maintenance-table th {
+    padding: 11px 8px;
+    border-bottom: 1px solid #d9e1ed;
+    text-align: left;
+    font-weight: 800;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.maintenance-table td {
+    padding: 13px 8px;
+    border-bottom: 1px solid #edf1f7;
+    color: #0f172a;
+    vertical-align: middle;
+}
+
+.maintenance-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Maintenance statuses */
+
+.status-badge.warning {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+/* Maintenance create modal */
+
+.maintenance-create-modal {
+    width: 760px;
+    max-width: calc(100vw - 32px);
+    padding: 18px 20px 16px;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+}
+
+.maintenance-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+}
+
+.maintenance-form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.maintenance-form-field.wide {
+    grid-column: 1 / -1;
+}
+
+.maintenance-form-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.maintenance-form-field label span {
+    color: #ef4444;
+}
+
+.maintenance-form-field input,
+.maintenance-form-field select,
+.maintenance-form-field textarea {
+    width: 100%;
+    border: 1px solid #d8e0ec;
+    border-radius: 10px;
+    background: white;
+    color: #0f172a;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+}
+
+.maintenance-form-field input,
+.maintenance-form-field select {
+    height: 40px;
+    padding: 0 12px;
+}
+
+.maintenance-form-field textarea {
+    min-height: 86px;
+    padding: 11px 12px;
+    resize: vertical;
+}
+
+.maintenance-form-field input:focus,
+.maintenance-form-field select:focus,
+.maintenance-form-field textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+@media (max-width: 1200px) {
+    .maintenance-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .maintenance-table-card {
+        overflow-x: auto;
+    }
+
+    .maintenance-table {
+        min-width: 980px;
+    }
+
+    .maintenance-filters-bottom {
+        gap: 16px;
+    }
+}
+
+@media (max-width: 700px) {
+    .maintenance-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .maintenance-form-grid {
+        grid-template-columns: 1fr;
+    }
+}

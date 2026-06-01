@@ -1,0 +1,171 @@
+﻿@page "/suppliers"
+@layout AdminLayout
+
+<div class="suppliers-page">
+
+    <div class="page-actions">
+        <button class="primary-button">
+            <i class="bi bi-plus-lg"></i>
+            Добавить поставщика
+        </button>
+    </div>
+
+    <div class="suppliers-stats">
+
+        <StatCard Title="Всего поставщиков"
+                  Value="28"
+                  Icon="bi bi-truck"
+                  Color="blue" />
+
+        <StatCard Title="Активные"
+                  Value="24"
+                  Icon="bi bi-check-circle"
+                  Color="green" />
+
+        <StatCard Title="Поставок за месяц"
+                  Value="42"
+                  Icon="bi bi-box-seam"
+                  Color="orange" />
+
+        <StatCard Title="Закупок на сумму"
+                  Value="1 250 000 ₽"
+                  Icon="bi bi-cash-stack"
+                  Color="cyan" />
+
+    </div>
+
+    <div class="suppliers-table-card">
+
+        <div class="suppliers-filters">
+
+            <div class="suppliers-filters-top">
+
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input placeholder="Поиск по названию, телефону или email..." />
+                </div>
+
+                <button class="secondary-button">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+
+            </div>
+
+            <div class="suppliers-filters-bottom">
+
+                <select class="filter-select">
+                    <option>Все статусы</option>
+                    <option>Активный</option>
+                    <option>Неактивный</option>
+                </select>
+
+                <select class="filter-select">
+                    <option>Все города</option>
+                    <option>Москва</option>
+                    <option>Санкт-Петербург</option>
+                    <option>Казань</option>
+                    <option>Екатеринбург</option>
+                </select>
+
+                <div class="date-range-block">
+                    <label>Дата сотрудничества</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <table class="suppliers-table">
+            <thead>
+            <tr>
+                <th>Название</th>
+                <th>Контактное лицо</th>
+                <th>Телефон</th>
+                <th>Email</th>
+                <th>Город</th>
+                <th>Дата сотрудничества</th>
+                <th>Статус</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            <tr>
+                <td><strong>ООО "Инструмент-Сервис"</strong></td>
+                <td>Иванов Сергей</td>
+                <td>+7 (999) 123-45-67</td>
+                <td>sales@instrument.ru</td>
+                <td>Москва</td>
+                <td>15.03.2023</td>
+                <td>
+                    <span class="status-badge available">
+                        Активный
+                    </span>
+                </td>
+                <td>
+                    <button class="icon-button">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                </td>
+            </tr>
+
+            <tr>
+                <td><strong>ООО "ПрокатТех"</strong></td>
+                <td>Петров Алексей</td>
+                <td>+7 (999) 555-11-22</td>
+                <td>info@prokattech.ru</td>
+                <td>Казань</td>
+                <td>22.06.2024</td>
+                <td>
+                    <span class="status-badge available">
+                        Активный
+                    </span>
+                </td>
+                <td>
+                    <button class="icon-button">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                </td>
+            </tr>
+
+            <tr>
+                <td><strong>ООО "СтройМаркет"</strong></td>
+                <td>Сидоров Андрей</td>
+                <td>+7 (999) 777-33-44</td>
+                <td>manager@stroymarket.ru</td>
+                <td>Екатеринбург</td>
+                <td>11.09.2022</td>
+                <td>
+                    <span class="status-badge neutral">
+                        Неактивный
+                    </span>
+                </td>
+                <td>
+                    <button class="icon-button">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+
+        <Pagination CurrentPage="1"
+                    TotalPages="1"
+                    TotalItems="3"
+                    StartItem="1"
+                    EndItem="3" />
+
+    </div>
+
+</div>

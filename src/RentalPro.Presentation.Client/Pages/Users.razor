@@ -1,0 +1,687 @@
+﻿@page "/users"
+@layout AdminLayout
+
+@using RentalPro.Contracts.Users
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+@inject UsersService UsersApiClient
+
+@using RentalPro.Contracts.Roles
+@using RentalPro.Presentation.Client.Models.Users
+@inject RolesService RolesService
+@inject FakeUserGeneratorService FakeUserGeneratorService
+
+<div class="users-page">
+
+    <div class="users-stats">
+
+        <StatCard Title="Всего"
+                  Value="@_totalCount.ToString()"
+                  Icon="bi bi-people"
+                  Color="blue" />
+
+        <StatCard Title="Активные"
+                  Value="@_activeCount.ToString()"
+                  Icon="bi bi-person-check"
+                  Color="green" />
+
+        <StatCard Title="Администраторы"
+                  Value="@_adminCount.ToString()"
+                  Icon="bi bi-person-gear"
+                  Color="orange" />
+
+        <StatCard Title="Заблокированные"
+                  Value="@_blockedCount.ToString()"
+                  Icon="bi bi-person-x"
+                  Color="red" />
+
+        <button class="users-add-card"
+                @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg"></i>
+            <span>Добавить пользователя</span>
+        </button>
+
+    </div>
+
+    <div class="users-table-card">
+
+        <div class="users-filters">
+            <div class="users-filters-top">
+
+                <div class="filter-group search-filter">
+                    <label>Поиск по ФИО, логину, email или телефону</label>
+
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+
+                        <input placeholder="ФИО, логин, email или телефон..."
+                               @bind="_search"
+                               @bind:event="oninput" />
+                    </div>
+                </div>
+
+                <button class="secondary-button">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+
+            </div>
+
+            <div class="users-filters-bottom">
+
+                <div class="filter-group">
+                    <label>Роль</label>
+
+                    <select class="filter-select" @bind="_roleId">
+                        <option value="">Все роли</option>
+
+                        @foreach (var role in _roles)
+                        {
+                            <option value="@role.Id">@role.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Статус</label>
+
+                    <select class="filter-select" @bind="_status">
+                        <option value="">Все статусы</option>
+                        <option value="active">Активен</option>
+                        <option value="blocked">Заблокирован</option>
+                    </select>
+                </div>
+
+                <div class="date-filter-group">
+                    <label>Дата создания</label>
+
+                    <div class="date-range-row">
+                        <input type="date"
+                               class="filter-select date-input"
+                               @bind="_createdFrom"/>
+
+                        <span class="date-separator">—</span>
+
+                        <input type="date"
+                               class="filter-select date-input"
+                               @bind="_createdTo"/>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <button class="secondary-button filter-reset-button"
+                            @onclick="ResetFilters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        Сбросить
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (_isLoading)
+        {
+            <table class="users-table">
+                <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Логин</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Статус</th>
+                    <th>Дата создания</th>
+                    <th>Дата изменения</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                @for (var i = 0; i < PageSize; i++)
+                {
+                    <tr>
+                        <td>
+                            <div class="skeleton-user-cell">
+                                <div class="skeleton skeleton-avatar"></div>
+                                <div class="skeleton-lines">
+                                    <div class="skeleton skeleton-line wide"></div>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-line wide"></div></td>
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-dot"></div></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (_users.Count == 0)
+        {
+            <div class="table-empty">Пользователи не найдены</div>
+        }
+        else
+        {
+            <table class="users-table">
+                <thead>
+                <tr>
+                    <th class="sortable-column" @onclick='() => ChangeSort("fullname")'>ФИО <i
+                            class="bi bi-arrow-down-up"></i></th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("login")'>Логин <i
+                            class="bi bi-arrow-down-up"></i></th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("email")'>Email <i
+                            class="bi bi-arrow-down-up"></i></th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("phonenumber")'>Телефон <i
+                            class="bi bi-arrow-down-up"></i></th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("status")'>Статус <i
+                            class="bi bi-arrow-down-up"></i></th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("createdat")'>Дата создания <i class="bi bi-arrow-down-up"></i></th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("updatedat")'>Дата изменения<i class="bi bi-arrow-down-up"></i></th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                @foreach (var user in _users)
+                {
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">@GetInitials(user.FullName)</div>
+
+                                <div>
+                                    <strong>@user.FullName</strong>
+                                    <span>@user.RoleName</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>@user.Login</td>
+                        <td>@user.Email</td>
+                        <td>@user.PhoneNumber</td>
+
+                        <td>
+                            <span class="@GetUserStatusClass(user.IsActive)">
+                                @(user.IsActive ? "Активен" : "Заблокирован")
+                            </span>
+                        </td>
+
+                        <td>@user.CreatedAt.ToString("dd.MM.yyyy")</td>
+
+                        <td>
+                            @(user.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-")
+                        </td>
+
+                        <td class="actions-cell">
+                            <button class="icon-button" @onclick="() => OpenActionsMenu(user.Login)">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+
+        <div class="table-footer">
+            <div class="bulk-generate-panel">
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="GenerateFakeUsers">
+                    <i class="bi bi-magic"></i>
+                    Заполнить тестовыми данными
+                </button>
+            </div>
+        </div>
+        
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="_totalPages"
+                    TotalItems="_totalCount"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage"/>
+    </div>
+
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop">
+            <div class="user-create-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Добавить пользователя</h3>
+                        <p>Заполните данные учетной записи</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="user-form-grid">
+                    <div class="user-form-field">
+                        <label>Фамилия <span>*</span></label>
+                        <input @bind="_createUser.LastName" placeholder="Иванов"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Имя <span>*</span></label>
+                        <input @bind="_createUser.FirstName" placeholder="Иван"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Отчество <span>*</span></label>
+                        <input @bind="_createUser.MiddleName" placeholder="Иванович"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Логин <span>*</span></label>
+                        <input @bind="_createUser.Login" placeholder="ivanov"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Email <span>*</span></label>
+                        <input @bind="_createUser.Email" placeholder="ivanov@example.com"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Телефон <span>*</span></label>
+                        <input @bind="_createUser.PhoneNumber" placeholder="+79000000000"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Пароль <span>*</span></label>
+                        <input type="password"
+                               autocomplete="new-password"
+                               @bind="_createUser.Password"
+                               placeholder="Введите пароль"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Роль <span>*</span></label>
+                        <select @bind="_createUser.RoleId">
+                            <option value="">Выберите роль</option>
+                            @foreach (var role in _roles)
+                            {
+                                <option value="@role.Id">@role.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button "
+                            type="button"
+                            @onclick="GenerateFakeUser">
+                        <i class="bi bi-magic"></i>
+                        Заполнить тестовыми данными
+                    </button>
+                    
+                    <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="CreateUser">
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить пользователя
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (_isActionsMenuOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия с пользователем</h3>
+                        <p>@_selectedLogin</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Редактирование")'>
+                    <i class="bi bi-pencil"></i>
+                    Редактировать
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Смена пароля")'>
+                    <i class="bi bi-key"></i>
+                    Сменить пароль
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Блокировка")'>
+                    <i class="bi bi-person-x"></i>
+                    Заблокировать
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick='() => ExecuteAction("Удаление")'>
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code
+{
+    private const int PageSize = 5;
+
+    private List<UserDto> _users = [];
+
+    private int _currentPage = 1;
+    private int _totalPages;
+    private int _totalCount;
+
+    private int _activeCount;
+    private int _blockedCount;
+    private int _adminCount;
+
+    private bool _isLoading;
+    private bool _isActionsMenuOpen;
+    private bool _isCreateModalOpen;
+
+    private string? _selectedLogin;
+    private string? _search;
+    private string? _status;
+    private string? _sortBy = "createdat";
+    private bool _descending = true;
+
+    private Guid? _roleId;
+    private DateTime? _createdFrom;
+    private DateTime? _createdTo;
+
+    private CreateUserFormModel _createUser = new();
+
+    private List<RoleDto> _roles = [];
+
+    private int PageStart =>
+        _totalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+
+    private int PageEnd =>
+        Math.Min(_currentPage * PageSize, _totalCount);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRolesAsync();
+        await LoadUsersAsync();
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        try
+        {
+            _roles = await RolesService.GetRolesAsync();
+        }
+        catch
+        {
+            NotificationService.Error("Не удалось загрузить роли пользователей");
+        }
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        _isLoading = true;
+
+        try
+        {
+            var request = new GetUsersRequest
+            {
+                Search = _search,
+                RoleId = _roleId,
+                IsActive = GetIsActiveFilter(),
+                CreatedFrom = _createdFrom,
+                CreatedTo = _createdTo,
+                SortBy = _sortBy,
+                Descending = _descending,
+                Page = _currentPage,
+                PageSize = PageSize
+            };
+
+            var result = await UsersApiClient.GetUsersAsync(request);
+
+            _users = result?.Items.ToList() ?? [];
+            _totalCount = result?.TotalCount ?? 0;
+            _totalPages = result?.TotalPages ?? 0;
+
+            RecalculateCurrentPageStats();
+        }
+        catch
+        {
+            NotificationService.Error("Не удалось загрузить пользователей");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        _currentPage = 1;
+        await LoadUsersAsync();
+    }
+
+    private async Task ChangeSort(string sortBy)
+    {
+        if (_sortBy == sortBy)
+        {
+            _descending = !_descending;
+        }
+        else
+        {
+            _sortBy = sortBy;
+            _descending = false;
+        }
+
+        _currentPage = 1;
+        await LoadUsersAsync();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        _currentPage = page;
+        await LoadUsersAsync();
+    }
+
+    private bool? GetIsActiveFilter()
+    {
+        return _status switch
+        {
+            "active" => true,
+            "blocked" => false,
+            _ => null
+        };
+    }
+
+    private void RecalculateCurrentPageStats()
+    {
+        _activeCount = _users.Count(x => x.IsActive);
+        _blockedCount = _users.Count(x => !x.IsActive);
+        _adminCount = _users.Count(x => x.RoleName == "Администратор");
+    }
+
+    private void OpenActionsMenu(string login)
+    {
+        _selectedLogin = login;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+        _selectedLogin = null;
+    }
+
+    private void ExecuteAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedLogin))
+            return;
+
+        NotificationService.Info($"{action}: {_selectedLogin}");
+
+        CloseActionsMenu();
+    }
+
+    private void OpenCreateModal()
+    {
+        _createUser = new CreateUserFormModel();
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+    }
+
+    private async Task CreateUser()
+    {
+        if (string.IsNullOrWhiteSpace(_createUser.LastName) ||
+            string.IsNullOrWhiteSpace(_createUser.FirstName) ||
+            string.IsNullOrWhiteSpace(_createUser.MiddleName) ||
+            string.IsNullOrWhiteSpace(_createUser.Login) ||
+            string.IsNullOrWhiteSpace(_createUser.Email) ||
+            string.IsNullOrWhiteSpace(_createUser.PhoneNumber) ||
+            string.IsNullOrWhiteSpace(_createUser.Password) ||
+            _createUser.RoleId is null)
+        {
+            NotificationService.Error("Заполните все обязательные поля");
+            return;
+        }
+
+        try
+        {
+            if (_createUser.RoleId is null)
+            {
+                NotificationService.Error("Выберите роль");
+                return;
+            }
+
+            var request = new CreateUserRequest
+            {
+                Login = _createUser.Login,
+                Password = _createUser.Password,
+                LastName = _createUser.LastName,
+                FirstName = _createUser.FirstName,
+                MiddleName = _createUser.MiddleName,
+                PhoneNumber = _createUser.PhoneNumber,
+                Email = _createUser.Email,
+                RoleId = _createUser.RoleId.Value
+            };
+
+            await UsersApiClient.CreateUserAsync(request);
+
+            NotificationService.Success("Пользователь успешно создан");
+
+            CloseCreateModal();
+
+            _currentPage = 1;
+
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Error($"Не удалось создать пользователя: {ex.Message}");
+        }
+    }
+
+    private static string GetUserStatusClass(bool isActive)
+    {
+        return isActive
+            ? "status-badge available"
+            : "status-badge danger";
+    }
+
+    private static string GetInitials(string fullName)
+    {
+        var parts = fullName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        return parts.Length switch
+        {
+            0 => string.Empty,
+            1 => parts[0][..1].ToUpper(),
+            _ => $"{parts[0][0]}{parts[1][0]}".ToUpper()
+        };
+    }
+    
+    private void GenerateFakeUser()
+    {
+        _createUser = FakeUserGeneratorService.Generate();
+    }
+    
+    private async Task GenerateFakeUsers()
+    {
+        if (_roles.Count == 0)
+        {
+            NotificationService.Error("Роли пользователей не загружены");
+            return;
+        }
+
+        NotificationService.Info("Началось создание тестовых данных");
+        var count = 10;
+        var createdCount = 0;
+
+        for (var i = 0; i < count; i++)
+        {
+            var role = _roles[Random.Shared.Next(_roles.Count)];
+            var generatedUser = FakeUserGeneratorService.Generate();
+
+            var request = new CreateUserRequest
+            {
+                Login = generatedUser.Login,
+                Password = generatedUser.Password,
+                LastName = generatedUser.LastName,
+                FirstName = generatedUser.FirstName,
+                MiddleName = generatedUser.MiddleName,
+                PhoneNumber = generatedUser.PhoneNumber,
+                Email = generatedUser.Email,
+                RoleId = role.Id
+            };
+
+            var result = await UsersApiClient.CreateUserAsync(request);
+
+            if (result.IsFailure)
+            {
+                NotificationService.Error(
+                    string.Join(
+                        Environment.NewLine,
+                        result.Error.Select(x => x.Message)));
+
+                return;
+            }
+
+            createdCount++;
+            NotificationService.Success($"Пользователь {result.Value.FullName} успешно создан");
+        }
+
+        NotificationService.Success($"Создано пользователей: {createdCount} из {count}");
+
+        _currentPage = 1;
+        await LoadUsersAsync();
+    }
+    
+    private async Task ResetFilters()
+    {
+        _search = string.Empty;
+        _roleId = null;
+        _status = null;
+        _createdFrom = null;
+        _createdTo = null;
+
+        _currentPage = 1;
+
+        await LoadUsersAsync();
+    }
+}

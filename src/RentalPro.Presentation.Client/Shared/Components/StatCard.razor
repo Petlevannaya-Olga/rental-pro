@@ -1,0 +1,32 @@
+﻿<div class="stat-card-common">
+    <span class="stat-card-icon @Color">
+        <i class="@Icon"></i>
+    </span>
+
+    <div class="stat-card-content">
+        <strong>@Value</strong>
+        <p>@Title</p>
+
+        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        {
+            <span>@Subtitle</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string Icon { get; set; } = "bi bi-info-circle";
+
+    [Parameter]
+    public string Color { get; set; } = "blue";
+}

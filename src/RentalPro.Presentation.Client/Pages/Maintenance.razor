@@ -1,0 +1,400 @@
+﻿@page "/maintenance"
+@layout AdminLayout
+
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+
+<div class="maintenance-page">
+
+    <div class="page-actions">
+        <button class="primary-button" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg"></i>
+            Добавить запись
+        </button>
+    </div>
+
+    <div class="maintenance-stats">
+        <StatCard Title="Всего записей"
+                  Value="@_records.Count.ToString()"
+                  Icon="bi bi-wrench-adjustable"
+                  Color="blue" />
+
+        <StatCard Title="В ремонте"
+                  Value="@_records.Count(x => x.Status == "В ремонте").ToString()"
+                  Icon="bi bi-tools"
+                  Color="orange" />
+
+        <StatCard Title="Завершено"
+                  Value="@_records.Count(x => x.Status == "Завершено").ToString()"
+                  Icon="bi bi-check-circle"
+                  Color="green" />
+
+        <StatCard Title="Сумма затрат"
+                  Value="@TotalCost"
+                  Icon="bi bi-cash-coin"
+                  Color="red" />
+    </div>
+
+    <div class="maintenance-table-card">
+
+        <div class="maintenance-filters">
+
+            <div class="maintenance-filters-top">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input placeholder="Поиск по номеру, инструменту или причине..." />
+                </div>
+
+                <button class="secondary-button">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+            </div>
+
+            <div class="maintenance-filters-bottom">
+
+                <select class="filter-select">
+                    <option>Все статусы</option>
+                    <option>В ремонте</option>
+                    <option>Ожидает запчастей</option>
+                    <option>Завершено</option>
+                    <option>Отменено</option>
+                </select>
+
+                <div class="date-range-block">
+                    <label>Период приема</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+                
+                <div class="date-range-block">
+                    <label>Плановое завершение</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <table class="maintenance-table">
+            <thead>
+            <tr>
+                <th class="sortable-column">№ записи <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Инструмент <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Причина <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Дата приема <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Плановое завершение <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Стоимость <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var record in PagedRecords)
+            {
+                <tr>
+                    <td><strong>@record.Number</strong></td>
+                    <td>@record.ToolName</td>
+                    <td>@record.Reason</td>
+                    <td>@record.StartDate.ToString("dd.MM.yyyy")</td>
+                    <td>@record.PlannedEndDate.ToString("dd.MM.yyyy")</td>
+                    <td>@record.Cost.ToString("N0") ₽</td>
+
+                    <td>
+                        <span class="@GetStatusClass(record.Status)">
+                            @record.Status
+                        </span>
+                    </td>
+
+                    <td class="actions-cell">
+                        <button class="icon-button" @onclick="() => OpenActionsMenu(record.Number)">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="TotalPages"
+                    TotalItems="_records.Count"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage" />
+    </div>
+
+    @if (_isActionsMenuOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия с ремонтом</h3>
+                        <p>@_selectedRecordNumber</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Просмотр")'>
+                    <i class="bi bi-eye"></i>
+                    Просмотр
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Редактирование")'>
+                    <i class="bi bi-pencil"></i>
+                    Редактировать
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Завершение ремонта")'>
+                    <i class="bi bi-check-circle"></i>
+                    Завершить ремонт
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Открытие инструмента")'>
+                    <i class="bi bi-tools"></i>
+                    Открыть инструмент
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("История статусов")'>
+                    <i class="bi bi-clock-history"></i>
+                    История статусов
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick='() => ExecuteAction("Удаление")'>
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseCreateModal">
+            <div class="maintenance-create-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Добавить запись обслуживания</h3>
+                        <p>Заполните данные ремонта или обслуживания</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="maintenance-form-grid">
+                    <div class="maintenance-form-field">
+                        <label>Инструмент <span>*</span></label>
+                        <select>
+                            <option>Перфоратор Bosch GBH 2-26</option>
+                            <option>Шуруповерт Makita DF331D</option>
+                            <option>Болгарка DeWalt DWE4217</option>
+                        </select>
+                    </div>
+
+                    <div class="maintenance-form-field">
+                        <label>Статус <span>*</span></label>
+                        <select>
+                            <option>В ремонте</option>
+                            <option>Ожидает запчастей</option>
+                            <option>Завершено</option>
+                            <option>Отменено</option>
+                        </select>
+                    </div>
+
+                    <div class="maintenance-form-field">
+                        <label>Дата приема <span>*</span></label>
+                        <input type="date" />
+                    </div>
+
+                    <div class="maintenance-form-field">
+                        <label>Плановая дата завершения <span>*</span></label>
+                        <input type="date" />
+                    </div>
+
+                    <div class="maintenance-form-field">
+                        <label>Стоимость</label>
+                        <input placeholder="Например: 2500" />
+                    </div>
+
+                    <div class="maintenance-form-field">
+                        <label>Причина <span>*</span></label>
+                        <select>
+                            <option>Плановое обслуживание</option>
+                            <option>Поломка</option>
+                            <option>Повреждение клиентом</option>
+                            <option>Диагностика</option>
+                            <option>Замена комплектующих</option>
+                        </select>
+                    </div>
+
+                    <div class="maintenance-form-field wide">
+                        <label>Комментарий</label>
+                        <textarea placeholder="Описание неисправности или работ"></textarea>
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="CreateRecord">
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить запись
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code
+{
+    private const int PageSize = 5;
+
+    private int _currentPage = 1;
+    private bool _isActionsMenuOpen;
+    private bool _isCreateModalOpen;
+    private string? _selectedRecordNumber;
+
+    private readonly List<MaintenanceRow> _records =
+    [
+        new()
+        {
+            Number = "REP-2026-001",
+            ToolName = "Перфоратор Bosch GBH 2-26",
+            Reason = "Плановое обслуживание",
+            StartDate = new DateOnly(2026, 6, 2),
+            PlannedEndDate = new DateOnly(2026, 6, 5),
+            Cost = 2500,
+            Status = "В ремонте"
+        },
+        new()
+        {
+            Number = "REP-2026-002",
+            ToolName = "Болгарка DeWalt DWE4217",
+            Reason = "Повреждение клиентом",
+            StartDate = new DateOnly(2026, 5, 28),
+            PlannedEndDate = new DateOnly(2026, 6, 4),
+            Cost = 4800,
+            Status = "Ожидает запчастей"
+        },
+        new()
+        {
+            Number = "REP-2026-003",
+            ToolName = "Шуруповерт Makita DF331D",
+            Reason = "Замена аккумулятора",
+            StartDate = new DateOnly(2026, 5, 20),
+            PlannedEndDate = new DateOnly(2026, 5, 22),
+            Cost = 3100,
+            Status = "Завершено"
+        }
+    ];
+
+    private string TotalCost =>
+        $"{_records.Sum(x => x.Cost):N0} ₽";
+
+    private IEnumerable<MaintenanceRow> PagedRecords =>
+        _records
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling(_records.Count / (double)PageSize);
+
+    private int PageStart =>
+        _records.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+
+    private int PageEnd =>
+        Math.Min(_currentPage * PageSize, _records.Count);
+
+    private void OpenActionsMenu(string recordNumber)
+    {
+        _selectedRecordNumber = recordNumber;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+        _selectedRecordNumber = null;
+    }
+
+    private void ExecuteAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedRecordNumber))
+            return;
+
+        NotificationService.Info($"{action}: {_selectedRecordNumber}");
+
+        CloseActionsMenu();
+    }
+
+    private void OpenCreateModal()
+    {
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+    }
+
+    private void CreateRecord()
+    {
+        NotificationService.Success("Запись обслуживания успешно сохранена");
+        _isCreateModalOpen = false;
+    }
+
+    private void GoToPage(int page)
+    {
+        _currentPage = page;
+    }
+
+    private static string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "В ремонте" => "status-badge repair",
+            "Ожидает запчастей" => "status-badge warning",
+            "Завершено" => "status-badge available",
+            "Отменено" => "status-badge neutral",
+            _ => "status-badge"
+        };
+    }
+
+    private sealed class MaintenanceRow
+    {
+        public string Number { get; set; } = string.Empty;
+        public string ToolName { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+        public DateOnly StartDate { get; set; }
+        public DateOnly PlannedEndDate { get; set; }
+        public decimal Cost { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+}

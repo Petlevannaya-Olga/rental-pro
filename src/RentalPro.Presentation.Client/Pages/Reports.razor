@@ -1,0 +1,234 @@
+﻿@page "/reports"
+@layout AdminLayout
+
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+
+<div class="reports-page">
+
+    <div class="reports-stats">
+        <StatCard Title="Общая выручка"
+                  Value="1 245 000 ₽"
+                  Icon="bi bi-cash-stack"
+                  Color="green" />
+
+        <StatCard Title="Активных аренд"
+                  Value="32"
+                  Icon="bi bi-receipt"
+                  Color="blue" />
+
+        <StatCard Title="Просрочено"
+                  Value="7"
+                  Icon="bi bi-exclamation-triangle"
+                  Color="red" />
+
+        <StatCard Title="В ремонте"
+                  Value="12"
+                  Icon="bi bi-wrench-adjustable"
+                  Color="orange" />
+    </div>
+
+    <div class="reports-charts">
+        <div class="report-chart-card">
+            <div class="report-chart-header">
+                <div>
+                    <h3>Выручка по месяцам</h3>
+                    <p>Динамика доходов за последние 6 месяцев</p>
+                </div>
+
+                <button class="secondary-button">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+            </div>
+
+            <div class="bar-chart">
+                <div class="bar-item">
+                    <div class="bar" style="height: 38%;"></div>
+                    <span>Янв</span>
+                </div>
+
+                <div class="bar-item">
+                    <div class="bar" style="height: 52%;"></div>
+                    <span>Фев</span>
+                </div>
+
+                <div class="bar-item">
+                    <div class="bar" style="height: 46%;"></div>
+                    <span>Мар</span>
+                </div>
+
+                <div class="bar-item">
+                    <div class="bar" style="height: 68%;"></div>
+                    <span>Апр</span>
+                </div>
+
+                <div class="bar-item">
+                    <div class="bar" style="height: 76%;"></div>
+                    <span>Май</span>
+                </div>
+
+                <div class="bar-item">
+                    <div class="bar" style="height: 88%;"></div>
+                    <span>Июн</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-chart-card">
+            <div class="report-chart-header">
+                <div>
+                    <h3>Структура доходов</h3>
+                    <p>Распределение поступлений по типам</p>
+                </div>
+            </div>
+
+            <div class="donut-chart-layout">
+                <div class="donut-chart">
+                    <div class="donut-center">
+                        <strong>100%</strong>
+                        <span>доходы</span>
+                    </div>
+                </div>
+
+                <div class="donut-legend">
+                    <div>
+                        <span class="legend-dot rent"></span>
+                        Аренда — 68%
+                    </div>
+
+                    <div>
+                        <span class="legend-dot deposits"></span>
+                        Залоги — 18%
+                    </div>
+
+                    <div>
+                        <span class="legend-dot fines"></span>
+                        Штрафы — 9%
+                    </div>
+
+                    <div>
+                        <span class="legend-dot returns"></span>
+                        Прочее — 5%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="reports-grid">
+
+        <div class="report-card" @onclick='() => OpenReport("Выручка по периодам")'>
+            <div class="report-icon green">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+
+            <div class="report-content">
+                <h3>Выручка по периодам</h3>
+                <p>Анализ доходов по дням, месяцам и годам</p>
+            </div>
+
+            <div class="report-actions">
+                <button class="secondary-button">Сформировать</button>
+                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
+                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
+            </div>
+        </div>
+
+        <div class="report-card" @onclick='() => OpenReport("Популярность инструментов")'>
+            <div class="report-icon blue">
+                <i class="bi bi-bar-chart"></i>
+            </div>
+
+            <div class="report-content">
+                <h3>Популярность инструментов</h3>
+                <p>Какие инструменты чаще всего берут в аренду</p>
+            </div>
+
+            <div class="report-actions">
+                <button class="secondary-button">Сформировать</button>
+                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
+                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
+            </div>
+        </div>
+
+        <div class="report-card" @onclick='() => OpenReport("Просроченные возвраты")'>
+            <div class="report-icon red">
+                <i class="bi bi-clock-history"></i>
+            </div>
+
+            <div class="report-content">
+                <h3>Просроченные возвраты</h3>
+                <p>Клиенты, инструменты и сроки просрочки</p>
+            </div>
+
+            <div class="report-actions">
+                <button class="secondary-button">Сформировать</button>
+                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
+                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
+            </div>
+        </div>
+
+        <div class="report-card" @onclick='() => OpenReport("Ремонты и затраты")'>
+            <div class="report-icon orange">
+                <i class="bi bi-tools"></i>
+            </div>
+
+            <div class="report-content">
+                <h3>Ремонты и затраты</h3>
+                <p>Количество ремонтов и стоимость обслуживания</p>
+            </div>
+
+            <div class="report-actions">
+                <button class="secondary-button">Сформировать</button>
+                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
+                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
+            </div>
+        </div>
+
+        <div class="report-card" @onclick='() => OpenReport("Финансовый отчет")'>
+            <div class="report-icon cyan">
+                <i class="bi bi-wallet2"></i>
+            </div>
+
+            <div class="report-content">
+                <h3>Финансовый отчет</h3>
+                <p>Аренда, штрафы, ремонты, закупки и прибыль</p>
+            </div>
+
+            <div class="report-actions">
+                <button class="secondary-button">Сформировать</button>
+                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
+                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
+            </div>
+        </div>
+
+        <div class="report-card" @onclick='() => OpenReport("Отчет по клиентам")'>
+            <div class="report-icon purple">
+                <i class="bi bi-people"></i>
+            </div>
+
+            <div class="report-content">
+                <h3>Отчет по клиентам</h3>
+                <p>Заказы, суммы аренд и штрафы по клиентам</p>
+            </div>
+
+            <div class="report-actions">
+                <button class="secondary-button">Сформировать</button>
+                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
+                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+@code
+{
+    private void OpenReport(string reportName)
+    {
+        NotificationService.Info($"Формирование отчета: {reportName}");
+    }
+}

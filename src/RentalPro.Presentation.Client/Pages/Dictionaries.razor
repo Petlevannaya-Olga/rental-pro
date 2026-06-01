@@ -1,0 +1,217 @@
+﻿@page "/dictionaries"
+@layout AdminLayout
+@inject NavigationManager NavigationManager
+
+<div class="dictionaries-page">
+
+    <div class="dictionary-grid">
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("tool-categories")'>
+
+            <div class="dictionary-icon blue">
+                <i class="bi bi-grid"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Категории инструментов</h3>
+                <p>Категории и группы инструментов</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>24</strong>
+                    <span>записи</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("tool-statuses")'>
+
+            <div class="dictionary-icon green">
+                <i class="bi bi-tools"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Статусы инструментов</h3>
+                <p>Статусы доступности инструментов</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>5</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("manufacturers")'>
+
+            <div class="dictionary-icon purple">
+                <i class="bi bi-building"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Производители</h3>
+                <p>Производители инструментов</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>18</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("order-statuses")'>
+
+            <div class="dictionary-icon orange">
+                <i class="bi bi-card-checklist"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Статусы заказов</h3>
+                <p>Статусы выполнения заказов</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>6</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("payment-methods")'>
+
+            <div class="dictionary-icon cyan">
+                <i class="bi bi-credit-card"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Способы оплаты</h3>
+                <p>Доступные способы оплаты</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>7</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("payment-types")'>
+
+            <div class="dictionary-icon mint">
+                <i class="bi bi-percent"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Типы оплат</h3>
+                <p>Типы оплат и наценок</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>9</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("maintenance-statuses")'>
+
+            <div class="dictionary-icon red">
+                <i class="bi bi-gear"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Статусы обслуживания</h3>
+                <p>Ремонт и обслуживание инструментов</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>6</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("roles")'>
+
+            <div class="dictionary-icon violet">
+                <i class="bi bi-person"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Роли пользователей</h3>
+                <p>Роли и права доступа</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>8</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+        <div class="dictionary-card"
+             @onclick='() => OpenDictionary("suppliers")'>
+
+            <div class="dictionary-icon yellow">
+                <i class="bi bi-truck"></i>
+            </div>
+
+            <div class="dictionary-content">
+                <h3>Поставщики</h3>
+                <p>Поставщики инструментов</p>
+            </div>
+
+            <div class="dictionary-footer">
+                <div class="dictionary-count">
+                    <strong>12</strong>
+                    <span>записей</span>
+                </div>
+
+                <i class="bi bi-arrow-right dictionary-arrow"></i>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+@code
+{
+    private void OpenDictionary(string dictionaryCode)
+    {
+        NavigationManager.NavigateTo($"/dictionaries/{dictionaryCode}");
+    }
+}

@@ -1,0 +1,178 @@
+﻿@page "/login"
+@using RentalPro.Presentation.Client.Services
+@layout LoginLayout
+@inject NavigationManager NavigationManager
+@inject AuthService AuthService
+
+<EditForm Model="_model" OnValidSubmit="HandleLogin">
+    <div class="login-page">
+        <div class="login-background-hex"></div>
+
+        <div class="login-content">
+
+            <header class="login-brand">
+                <div class="login-brand-main">
+                    <div class="login-logo">
+                        <i class="bi bi-tools"></i>
+                    </div>
+
+                    <div class="login-brand-title">
+                        Rental<span>PRO</span>
+                    </div>
+                </div>
+
+                <div class="login-brand-subtitle">
+                    Система управления прокатом инструментов
+                </div>
+            </header>
+
+            <section class="login-card">
+                <h1>Вход в систему</h1>
+
+                <p class="login-card-subtitle">
+                    Введите свои учетные данные для входа
+                </p>
+
+                <div class="login-field">
+                    <label>Логин</label>
+
+                    <div class="login-input">
+                        <span class="login-input-icon">
+                            <i class="bi bi-person"></i>
+                        </span>
+
+                        <InputText
+                            @bind-Value="_model.Login"
+                            placeholder="Введите логин" />
+                    </div>
+                </div>
+
+                <div class="login-field">
+                    <label>Пароль</label>
+
+                    <div class="login-input">
+                        <span class="login-input-icon">
+                            <i class="bi bi-lock"></i>
+                        </span>
+
+                        <InputText
+                            type="@(_showPassword ? "text" : "password")"
+                            @bind-Value="_model.Password"
+                            placeholder="Введите пароль" />
+
+                        <button
+                            type="button"
+                            class="login-eye"
+                            @onclick="TogglePassword">
+                            @if (_showPassword)
+                            {
+                                <i class="bi bi-eye"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-eye-slash"></i>
+                            }
+                        </button>
+                    </div>
+                </div>
+
+                <div class="login-row">
+                    <label class="login-remember">
+                        <InputCheckbox @bind-Value="_model.RememberMe" />
+                        <span>Запомнить меня</span>
+                    </label>
+
+                    <a href="#" class="login-link">
+                        Забыли пароль?
+                    </a>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    <div class="login-error">
+                        @_errorMessage
+                    </div>
+                }
+
+                <button type="submit" class="login-submit" disabled="@_isLoading">
+                    <i class="bi bi-box-arrow-in-right"></i>
+
+                    @if (_isLoading)
+                    {
+                        <span>Вход...</span>
+                    }
+                    else
+                    {
+                        <span>Войти</span>
+                    }
+                </button>
+
+                <div class="login-divider"></div>
+
+                <div class="login-admin-note">
+                    <span class="login-admin-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </span>
+
+                    <p>
+                        Нет учетной записи?
+                        Обратитесь к
+                        <a href="#" class="login-link">
+                            администратору системы
+                        </a>.
+                    </p>
+                </div>
+            </section>
+
+            <footer class="login-footer">
+                © 2024 RentalPRO. Все права защищены.
+            </footer>
+
+        </div>
+    </div>
+</EditForm>
+
+@code
+{
+    private readonly LoginModel _model = new();
+
+    private bool _showPassword;
+
+    private bool _isLoading;
+
+    private string? _errorMessage;
+
+    private async Task HandleLogin()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+
+        var result = await AuthService.LoginAsync(
+            _model.Login,
+            _model.Password);
+
+        _isLoading = false;
+
+        if (result is null || !result.Success)
+        {
+            _errorMessage = result?.Message ?? "Неверный логин или пароль";
+            return;
+        }
+
+        NavigationManager.NavigateTo("/dashboard");
+    }
+
+    private void TogglePassword()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private sealed class LoginModel
+    {
+        public string Login { get; set; } = string.Empty;
+
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; } = true;
+    }
+}

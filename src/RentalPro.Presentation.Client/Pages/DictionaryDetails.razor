@@ -1,0 +1,122 @@
+﻿@page "/dictionaries/{DictionaryCode}"
+@layout AdminLayout
+
+<div class="dictionary-details-page">
+
+    <div class="dictionary-header">
+
+        <button class="back-link" @onclick="GoBack">
+            <i class="bi bi-arrow-left"></i>
+            Назад
+        </button>
+
+        <div class="dictionary-title-row">
+            <h2>@DictionaryTitle</h2>
+
+            <button class="primary-button" @onclick="OpenCreateModal">
+                <i class="bi bi-plus-lg"></i>
+                Добавить запись
+            </button>
+        </div>
+
+    </div>
+
+    <div class="dictionary-details-card">
+        <table class="tools-table">
+            <thead>
+            <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Дата создания</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var item in Items)
+            {
+                <tr>
+                    <td>
+                        <strong>@item.Name</strong>
+                    </td>
+                    <td>@item.Description</td>
+                    <td>@item.CreatedAt</td>
+                    <td class="actions-cell">
+                        <button class="icon-button">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public string DictionaryCode { get; set; } = string.Empty;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private string DictionaryTitle => DictionaryCode switch
+    {
+        "tool-categories" => "Категории инструментов",
+        "tool-statuses" => "Статусы инструментов",
+        "manufacturers" => "Производители",
+        "order-statuses" => "Статусы заказов",
+        "payment-methods" => "Способы оплаты",
+        "payment-types" => "Типы оплат",
+        "maintenance-statuses" => "Статусы обслуживания",
+        "roles" => "Роли пользователей",
+        "suppliers" => "Поставщики",
+        _ => "Справочник"
+    };
+
+    private List<DictionaryItem> Items => DictionaryCode switch
+    {
+        "tool-categories" =>
+        [
+            new("Перфораторы", "Инструменты для бурения и сверления", "14.05.2024"),
+            new("Шуруповерты", "Аккумуляторные и сетевые шуруповерты", "14.05.2024"),
+            new("Болгарки", "Угловые шлифовальные машины", "14.05.2024")
+        ],
+
+        "tool-statuses" =>
+        [
+            new("Доступен", "Инструмент доступен для аренды", "14.05.2024"),
+            new("В аренде", "Инструмент находится у клиента", "14.05.2024"),
+            new("На ремонте", "Инструмент временно недоступен", "14.05.2024")
+        ],
+
+        "payment-methods" =>
+        [
+            new("Наличные", "Оплата наличными средствами", "14.05.2024"),
+            new("Банковская карта", "Оплата картой", "14.05.2024"),
+            new("Безналичный расчет", "Оплата по счету", "14.05.2024")
+        ],
+
+        _ =>
+        [
+            new("Запись 1", "Описание записи", "14.05.2024"),
+            new("Запись 2", "Описание записи", "14.05.2024")
+        ]
+    };
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/dictionaries");
+    }
+
+    private void OpenCreateModal()
+    {
+        // Позже откроем модальное окно добавления записи
+    }
+
+    private sealed record DictionaryItem(
+        string Name,
+        string Description,
+        string CreatedAt);
+}

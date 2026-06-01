@@ -1,0 +1,48 @@
+﻿<div class="table-toolbar">
+    <div class="toolbar-filters">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+
+            <input value="@SearchText"
+                   @oninput="OnSearchChanged"
+                   placeholder="@SearchPlaceholder" />
+        </div>
+
+        @ChildContent
+    </div>
+
+    @if (ShowExport)
+    {
+        <button class="secondary-button" @onclick="ExportClicked">
+            <i class="bi bi-download"></i>
+            Экспорт
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchTextChanged { get; set; }
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "Поиск...";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool ShowExport { get; set; } = true;
+
+    [Parameter]
+    public EventCallback ExportClicked { get; set; }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        SearchText = e.Value?.ToString() ?? string.Empty;
+
+        await SearchTextChanged.InvokeAsync(SearchText);
+    }
+}

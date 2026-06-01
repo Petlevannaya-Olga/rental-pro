@@ -1,0 +1,370 @@
+﻿@page "/purchases"
+@layout AdminLayout
+
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+
+<div class="purchases-page">
+
+    <div class="page-actions">
+        <button class="primary-button" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg"></i>
+            Добавить закупку
+        </button>
+    </div>
+
+    <div class="purchases-stats">
+        <StatCard Title="Всего закупок"
+                  Value="@_purchases.Count.ToString()"
+                  Icon="bi bi-briefcase"
+                  Color="blue" />
+
+        <StatCard Title="За месяц"
+                  Value="@_purchases.Count.ToString()"
+                  Icon="bi bi-calendar-check"
+                  Color="green" />
+
+        <StatCard Title="Инструментов"
+                  Value="@_purchases.Sum(x => x.Quantity).ToString()"
+                  Icon="bi bi-tools"
+                  Color="orange" />
+
+        <StatCard Title="Сумма закупок"
+                  Value="@TotalPurchasesAmount"
+                  Icon="bi bi-cash-stack"
+                  Color="cyan" />
+    </div>
+
+    <div class="purchases-table-card">
+
+        <div class="purchases-filters">
+
+            <div class="purchases-filters-top">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input placeholder="Поиск по номеру закупки, инструменту или поставщику..." />
+                </div>
+
+                <button class="secondary-button">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+            </div>
+
+            <div class="purchases-filters-bottom">
+
+                <select class="filter-select">
+                    <option>Все поставщики</option>
+                    <option>ООО "Инструмент-Сервис"</option>
+                    <option>ООО "ПрокатТех"</option>
+                    <option>ООО "СтройМаркет"</option>
+                </select>
+
+                <select class="filter-select">
+                    <option>Все категории</option>
+                    <option>Перфораторы</option>
+                    <option>Шуруповерты</option>
+                    <option>Болгарки</option>
+                    <option>Измерительные</option>
+                </select>
+
+                <div class="date-range-block">
+                    <label>Период закупки</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <table class="purchases-table">
+            <thead>
+            <tr>
+                <th class="sortable-column">№ закупки <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Инструмент <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Поставщик <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Категория <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Дата закупки <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Кол-во <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Цена за ед. <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Сумма <i class="bi bi-arrow-down-up"></i></th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var purchase in PagedPurchases)
+            {
+                <tr>
+                    <td><strong>@purchase.Number</strong></td>
+                    <td>@purchase.ToolName</td>
+                    <td>@purchase.SupplierName</td>
+                    <td>@purchase.Category</td>
+                    <td>@purchase.PurchaseDate.ToString("dd.MM.yyyy")</td>
+                    <td>@purchase.Quantity</td>
+                    <td>@purchase.UnitPrice.ToString("N0") ₽</td>
+                    <td>@purchase.TotalAmount.ToString("N0") ₽</td>
+
+                    <td class="actions-cell">
+                        <button class="icon-button" @onclick="() => OpenActionsMenu(purchase.Number)">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="TotalPages"
+                    TotalItems="_purchases.Count"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage" />
+    </div>
+
+    @if (_isActionsMenuOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия с закупкой</h3>
+                        <p>@_selectedPurchaseNumber</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Просмотр")'>
+                    <i class="bi bi-eye"></i>
+                    Просмотр
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Редактирование")'>
+                    <i class="bi bi-pencil"></i>
+                    Редактировать
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Открытие поставщика")'>
+                    <i class="bi bi-truck"></i>
+                    Открыть поставщика
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecuteAction("Открытие инструмента")'>
+                    <i class="bi bi-tools"></i>
+                    Открыть инструмент
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick='() => ExecuteAction("Удаление")'>
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseCreateModal">
+            <div class="purchase-create-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Добавить закупку</h3>
+                        <p>Заполните данные поступления инструмента</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="purchase-form-grid">
+                    <div class="purchase-form-field">
+                        <label>Инструмент <span>*</span></label>
+                        <select>
+                            <option>Перфоратор Bosch GBH 2-26</option>
+                            <option>Шуруповерт Makita DF331D</option>
+                            <option>Болгарка DeWalt DWE4217</option>
+                        </select>
+                    </div>
+
+                    <div class="purchase-form-field">
+                        <label>Поставщик <span>*</span></label>
+                        <select>
+                            <option>ООО "Инструмент-Сервис"</option>
+                            <option>ООО "ПрокатТех"</option>
+                            <option>ООО "СтройМаркет"</option>
+                        </select>
+                    </div>
+
+                    <div class="purchase-form-field">
+                        <label>Дата закупки <span>*</span></label>
+                        <input type="date" />
+                    </div>
+
+                    <div class="purchase-form-field">
+                        <label>Количество <span>*</span></label>
+                        <input placeholder="Например: 3" />
+                    </div>
+
+                    <div class="purchase-form-field">
+                        <label>Цена за единицу <span>*</span></label>
+                        <input placeholder="Например: 12500" />
+                    </div>
+
+                    <div class="purchase-form-field">
+                        <label>Сумма</label>
+                        <input value="37 500 ₽" readonly />
+                    </div>
+
+                    <div class="purchase-form-field wide">
+                        <label>Комментарий</label>
+                        <textarea placeholder="Комментарий к закупке"></textarea>
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="CreatePurchase">
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить закупку
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code
+{
+    private const int PageSize = 5;
+
+    private int _currentPage = 1;
+    private bool _isActionsMenuOpen;
+    private bool _isCreateModalOpen;
+    private string? _selectedPurchaseNumber;
+
+    private readonly List<PurchaseRow> _purchases =
+    [
+        new()
+        {
+            Number = "PUR-2026-001",
+            ToolName = "Перфоратор Bosch GBH 2-26",
+            SupplierName = "ООО \"Инструмент-Сервис\"",
+            Category = "Перфораторы",
+            PurchaseDate = new DateOnly(2026, 6, 1),
+            Quantity = 3,
+            UnitPrice = 12500
+        },
+        new()
+        {
+            Number = "PUR-2026-002",
+            ToolName = "Шуруповерт Makita DF331D",
+            SupplierName = "ООО \"ПрокатТех\"",
+            Category = "Шуруповерты",
+            PurchaseDate = new DateOnly(2026, 6, 4),
+            Quantity = 5,
+            UnitPrice = 8900
+        },
+        new()
+        {
+            Number = "PUR-2026-003",
+            ToolName = "Болгарка DeWalt DWE4217",
+            SupplierName = "ООО \"СтройМаркет\"",
+            Category = "Болгарки",
+            PurchaseDate = new DateOnly(2026, 6, 7),
+            Quantity = 2,
+            UnitPrice = 11200
+        }
+    ];
+
+    private string TotalPurchasesAmount =>
+        $"{_purchases.Sum(x => x.TotalAmount):N0} ₽";
+
+    private IEnumerable<PurchaseRow> PagedPurchases =>
+        _purchases
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling(_purchases.Count / (double)PageSize);
+
+    private int PageStart =>
+        _purchases.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+
+    private int PageEnd =>
+        Math.Min(_currentPage * PageSize, _purchases.Count);
+
+    private void OpenActionsMenu(string purchaseNumber)
+    {
+        _selectedPurchaseNumber = purchaseNumber;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+        _selectedPurchaseNumber = null;
+    }
+
+    private void ExecuteAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedPurchaseNumber))
+            return;
+
+        NotificationService.Info($"{action}: {_selectedPurchaseNumber}");
+
+        CloseActionsMenu();
+    }
+
+    private void OpenCreateModal()
+    {
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+    }
+
+    private void CreatePurchase()
+    {
+        NotificationService.Success("Закупка успешно сохранена");
+        _isCreateModalOpen = false;
+    }
+
+    private void GoToPage(int page)
+    {
+        _currentPage = page;
+    }
+
+    private sealed class PurchaseRow
+    {
+        public string Number { get; set; } = string.Empty;
+        public string ToolName { get; set; } = string.Empty;
+        public string SupplierName { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public DateOnly PurchaseDate { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+
+        public decimal TotalAmount => Quantity * UnitPrice;
+    }
+}

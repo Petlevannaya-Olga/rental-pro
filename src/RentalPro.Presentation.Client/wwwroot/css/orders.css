@@ -1,0 +1,335 @@
+/* Orders page */
+
+.orders-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.orders-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.orders-table-card {
+    border: 1px solid #e7ecf5;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    padding: 18px;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.orders-table th {
+    padding: 11px 8px;
+    border-bottom: 1px solid #d9e1ed;
+    text-align: left;
+    font-weight: 800;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.orders-table td {
+    padding: 13px 8px;
+    border-bottom: 1px solid #edf1f7;
+    color: #0f172a;
+    vertical-align: middle;
+}
+
+.orders-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Date range filter */
+
+.orders-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.orders-filters-top {
+    display: flex;
+}
+
+.orders-filters-top .search-box {
+    width: 100%;
+}
+
+.orders-filters-bottom {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.date-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.date-filter label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.date-filter input {
+    width: 180px;
+}
+
+.orders-export {
+    margin-left: auto;
+}
+
+
+/* Extra order statuses */
+
+.status-badge.info {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-badge.danger {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-badge.neutral {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Order create modal */
+
+.order-create-modal {
+    width: 760px;
+    max-width: calc(100vw - 32px);
+    padding: 18px 20px 16px;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+}
+
+.order-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+}
+
+.order-form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.order-form-field.wide {
+    grid-column: 1 / -1;
+}
+
+.order-form-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.order-form-field label span {
+    color: #ef4444;
+}
+
+.order-form-field input,
+.order-form-field select,
+.order-form-field textarea {
+    width: 100%;
+    border: 1px solid #d8e0ec;
+    border-radius: 10px;
+    background: white;
+    color: #0f172a;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+}
+
+.order-form-field input,
+.order-form-field select {
+    height: 40px;
+    padding: 0 12px;
+}
+
+.order-form-field textarea {
+    min-height: 86px;
+    padding: 11px 12px;
+    resize: vertical;
+}
+
+.order-form-field input:focus,
+.order-form-field select:focus,
+.order-form-field textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.order-form-field input[readonly] {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+@media (max-width: 1200px) {
+    .orders-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .orders-table-card {
+        overflow-x: auto;
+    }
+
+    .orders-table {
+        min-width: 980px;
+    }
+
+    .toolbar-filters {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 700px) {
+    .orders-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .order-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .date-range-inputs {
+        flex-direction: column;
+    }
+
+    .date-range-inputs input {
+        width: 100%;
+    }
+}
+
+.date-range-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.date-range-filter label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.date-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.date-input-group span {
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    min-width: 18px;
+}
+
+.date-input-group input {
+    width: 150px;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid #d8e0ec;
+    border-radius: 10px;
+}
+
+.date-range-inputs {
+    flex-direction: column;
+}
+
+.date-range-inputs input {
+    width: 100%;
+}
+
+.date-range-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.date-range-block label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.date-range-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-range-row span {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.date-range-row input {
+    width: 150px;
+}
+
+.orders-filters-bottom {
+    display: flex;
+    align-items: flex-end;
+    gap: 28px;
+    flex-wrap: wrap;
+}
+
+.date-range-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.date-range-block label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.date-range-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-range-row span {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.date-input {
+    width: 155px !important;
+}
+
+.orders-export {
+    margin-left: auto;
+}

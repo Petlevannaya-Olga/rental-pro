@@ -1,0 +1,406 @@
+﻿@page "/payments"
+@layout AdminLayout
+
+@using RentalPro.Presentation.Client.Services
+
+@inject NotificationService NotificationService
+
+<div class="payments-page">
+
+    <div class="page-actions">
+        <button class="primary-button" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg"></i>
+            Добавить оплату
+        </button>
+    </div>
+
+    <div class="payments-stats">
+        <StatCard Title="Всего оплат"
+                  Value="@_payments.Count.ToString()"
+                  Icon="bi bi-credit-card"
+                  Color="blue" />
+
+        <StatCard Title="Оплачено"
+                  Value="@_payments.Count(x => x.Status == "Оплачено").ToString()"
+                  Icon="bi bi-check-circle"
+                  Color="green" />
+
+        <StatCard Title="Возвраты"
+                  Value="@_payments.Count(x => x.PaymentType == "Возврат").ToString()"
+                  Icon="bi bi-arrow-counterclockwise"
+                  Color="orange" />
+
+        <StatCard Title="Сумма за месяц"
+                  Value="@MonthlyPaymentsAmount"
+                  Icon="bi bi-wallet2"
+                  Color="cyan" />
+    </div>
+
+    <div class="payments-table-card">
+
+        <div class="payments-filters">
+
+            <div class="payments-filters-top">
+
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input placeholder="Поиск по номеру платежа, заказу или клиенту..." />
+                </div>
+
+                <button class="secondary-button">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+
+            </div>
+
+            <div class="payments-filters-bottom">
+
+                <select class="filter-select">
+                    <option>Все статусы</option>
+                    <option>Оплачено</option>
+                    <option>Ожидает оплаты</option>
+                    <option>Возвращено</option>
+                    <option>Ошибка</option>
+                </select>
+
+                <select class="filter-select">
+                    <option>Все типы оплат</option>
+                    <option>Аренда</option>
+                    <option>Залог</option>
+                    <option>Штраф</option>
+                    <option>Возврат</option>
+                </select>
+
+                <select class="filter-select">
+                    <option>Все способы</option>
+                    <option>Наличные</option>
+                    <option>Банковская карта</option>
+                    <option>Безналичный расчет</option>
+                    <option>Онлайн-оплата</option>
+                </select>
+
+                <div class="date-range-block">
+                    <label>Период оплаты</label>
+
+                    <div class="date-range-row">
+                        <span>От</span>
+                        <input type="date" class="filter-select date-input" />
+
+                        <span>До</span>
+                        <input type="date" class="filter-select date-input" />
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <table class="payments-table">
+            <thead>
+            <tr>
+                <th class="sortable-column">№ платежа <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Заказ <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Клиент <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Тип оплаты <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Способ <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Дата <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Сумма <i class="bi bi-arrow-down-up"></i></th>
+                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var payment in PagedPayments)
+            {
+                <tr>
+                    <td><strong>@payment.Number</strong></td>
+                    <td>@payment.OrderNumber</td>
+                    <td>@payment.CustomerName</td>
+                    <td>@payment.PaymentType</td>
+                    <td>@payment.PaymentMethod</td>
+                    <td>@payment.PaymentDate.ToString("dd.MM.yyyy")</td>
+                    <td>@payment.Amount.ToString("N0") ₽</td>
+
+                    <td>
+                        <span class="@GetPaymentStatusClass(payment.Status)">
+                            @payment.Status
+                        </span>
+                    </td>
+
+                    <td class="actions-cell">
+                        <button class="icon-button" @onclick="() => OpenActionsMenu(payment.Number)">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="TotalPages"
+                    TotalItems="_payments.Count"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage" />
+    </div>
+
+    @if (_isActionsMenuOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия с оплатой</h3>
+                        <p>@_selectedPaymentNumber</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick='() => ExecutePaymentAction("Просмотр")'>
+                    <i class="bi bi-eye"></i>
+                    Просмотр
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecutePaymentAction("Печать чека")'>
+                    <i class="bi bi-printer"></i>
+                    Печать чека
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecutePaymentAction("Возврат оплаты")'>
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Оформить возврат
+                </button>
+
+                <button class="menu-item" @onclick='() => ExecutePaymentAction("Связанный заказ")'>
+                    <i class="bi bi-receipt"></i>
+                    Открыть заказ
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick='() => ExecutePaymentAction("Удаление")'>
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseCreateModal">
+            <div class="payment-create-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Добавить оплату</h3>
+                        <p>Заполните данные платежа</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="payment-form-grid">
+                    <div class="payment-form-field">
+                        <label>Заказ <span>*</span></label>
+                        <select>
+                            <option>ORD-2026-001 — Петров А.С.</option>
+                            <option>ORD-2026-002 — Сидоров И.П.</option>
+                            <option>ORD-2026-003 — Кузнецова М.В.</option>
+                        </select>
+                    </div>
+
+                    <div class="payment-form-field">
+                        <label>Клиент</label>
+                        <input value="Петров А.С." readonly />
+                    </div>
+
+                    <div class="payment-form-field">
+                        <label>Тип оплаты <span>*</span></label>
+                        <select>
+                            <option>Аренда</option>
+                            <option>Залог</option>
+                            <option>Штраф</option>
+                            <option>Возврат</option>
+                        </select>
+                    </div>
+
+                    <div class="payment-form-field">
+                        <label>Способ оплаты <span>*</span></label>
+                        <select>
+                            <option>Наличные</option>
+                            <option>Банковская карта</option>
+                            <option>Безналичный расчет</option>
+                            <option>Онлайн-оплата</option>
+                        </select>
+                    </div>
+
+                    <div class="payment-form-field">
+                        <label>Дата оплаты <span>*</span></label>
+                        <input type="date" />
+                    </div>
+
+                    <div class="payment-form-field">
+                        <label>Сумма <span>*</span></label>
+                        <input value="2 100 ₽" />
+                    </div>
+
+                    <div class="payment-form-field wide">
+                        <label>Комментарий</label>
+                        <textarea placeholder="Комментарий к оплате"></textarea>
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="CreatePayment">
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить оплату
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code
+{
+    private const int PageSize = 5;
+
+    private int _currentPage = 1;
+    private bool _isActionsMenuOpen;
+    private bool _isCreateModalOpen;
+    private string? _selectedPaymentNumber;
+
+    private readonly List<PaymentRow> _payments =
+    [
+        new()
+        {
+            Number = "PAY-2026-001",
+            OrderNumber = "ORD-2026-001",
+            CustomerName = "Петров А.С.",
+            PaymentType = "Аренда",
+            PaymentMethod = "Банковская карта",
+            PaymentDate = new DateOnly(2026, 6, 1),
+            Amount = 2100,
+            Status = "Оплачено"
+        },
+        new()
+        {
+            Number = "PAY-2026-002",
+            OrderNumber = "ORD-2026-001",
+            CustomerName = "Петров А.С.",
+            PaymentType = "Залог",
+            PaymentMethod = "Наличные",
+            PaymentDate = new DateOnly(2026, 6, 1),
+            Amount = 5000,
+            Status = "Оплачено"
+        },
+        new()
+        {
+            Number = "PAY-2026-003",
+            OrderNumber = "ORD-2026-002",
+            CustomerName = "Сидоров И.П.",
+            PaymentType = "Возврат",
+            PaymentMethod = "Банковская карта",
+            PaymentDate = new DateOnly(2026, 6, 3),
+            Amount = 3000,
+            Status = "Возвращено"
+        }
+    ];
+
+    private IEnumerable<PaymentRow> PagedPayments =>
+        _payments
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling(_payments.Count / (double)PageSize);
+
+    private int PageStart =>
+        _payments.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+
+    private int PageEnd =>
+        Math.Min(_currentPage * PageSize, _payments.Count);
+    
+    private string MonthlyPaymentsAmount =>
+        $"{_payments.Sum(x => x.Amount):N0} ₽";
+
+    private void OpenActionsMenu(string paymentNumber)
+    {
+        _selectedPaymentNumber = paymentNumber;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+        _selectedPaymentNumber = null;
+    }
+
+    private void ExecutePaymentAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedPaymentNumber))
+            return;
+
+        NotificationService.Info($"{action}: {_selectedPaymentNumber}");
+
+        CloseActionsMenu();
+    }
+
+    private void OpenCreateModal()
+    {
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+    }
+
+    private void CreatePayment()
+    {
+        NotificationService.Success("Оплата успешно сохранена");
+        _isCreateModalOpen = false;
+    }
+
+    private void GoToPage(int page)
+    {
+        _currentPage = page;
+    }
+
+    private static string GetPaymentStatusClass(string status)
+    {
+        return status switch
+        {
+            "Оплачено" => "status-badge available",
+            "Возвращено" => "status-badge info",
+            "Ожидает оплаты" => "status-badge neutral",
+            "Ошибка" => "status-badge danger",
+            _ => "status-badge"
+        };
+    }
+
+    private sealed class PaymentRow
+    {
+        public string Number { get; set; } = string.Empty;
+        public string OrderNumber { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string PaymentType { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = string.Empty;
+        public DateOnly PaymentDate { get; set; }
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+}

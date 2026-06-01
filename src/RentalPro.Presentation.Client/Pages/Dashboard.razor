@@ -1,0 +1,270 @@
+﻿@page "/dashboard"
+@layout AdminLayout
+
+<div class="dashboard">
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon stat-blue">
+                <i class="bi bi-briefcase"></i>
+            </div>
+
+            <div>
+                <div class="stat-title">Инструментов</div>
+                <div class="stat-value">125</div>
+                <div class="stat-change positive">+12 за неделю</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-green">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+
+            <div>
+                <div class="stat-title">В аренде</div>
+                <div class="stat-value">34</div>
+                <div class="stat-change positive">+5 за сегодня</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-orange">
+                <i class="bi bi-wrench"></i>
+            </div>
+
+            <div>
+                <div class="stat-title">На ремонте</div>
+                <div class="stat-value">3</div>
+                <div class="stat-change negative">-1 за неделю</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-purple">
+                <i class="bi bi-people"></i>
+            </div>
+
+            <div>
+                <div class="stat-title">Клиенты</div>
+                <div class="stat-value">248</div>
+                <div class="stat-change positive">+18 за месяц</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-cyan">
+                <i class="bi bi-wallet2"></i>
+            </div>
+
+            <div>
+                <div class="stat-title">Выручка за месяц</div>
+                <div class="stat-value">345 000 ₽</div>
+                <div class="stat-change positive">+16%</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dashboard-actions">
+
+        <button class="dashboard-action-card">
+            <i class="bi bi-receipt"></i>
+            <span>Новый заказ</span>
+        </button>
+
+        <button class="dashboard-action-card">
+            <i class="bi bi-person-plus"></i>
+            <span>Новый клиент</span>
+        </button>
+
+        <button class="dashboard-action-card">
+            <i class="bi bi-exclamation-circle"></i>
+            <span>Новый штраф</span>
+        </button>
+
+        <button class="dashboard-action-card">
+            <i class="bi bi-cart-plus"></i>
+            <span>Новая закупка</span>
+        </button>
+
+    </div>
+
+    <div class="dashboard-row">
+
+        <div class="dashboard-card dashboard-large">
+
+            <div class="card-header">
+                <h3>Последние заказы</h3>
+
+                <button class="card-button">
+                    Все заказы
+                </button>
+            </div>
+
+            <table class="orders-table">
+                <thead>
+                <tr>
+                    <th>№ заказа</th>
+                    <th>Клиент</th>
+                    <th>Инструментов</th>
+                    <th>Дата выдачи</th>
+                    <th>Дата возврата</th>
+                    <th>Статус</th>
+                    <th>Сумма</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr>
+                    <td>00057</td>
+                    <td>Петров А.С.</td>
+                    <td>3</td>
+                    <td>14.05.2024</td>
+                    <td>21.05.2024</td>
+                    <td><span class="badge-success">Активен</span></td>
+                    <td>3 500 ₽</td>
+                </tr>
+
+                <tr>
+                    <td>00056</td>
+                    <td>Сидоров И.П.</td>
+                    <td>1</td>
+                    <td>14.05.2024</td>
+                    <td>16.05.2024</td>
+                    <td><span class="badge-success">Активен</span></td>
+                    <td>800 ₽</td>
+                </tr>
+
+                <tr>
+                    <td>00055</td>
+                    <td>Кузнецов М.В.</td>
+                    <td>2</td>
+                    <td>13.05.2024</td>
+                    <td>20.05.2024</td>
+                    <td><span class="badge-success">Активен</span></td>
+                    <td>2 400 ₽</td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <div class="dashboard-card">
+
+            <h3>Статусы инструментов</h3>
+
+            <div class="status-chart">
+                <div class="chart-circle">
+                    <div class="chart-center">
+                        <div>125</div>
+                        <small>Всего</small>
+                    </div>
+                </div>
+
+                <div class="chart-legend">
+                    <div>
+                        <span class="dot green"></span>
+                        <span>Доступен</span>
+                        <strong>88</strong>
+                    </div>
+
+                    <div>
+                        <span class="dot blue"></span>
+                        <span>В аренде</span>
+                        <strong>34</strong>
+                    </div>
+
+                    <div>
+                        <span class="dot orange"></span>
+                        <span>На ремонте</span>
+                        <strong>3</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="dashboard-row bottom-row">
+
+        <div class="dashboard-card">
+
+            <div class="card-header">
+                <h3>Ближайшие возвраты</h3>
+            </div>
+
+            <div class="returns-list">
+
+                <div class="return-item">
+                    <div>
+                        <strong>Петров А.С.</strong>
+                        <span>Перфоратор Bosch GBH 2-26</span>
+                    </div>
+                    <span class="return-date today">Сегодня</span>
+                </div>
+
+                <div class="return-item">
+                    <div>
+                        <strong>Иванов И.П.</strong>
+                        <span>Шуруповерт Makita DF331D</span>
+                    </div>
+                    <span class="return-date tomorrow">Завтра</span>
+                </div>
+
+                <div class="return-item">
+                    <div>
+                        <strong>Сидоров А.В.</strong>
+                        <span>Болгарка DeWalt DWE4217</span>
+                    </div>
+                    <span class="return-date">03.06.2026</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="dashboard-card">
+
+            <div class="card-header">
+                <h3>Просроченные возвраты</h3>
+            </div>
+
+            <div class="overdue-list">
+
+                <div class="overdue-item">
+                    <div>
+                        <strong>Петров А.С.</strong>
+                        <span>Перфоратор Bosch GBH 2-26</span>
+                    </div>
+
+                    <span class="overdue-days">3 дня</span>
+                </div>
+
+                <div class="overdue-item">
+                    <div>
+                        <strong>Иванов И.П.</strong>
+                        <span>Шуруповерт Makita DF331D</span>
+                    </div>
+
+                    <span class="overdue-days">2 дня</span>
+                </div>
+
+                <div class="overdue-item">
+                    <div>
+                        <strong>Сидоров А.В.</strong>
+                        <span>Болгарка DeWalt DWE4217</span>
+                    </div>
+
+                    <span class="overdue-days">1 день</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
