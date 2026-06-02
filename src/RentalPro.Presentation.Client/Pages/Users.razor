@@ -450,8 +450,9 @@
 
             RecalculateCurrentPageStats();
         }
-        catch
+        catch(Exception ex)
         {
+            Console.WriteLine(ex);
             _users = [];
             _totalCount = 0;
             _totalPages = 0;

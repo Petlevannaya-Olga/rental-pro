@@ -11,10 +11,10 @@ using RentalPro.Shared;
 
 namespace RentalPro.Infrastructure.Repositories;
 
-public sealed class UserRepository(
+public sealed class UsersRepository(
     ApplicationDbContext dbContext,
     ITransactionManager transactionManager,
-    ILogger<UserRepository> logger)
+    ILogger<UsersRepository> logger)
     : IUserRepository
 {
     public async Task<Result<User, Error>> AddAsync(
@@ -219,16 +219,16 @@ public sealed class UserRepository(
                     .ThenBy(x => x.FullName.MiddleName),
 
             "login" => descending
-                ? query.OrderByDescending(x => x.Login.Value)
-                : query.OrderBy(x => x.Login.Value),
+                ? query.OrderByDescending(x => x.Login)
+                : query.OrderBy(x => x.Login),
 
             "email" => descending
-                ? query.OrderByDescending(x => x.Email.Value)
-                : query.OrderBy(x => x.Email.Value),
+                ? query.OrderByDescending(x => x.Email)
+                : query.OrderBy(x => x.Email),
 
             "phonenumber" => descending
-                ? query.OrderByDescending(x => x.PhoneNumber.Value)
-                : query.OrderBy(x => x.PhoneNumber.Value),
+                ? query.OrderByDescending(x => x.PhoneNumber)
+                : query.OrderBy(x => x.PhoneNumber),
 
             "status" => descending
                 ? query.OrderByDescending(x => x.IsActive)

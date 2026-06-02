@@ -8,9 +8,9 @@ using RentalPro.Shared;
 
 namespace RentalPro.Infrastructure.Repositories;
 
-public sealed class RoleRepository(
+public sealed class RolesRepository(
     ApplicationDbContext dbContext,
-    ILogger<RoleRepository> logger)
+    ILogger<RolesRepository> logger)
     : IRoleRepository
 {
     public async Task<Result<Role?, Error>> GetByAsync(

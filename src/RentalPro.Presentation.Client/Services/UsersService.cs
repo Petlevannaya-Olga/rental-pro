@@ -1,4 +1,6 @@
-﻿using System.Net.Http.Json;
+﻿using System.Diagnostics;
+using System.Net.Http.Json;
+using System.Reflection.PortableExecutable;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.WebUtilities;
 using RentalPro.Contracts.Users;
@@ -26,6 +28,8 @@ public sealed class UsersService(HttpClient httpClient)
                 ["page"] = request.Page.ToString(),
                 ["pageSize"] = request.PageSize.ToString()
             });
+        
+        Console.WriteLine(url);
 
         return await httpClient.GetFromJsonAsync<PagedResult<UserDto>>(
             url,

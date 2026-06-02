@@ -338,6 +338,10 @@
     background: #f8fafc;
 }
 
+.table-paging-left {
+    margin-right: 24px;
+}
+
 .paging-button.active {
     background: #0b63f6;
     border-color: #0b63f6;
