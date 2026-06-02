@@ -31,8 +31,8 @@ public sealed class UsersService(HttpClient httpClient)
             url,
             cancellationToken);
     }
-    
-    public async Task<Result<UserDto, Errors>> CreateUserAsync(
+
+    public async Task<Result<UserOnlyNameDto, Errors>> CreateUserAsync(
         CreateUserRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -56,20 +56,20 @@ public sealed class UsersService(HttpClient httpClient)
             ]);
         }
 
-        var user = await response.Content.ReadFromJsonAsync<UserDto>(
+        var responseData = await response.Content.ReadFromJsonAsync<CreateUserResponse>(
             cancellationToken);
 
-        if (user is null)
+        if (responseData is null)
         {
             return new Errors(
             [
                 new Error(
                     "user.create.empty.response",
-                    "Server returned empty user",
+                    "Server returned empty response",
                     ErrorType.FAILURE)
             ]);
         }
 
-        return user;
+        return new UserOnlyNameDto(request.LastName, request.FirstName, request.MiddleName);
     }
 }

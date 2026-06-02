@@ -221,23 +221,23 @@
             </table>
         }
 
-        <div class="table-footer">
-            <div class="bulk-generate-panel">
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="_totalPages"
+                    TotalItems="_totalCount"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage">
+
+            <LeftContent>
                 <button class="secondary-button"
                         type="button"
                         @onclick="GenerateFakeUsers">
                     <i class="bi bi-magic"></i>
                     Заполнить тестовыми данными
                 </button>
-            </div>
-        </div>
-        
-        <Pagination CurrentPage="_currentPage"
-                    TotalPages="_totalPages"
-                    TotalItems="_totalCount"
-                    StartItem="PageStart"
-                    EndItem="PageEnd"
-                    PageChanged="GoToPage"/>
+            </LeftContent>
+
+        </Pagination>
     </div>
 
     @if (_isCreateModalOpen)
@@ -660,7 +660,7 @@
             }
 
             createdCount++;
-            NotificationService.Success($"Пользователь {result.Value.FullName} успешно создан");
+            NotificationService.Success($"Пользователь {result.Value.LastName} {result.Value.FirstName} {result.Value.MiddleName} успешно создан");
         }
 
         NotificationService.Success($"Создано пользователей: {createdCount} из {count}");

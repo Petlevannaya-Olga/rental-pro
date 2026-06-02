@@ -14,9 +14,9 @@ public sealed class CreateUserCommandHandler(
     IUserRepository userRepository,
     IRoleRepository roleRepository,
     ILogger<CreateUserCommandHandler> logger)
-    : ICommandHandler<UserDto, CreateUserCommand>
+    : ICommandHandler<Guid, CreateUserCommand>
 {
-    public async Task<Result<UserDto, Errors>> Handle(
+    public async Task<Result<Guid, Errors>> Handle(
         Users.CreateUserCommand.CreateUserCommand command,
         CancellationToken cancellationToken)
     {
@@ -177,6 +177,6 @@ public sealed class CreateUserCommandHandler(
             "User created successfully. UserId = {UserId}",
             userResult.Value.Id.Value);
 
-        return userResult.Value.ToDto();
+        return userResult.Value.Id.Value;
     }
 }

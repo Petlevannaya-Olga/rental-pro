@@ -360,3 +360,19 @@
     color: #64748b;
     font-weight: 600;
 }
+
+.table-paging {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+}
+
+.table-paging-left {
+    display: flex;
+    align-items: center;
+}
+
+.paging-actions {
+    justify-self: end;
+}

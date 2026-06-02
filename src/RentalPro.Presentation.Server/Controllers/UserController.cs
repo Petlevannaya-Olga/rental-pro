@@ -11,7 +11,7 @@ namespace RentalPro.Presentation.Server.Controllers;
 [Route("api/users")]
 public sealed class UsersController(
     IQueryHandler<PagedResult<UserDto>, GetUsersQuery> getUsersHandler,
-    ICommandHandler<UserDto, CreateUserCommand> createUserHandler)
+    ICommandHandler<Guid, CreateUserCommand> createUserHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -59,7 +59,7 @@ public sealed class UsersController(
             return BadRequest(result.Error);
 
         return Created(
-            $"/api/users/{result.Value.Id}",
-            result.Value);
+            $"/api/users/{result.Value}",
+            new CreateUserResponse(result.Value));
     }
 }
