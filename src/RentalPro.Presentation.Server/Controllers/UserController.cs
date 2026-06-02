@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Users.CreateUserCommand;
 using RentalPro.Contracts.Users;
-using RentalPro.Domain.Users;
 using RentalPro.Shared;
 using RentalPro.Shared.Abstractions;
 using GetUsersQuery = RentalPro.Application.Users.GetUsersQuery.GetUsersQuery;

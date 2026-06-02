@@ -130,7 +130,6 @@
                     <th>Телефон</th>
                     <th>Статус</th>
                     <th>Дата создания</th>
-                    <th>Дата изменения</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -153,7 +152,6 @@
                         <td><div class="skeleton skeleton-line wide"></div></td>
                         <td><div class="skeleton skeleton-line medium"></div></td>
                         <td><div class="skeleton skeleton-badge"></div></td>
-                        <td><div class="skeleton skeleton-line medium"></div></td>
                         <td><div class="skeleton skeleton-line medium"></div></td>
                         <td><div class="skeleton skeleton-dot"></div></td>
                     </tr>
@@ -181,7 +179,6 @@
                     <th class="sortable-column" @onclick='() => ChangeSort("status")'>Статус <i
                             class="bi bi-arrow-down-up"></i></th>
                     <th class="sortable-column" @onclick='() => ChangeSort("createdat")'>Дата создания <i class="bi bi-arrow-down-up"></i></th>
-                    <th class="sortable-column" @onclick='() => ChangeSort("updatedat")'>Дата изменения<i class="bi bi-arrow-down-up"></i></th>
                     <th></th>
                 </tr>
                 </thead>
@@ -212,10 +209,6 @@
                         </td>
 
                         <td>@user.CreatedAt.ToString("dd.MM.yyyy")</td>
-
-                        <td>
-                            @(user.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-")
-                        </td>
 
                         <td class="actions-cell">
                             <button class="icon-button" @onclick="() => OpenActionsMenu(user.Login)">
@@ -388,7 +381,7 @@
     private int _blockedCount;
     private int _adminCount;
 
-    private bool _isLoading;
+    private bool _isLoading = true;
     private bool _isActionsMenuOpen;
     private bool _isCreateModalOpen;
 
@@ -459,6 +452,10 @@
         }
         catch
         {
+            _users = [];
+            _totalCount = 0;
+            _totalPages = 0;
+
             NotificationService.Error("Не удалось загрузить пользователей");
         }
         finally

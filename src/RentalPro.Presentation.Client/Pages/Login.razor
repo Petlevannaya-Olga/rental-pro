@@ -4,7 +4,7 @@
 @inject NavigationManager NavigationManager
 @inject AuthService AuthService
 
-<EditForm Model="_model" OnValidSubmit="HandleLogin">
+<EditForm Model="_model" OnValidSubmit="HandleLogin" autocomplete="off">
     <div class="login-page">
         <div class="login-background-hex"></div>
 
@@ -43,7 +43,10 @@
 
                         <InputText
                             @bind-Value="_model.Login"
-                            placeholder="Введите логин" />
+                            name="user-create-login"
+                            placeholder="Введите логин"
+                            autocomplete="off"
+                            spellcheck="false" />
                     </div>
                 </div>
 
@@ -58,7 +61,8 @@
                         <InputText
                             type="@(_showPassword ? "text" : "password")"
                             @bind-Value="_model.Password"
-                            placeholder="Введите пароль" />
+                            placeholder="Введите пароль"
+                            autocomplete="off" />
 
                         <button
                             type="button"
