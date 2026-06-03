@@ -19,7 +19,7 @@
                 ActiveCount="_activeCount"
                 AdminCount="_adminCount"
                 BlockedCount="_blockedCount"
-                AddUserClicked="OpenCreateModal" />
+                AddUserClicked="OpenCreateModal"/>
 
     <div class="users-table-card">
 
@@ -34,7 +34,7 @@
 
                         <input placeholder="ФИО, логин, email или телефон..."
                                value="@_search"
-                               @oninput="OnSearchChanged" />
+                               @oninput="OnSearchChanged"/>
                     </div>
                 </div>
 
@@ -127,12 +127,24 @@
                             </div>
                         </td>
 
-                        <td><div class="skeleton skeleton-line medium"></div></td>
-                        <td><div class="skeleton skeleton-line wide"></div></td>
-                        <td><div class="skeleton skeleton-line medium"></div></td>
-                        <td><div class="skeleton skeleton-badge"></div></td>
-                        <td><div class="skeleton skeleton-line medium"></div></td>
-                        <td><div class="skeleton skeleton-dot"></div></td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line wide"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-badge"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-dot"></div>
+                        </td>
                     </tr>
                 }
                 </tbody>
@@ -157,7 +169,8 @@
                             class="bi bi-arrow-down-up"></i></th>
                     <th class="sortable-column" @onclick='() => ChangeSort("status")'>Статус <i
                             class="bi bi-arrow-down-up"></i></th>
-                    <th class="sortable-column" @onclick='() => ChangeSort("createdat")'>Дата создания <i class="bi bi-arrow-down-up"></i></th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("createdat")'>Дата создания <i
+                            class="bi bi-arrow-down-up"></i></th>
                     <th></th>
                 </tr>
                 </thead>
@@ -284,7 +297,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="tool-form-actions modal-footer">
                     <button class="secondary-button "
                             type="button"
@@ -292,7 +305,7 @@
                         <i class="bi bi-magic"></i>
                         Заполнить тестовыми данными
                     </button>
-                    
+
                     <button class="secondary-button" type="button" @onclick="CloseCreateModal">
                         Отмена
                     </button>
@@ -300,6 +313,84 @@
                     <button class="primary-button" type="button" @onclick="CreateUser">
                         <i class="bi bi-check-lg"></i>
                         Сохранить пользователя
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (_isEditModalOpen)
+    {
+        <div class="actions-backdrop">
+            <div class="user-create-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Редактировать пользователя</h3>
+                        <p>Измените данные учетной записи</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseEditModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="user-form-grid">
+                    <div class="user-form-field">
+                        <label>Фамилия <span>*</span></label>
+                        <input @bind="_editUser.LastName" placeholder="Иванов"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Имя <span>*</span></label>
+                        <input @bind="_editUser.FirstName" placeholder="Иван"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Отчество <span>*</span></label>
+                        <input @bind="_editUser.MiddleName" placeholder="Иванович"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Логин <span>*</span></label>
+                        <input @bind="_editUser.Login" placeholder="ivanov"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Email <span>*</span></label>
+                        <input @bind="_editUser.Email" placeholder="ivanov@example.com"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Телефон <span>*</span></label>
+                        <input @bind="_editUser.PhoneNumber" placeholder="+79000000000"/>
+                    </div>
+
+                    <div class="user-form-field">
+                        <label>Роль <span>*</span></label>
+                        <select @bind="_editUser.RoleId">
+                            <option value="">Выберите роль</option>
+                            @foreach (var role in _roles)
+                            {
+                                <option value="@role.Id">@role.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="FillEditUserWithFakeData">
+                        <i class="bi bi-magic"></i>
+                        Заполнить тестовыми данными
+                    </button>
+
+                    <button class="secondary-button" type="button" @onclick="CloseEditModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="UpdateUser">
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить изменения
                     </button>
                 </div>
             </div>
@@ -324,7 +415,7 @@
                     <i class="bi bi-eye"></i>
                     Просмотр
                 </button>
-                
+
                 <button class="menu-item" @onclick="OpenEditModal">
                     <i class="bi bi-pencil"></i>
                     Редактировать
@@ -349,75 +440,75 @@
             </div>
         </div>
     }
-    
+
     @if (_isDetailsModalOpen && _selectedUser is not null)
-{
-    <div class="actions-backdrop">
-        <div class="user-details-modal" @onclick:stopPropagation="true">
-            <div class="actions-modal-header">
-                <div>
-                    <h3>Просмотр пользователя</h3>
-                    <p>@_selectedUser.FullName</p>
+    {
+        <div class="actions-backdrop">
+            <div class="user-details-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Просмотр пользователя</h3>
+                        <p>@_selectedUser.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseDetailsModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
 
-                <button type="button" @onclick="CloseDetailsModal">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
+                <div class="user-details-grid">
+                    <div>
+                        <span>ФИО</span>
+                        <strong>@_selectedUser.FullName</strong>
+                    </div>
 
-            <div class="user-details-grid">
-                <div>
-                    <span>ФИО</span>
-                    <strong>@_selectedUser.FullName</strong>
+                    <div>
+                        <span>Логин</span>
+                        <strong>@_selectedUser.Login</strong>
+                    </div>
+
+                    <div>
+                        <span>Email</span>
+                        <strong>@_selectedUser.Email</strong>
+                    </div>
+
+                    <div>
+                        <span>Телефон</span>
+                        <strong>@_selectedUser.PhoneNumber</strong>
+                    </div>
+
+                    <div>
+                        <span>Роль</span>
+                        <strong>@_selectedUser.RoleName</strong>
+                    </div>
+
+                    <div>
+                        <span>Статус</span>
+                        <strong class="@(_selectedUser.IsActive ? "status-active" : "status-blocked")">
+                            @(_selectedUser.IsActive ? "Активен" : "Заблокирован")
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Дата создания</span>
+                        <strong>@_selectedUser.CreatedAt.ToString("dd.MM.yyyy HH:mm")</strong>
+                    </div>
+
+                    <div>
+                        <span>Дата изменения</span>
+                        <strong>@(_selectedUser.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong>
+                    </div>
                 </div>
 
-                <div>
-                    <span>Логин</span>
-                    <strong>@_selectedUser.Login</strong>
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseDetailsModal">
+                        Закрыть
+                    </button>
                 </div>
-
-                <div>
-                    <span>Email</span>
-                    <strong>@_selectedUser.Email</strong>
-                </div>
-
-                <div>
-                    <span>Телефон</span>
-                    <strong>@_selectedUser.PhoneNumber</strong>
-                </div>
-
-                <div>
-                    <span>Роль</span>
-                    <strong>@_selectedUser.RoleName</strong>
-                </div>
-
-                <div>
-                    <span>Статус</span>
-                    <strong class="@(_selectedUser.IsActive ? "status-active" : "status-blocked")">
-                        @(_selectedUser.IsActive ? "Активен" : "Заблокирован")
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Дата создания</span>
-                    <strong>@_selectedUser.CreatedAt.ToString("dd.MM.yyyy HH:mm")</strong>
-                </div>
-
-                <div>
-                    <span>Дата изменения</span>
-                    <strong>@(_selectedUser.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong>
-                </div>
-            </div>
-
-            <div class="tool-form-actions modal-footer">
-                <button class="secondary-button" type="button" @onclick="CloseDetailsModal">
-                    Закрыть
-                </button>
             </div>
         </div>
-    </div>
-}
-    
+    }
+
     @if (_isBlockModalOpen && _selectedUser is not null)
     {
         <div class="actions-backdrop">
@@ -488,14 +579,16 @@
     private Guid? _roleId;
     private DateTime? _createdFrom;
     private DateTime? _createdTo;
-    
+
     private bool _isDetailsModalOpen;
     private UserDto? _selectedUser;
 
     private CreateUserFormModel _createUser = new();
 
+    private EditUserFormModel _editUser = new();
+
     private List<RoleDto> _roles = [];
-    
+
     private bool _isEditModalOpen;
     private bool _isChangePasswordModalOpen;
     private bool _isBlockModalOpen;
@@ -551,7 +644,7 @@
             _totalCount = result?.TotalCount ?? 0;
             _totalPages = result?.TotalPages ?? 0;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine(ex);
             _users = [];
@@ -709,12 +802,12 @@
             _ => $"{parts[0][0]}{parts[1][0]}".ToUpper()
         };
     }
-    
+
     private void GenerateFakeUser()
     {
         _createUser = FakeUserGeneratorService.Generate();
     }
-    
+
     private async Task GenerateFakeUsers()
     {
         if (_roles.Count == 0)
@@ -766,7 +859,7 @@
         await LoadUsersAsync();
         await LoadStatsAsync();
     }
-    
+
     private async Task ResetFilters()
     {
         _search = string.Empty;
@@ -779,7 +872,7 @@
 
         await LoadUsersAsync();
     }
-    
+
     private async Task OnSearchChanged(ChangeEventArgs e)
     {
         _search = e.Value?.ToString();
@@ -802,7 +895,7 @@
             // ignored
         }
     }
-    
+
     private async Task LoadStatsAsync()
     {
         try
@@ -822,7 +915,7 @@
             NotificationService.Error("Не удалось загрузить статистику пользователей");
         }
     }
-    
+
     private void OpenDetailsModal()
     {
         if (_selectedUser is null)
@@ -836,14 +929,34 @@
     {
         _isDetailsModalOpen = false;
     }
-    
+
     private void OpenEditModal()
     {
         if (_selectedUser is null)
             return;
 
+        var nameParts = _selectedUser.FullName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        _editUser = new EditUserFormModel
+        {
+            Id = _selectedUser.Id,
+            LastName = nameParts.Length > 0 ? nameParts[0] : string.Empty,
+            FirstName = nameParts.Length > 1 ? nameParts[1] : string.Empty,
+            MiddleName = nameParts.Length > 2 ? nameParts[2] : string.Empty,
+            Login = _selectedUser.Login,
+            Email = _selectedUser.Email,
+            PhoneNumber = _selectedUser.PhoneNumber,
+            RoleId = _selectedUser.RoleId
+        };
+
         _isActionsMenuOpen = false;
         _isEditModalOpen = true;
+    }
+
+    private void CloseEditModal()
+    {
+        _isEditModalOpen = false;
     }
 
     private void OpenChangePasswordModal()
@@ -877,7 +990,7 @@
         _isActionsMenuOpen = false;
         _isDeleteModalOpen = true;
     }
-    
+
     private async Task ToggleUserStatus()
     {
         if (_selectedUser is null)
@@ -904,5 +1017,46 @@
             NotificationService.Error(
                 $"Не удалось изменить статус пользователя: {ex.Message}");
         }
+    }
+
+    private async Task UpdateUser()
+    {
+        if (_editUser.RoleId is null)
+        {
+            NotificationService.Error("Выберите роль");
+            return;
+        }
+
+        var request = new UpdateUserRequest
+        {
+            LastName = _editUser.LastName,
+            FirstName = _editUser.FirstName,
+            MiddleName = _editUser.MiddleName,
+            Login = _editUser.Login,
+            Email = _editUser.Email,
+            PhoneNumber = _editUser.PhoneNumber,
+            RoleId = _editUser.RoleId.Value
+        };
+
+        await UsersApiClient.UpdateUserAsync(_editUser.Id, request);
+
+        NotificationService.Success("Пользователь обновлен");
+
+        CloseEditModal();
+
+        await LoadUsersAsync();
+        await LoadStatsAsync();
+    }
+    
+    private void FillEditUserWithFakeData()
+    {
+        var fakeUser = FakeUserGeneratorService.Generate();
+
+        _editUser.LastName = fakeUser.LastName;
+        _editUser.FirstName = fakeUser.FirstName;
+        _editUser.MiddleName = fakeUser.MiddleName;
+        _editUser.Login = fakeUser.Login;
+        _editUser.Email = fakeUser.Email;
+        _editUser.PhoneNumber = fakeUser.PhoneNumber;
     }
 }

@@ -106,4 +106,17 @@ public sealed class UsersService(HttpClient httpClient)
 
         response.EnsureSuccessStatusCode();
     }
+    
+    public async Task UpdateUserAsync(
+        Guid id,
+        UpdateUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/users/{id}",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+    }
 }

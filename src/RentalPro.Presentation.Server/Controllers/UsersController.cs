@@ -2,6 +2,7 @@
 using RentalPro.Application;
 using RentalPro.Application.Users.ChangeUserStatusCommand;
 using RentalPro.Application.Users.CreateUserCommand;
+using RentalPro.Application.Users.UpdateUserCommand;
 using RentalPro.Contracts.Users;
 using RentalPro.Domain.Users;
 using RentalPro.Shared;
@@ -16,7 +17,8 @@ public sealed class UsersController(
     IUsersReadRepository usersReadRepository,
     IQueryHandler<PagedResult<UserDto>, GetUsersQuery> getUsersHandler,
     ICommandHandler<Guid, CreateUserCommand> createUserHandler,
-    ICommandHandler<ChangeUserStatusCommand> changeUserStatusHandler)
+    ICommandHandler<ChangeUserStatusCommand> changeUserStatusHandler,
+    ICommandHandler<UpdateUserCommand> updateUserCommandHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -96,6 +98,32 @@ public sealed class UsersController(
             request.IsActive);
 
         var result = await changeUserStatusHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+    
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateUser(
+        Guid id,
+        [FromBody] UpdateUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateUserCommand(
+            id,
+            request.LastName,
+            request.FirstName,
+            request.MiddleName,
+            request.Login,
+            request.Email,
+            request.PhoneNumber,
+            request.RoleId);
+
+        var result = await updateUserCommandHandler.Handle(
             command,
             cancellationToken);
 

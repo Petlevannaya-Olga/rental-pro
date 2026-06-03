@@ -192,4 +192,52 @@ public sealed class User : AuditableEntity<UserId>
 
         return MarkDeleted(nameof(User));
     }
+    
+    public UnitResult<Error> Update(
+        string login,
+        string lastName,
+        string firstName,
+        string middleName,
+        string phoneNumber,
+        string email,
+        Guid roleId)
+    {
+        var loginResult = Login.Create(login);
+
+        if (loginResult.IsFailure)
+            return loginResult.Error;
+
+        var fullNameResult = FullName.Create(
+            lastName,
+            firstName,
+            middleName);
+
+        if (fullNameResult.IsFailure)
+            return fullNameResult.Error;
+
+        var phoneNumberResult = PhoneNumber.Create(phoneNumber);
+
+        if (phoneNumberResult.IsFailure)
+            return phoneNumberResult.Error;
+
+        var emailResult = Email.Create(email);
+
+        if (emailResult.IsFailure)
+            return emailResult.Error;
+
+        var roleIdResult = RoleId.Create(roleId);
+
+        if (roleIdResult.IsFailure)
+            return roleIdResult.Error;
+
+        Login = loginResult.Value;
+        FullName = fullNameResult.Value;
+        PhoneNumber = phoneNumberResult.Value;
+        Email = emailResult.Value;
+        RoleId = roleIdResult.Value;
+
+        MarkUpdated();
+
+        return UnitResult.Success<Error>();
+    }
 }
