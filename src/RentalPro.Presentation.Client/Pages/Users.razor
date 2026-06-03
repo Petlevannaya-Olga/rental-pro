@@ -549,6 +549,89 @@
             </div>
         </div>
     }
+    @if (_isChangePasswordModalOpen && _selectedUser is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="confirm-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Сменить пароль</h3>
+                        <p>@_selectedUser.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseChangePasswordModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="user-form-field">
+                    <label>Старый пароль <span>*</span></label>
+                    <input type="password"
+                           autocomplete="current-password"
+                           @bind="_oldPassword"
+                           placeholder="Введите старый пароль" />
+                </div>
+
+                <div class="user-form-field">
+                    <label>Новый пароль <span>*</span></label>
+                    <input type="password"
+                           autocomplete="new-password"
+                           @bind="_newPassword"
+                           placeholder="Введите новый пароль" />
+                </div>
+
+                <div class="user-form-field">
+                    <label>Подтвердите пароль <span>*</span></label>
+                    <input type="password"
+                           autocomplete="new-password"
+                           @bind="_confirmPassword"
+                           placeholder="Повторите новый пароль" />
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseChangePasswordModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="ChangePassword">
+                        Сохранить пароль
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (_isDeleteModalOpen && _selectedUser is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="confirm-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Удалить пользователя</h3>
+                        <p>@_selectedUser.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseDeleteModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <p class="confirm-text">
+                    Пользователь будет удален из списка и больше не сможет работать в системе.
+                    Продолжить?
+                </p>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseDeleteModal">
+                        Отмена
+                    </button>
+
+                    <button class="danger-button" type="button" @onclick="DeleteUser">
+                        Удалить
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code
@@ -593,6 +676,9 @@
     private bool _isChangePasswordModalOpen;
     private bool _isBlockModalOpen;
     private bool _isDeleteModalOpen;
+    private string _oldPassword = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _confirmPassword = string.Empty;
 
     private int PageStart =>
         _totalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
@@ -964,8 +1050,57 @@
         if (_selectedUser is null)
             return;
 
+        _newPassword = string.Empty;
         _isActionsMenuOpen = false;
         _isChangePasswordModalOpen = true;
+    }
+
+    private void CloseChangePasswordModal()
+    {
+        _isChangePasswordModalOpen = false;
+
+        _oldPassword = string.Empty;
+        _newPassword = string.Empty;
+        _confirmPassword = string.Empty;
+    }
+
+    private async Task ChangePassword()
+    {
+        if (_selectedUser is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_oldPassword) ||
+            string.IsNullOrWhiteSpace(_newPassword) ||
+            string.IsNullOrWhiteSpace(_confirmPassword))
+        {
+            NotificationService.Error("Заполните все поля");
+            return;
+        }
+
+        if (_newPassword != _confirmPassword)
+        {
+            NotificationService.Error("Новый пароль и подтверждение не совпадают");
+            return;
+        }
+
+        try
+        {
+            await UsersApiClient.ChangePasswordAsync(
+                _selectedUser.Id,
+                new ChangeUserPasswordRequest
+                {
+                    OldPassword = _oldPassword,
+                    NewPassword = _newPassword
+                });
+
+            NotificationService.Success("Пароль пользователя изменен");
+
+            CloseChangePasswordModal();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Error($"Не удалось изменить пароль: {ex.Message}");
+        }
     }
 
     private void OpenBlockModal()
@@ -989,6 +1124,38 @@
 
         _isActionsMenuOpen = false;
         _isDeleteModalOpen = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        _isDeleteModalOpen = false;
+    }
+
+    private async Task DeleteUser()
+    {
+        if (_selectedUser is null)
+            return;
+
+        try
+        {
+            await UsersApiClient.DeleteUserAsync(_selectedUser.Id);
+
+            NotificationService.Success("Пользователь удален");
+
+            CloseDeleteModal();
+
+            _selectedUser = null;
+            _selectedUserName = null;
+
+            _currentPage = 1;
+
+            await LoadUsersAsync();
+            await LoadStatsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Error($"Не удалось удалить пользователя: {ex.Message}");
+        }
     }
 
     private async Task ToggleUserStatus()

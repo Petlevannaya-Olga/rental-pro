@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application;
+using RentalPro.Application.Users.ChangeUserPasswordCommand;
 using RentalPro.Application.Users.ChangeUserStatusCommand;
 using RentalPro.Application.Users.CreateUserCommand;
+using RentalPro.Application.Users.DeleteUserCommand;
 using RentalPro.Application.Users.UpdateUserCommand;
 using RentalPro.Contracts.Users;
 using RentalPro.Domain.Users;
@@ -18,7 +20,9 @@ public sealed class UsersController(
     IQueryHandler<PagedResult<UserDto>, GetUsersQuery> getUsersHandler,
     ICommandHandler<Guid, CreateUserCommand> createUserHandler,
     ICommandHandler<ChangeUserStatusCommand> changeUserStatusHandler,
-    ICommandHandler<UpdateUserCommand> updateUserCommandHandler)
+    ICommandHandler<UpdateUserCommand> updateUserCommandHandler,
+    ICommandHandler<ChangeUserPasswordCommand> changeUserPasswordHandler,
+    ICommandHandler<DeleteUserCommand> deleteUserHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -124,6 +128,44 @@ public sealed class UsersController(
             request.RoleId);
 
         var result = await updateUserCommandHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+    
+    [HttpPatch("{id:guid}/password")]
+    public async Task<IActionResult> ChangePassword(
+        Guid id,
+        [FromBody] ChangeUserPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ChangeUserPasswordCommand(
+            id,
+            request.OldPassword,
+            request.NewPassword);
+
+        var result = await changeUserPasswordHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+    
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteUser(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new DeleteUserCommand(id);
+
+        var result = await deleteUserHandler.Handle(
             command,
             cancellationToken);
 

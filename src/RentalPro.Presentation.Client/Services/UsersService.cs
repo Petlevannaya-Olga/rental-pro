@@ -119,4 +119,28 @@ public sealed class UsersService(HttpClient httpClient)
 
         response.EnsureSuccessStatusCode();
     }
+    
+    public async Task ChangePasswordAsync(
+        Guid userId,
+        ChangeUserPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PatchAsJsonAsync(
+            $"api/users/{userId}/password",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+    }
+    
+    public async Task DeleteUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync(
+            $"api/users/{userId}",
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+    }
 }
