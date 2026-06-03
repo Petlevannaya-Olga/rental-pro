@@ -1,0 +1,38 @@
+<div class="users-stats">
+
+    <StatCard Title="Всего"
+              Value="@TotalCount.ToString()"
+              Icon="bi bi-people"
+              Color="blue" />
+
+    <StatCard Title="Активные"
+              Value="@ActiveCount.ToString()"
+              Icon="bi bi-person-check"
+              Color="green" />
+
+    <StatCard Title="Администраторы"
+              Value="@AdminCount.ToString()"
+              Icon="bi bi-person-gear"
+              Color="orange" />
+
+    <StatCard Title="Заблокированные"
+              Value="@BlockedCount.ToString()"
+              Icon="bi bi-person-x"
+              Color="red" />
+
+    <button class="users-add-card"
+            @onclick="AddUserClicked">
+        <i class="bi bi-plus-lg"></i>
+        <span>Добавить пользователя</span>
+    </button>
+
+</div>
+
+@code {
+    [Parameter] public int TotalCount { get; set; }
+    [Parameter] public int ActiveCount { get; set; }
+    [Parameter] public int AdminCount { get; set; }
+    [Parameter] public int BlockedCount { get; set; }
+
+    [Parameter] public EventCallback AddUserClicked { get; set; }
+}

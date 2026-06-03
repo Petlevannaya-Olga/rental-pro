@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, JwtTokenService>();
         
         services.AddScoped<IUserRepository, UsersRepository>();
+        services.AddScoped<IUsersReadRepository, UsersReadRepository>();
         services.AddScoped<IRoleRepository, RolesRepository>();
         
         services.AddScoped<ITransactionManager, TransactionManager>();

@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RentalPro.Application;
+using RentalPro.Application.Users.ChangeUserStatusCommand;
 using RentalPro.Application.Users.CreateUserCommand;
 using RentalPro.Contracts.Users;
+using RentalPro.Domain.Users;
 using RentalPro.Shared;
 using RentalPro.Shared.Abstractions;
 using GetUsersQuery = RentalPro.Application.Users.GetUsersQuery.GetUsersQuery;
@@ -10,8 +13,10 @@ namespace RentalPro.Presentation.Server.Controllers;
 [ApiController]
 [Route("api/users")]
 public sealed class UsersController(
+    IUsersReadRepository usersReadRepository,
     IQueryHandler<PagedResult<UserDto>, GetUsersQuery> getUsersHandler,
-    ICommandHandler<Guid, CreateUserCommand> createUserHandler)
+    ICommandHandler<Guid, CreateUserCommand> createUserHandler,
+    ICommandHandler<ChangeUserStatusCommand> changeUserStatusHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -61,5 +66,42 @@ public sealed class UsersController(
         return Created(
             $"/api/users/{result.Value}",
             new CreateUserResponse(result.Value));
+    }
+    
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats(
+        CancellationToken cancellationToken)
+    {
+        var result = await usersReadRepository.GetStatsAsync(cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+    
+    [HttpPatch("{id:guid}/status")]
+    public async Task<IActionResult> ChangeStatus(
+        Guid id,
+        [FromBody] ChangeUserStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userIdResult = UserId.Create(id);
+
+        if (userIdResult.IsFailure)
+            return BadRequest(userIdResult.Error);
+
+        var command = new ChangeUserStatusCommand(
+            userIdResult.Value,
+            request.IsActive);
+
+        var result = await changeUserStatusHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
     }
 }

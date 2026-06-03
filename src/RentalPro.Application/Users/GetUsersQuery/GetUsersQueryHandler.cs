@@ -7,7 +7,7 @@ using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Application.Users.GetUsersQuery;
 
-public sealed class GetUsersQueryHandler(IUserRepository userRepository)
+public sealed class GetUsersQueryHandler(IUsersReadRepository userRepository)
     : IQueryHandler<PagedResult<UserDto>, GetUsersQuery>
 {
     public async Task<Result<PagedResult<UserDto>, Errors>> Handle(
@@ -41,6 +41,6 @@ public sealed class GetUsersQueryHandler(IUserRepository userRepository)
         if (usersResult.IsFailure)
             return usersResult.Error;
 
-        return usersResult.Value.ToDto();
+        return usersResult.Value;
     }
 }

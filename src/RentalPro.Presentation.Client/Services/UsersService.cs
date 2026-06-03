@@ -14,21 +14,31 @@ public sealed class UsersService(HttpClient httpClient)
         GetUsersRequest request,
         CancellationToken cancellationToken = default)
     {
-        var url = QueryHelpers.AddQueryString(
-            "api/users",
-            new Dictionary<string, string?>
-            {
-                ["search"] = request.Search,
-                ["roleId"] = request.RoleId?.ToString(),
-                ["isActive"] = request.IsActive?.ToString(),
-                ["createdFrom"] = request.CreatedFrom?.ToString("yyyy-MM-dd"),
-                ["createdTo"] = request.CreatedTo?.ToString("yyyy-MM-dd"),
-                ["sortBy"] = request.SortBy,
-                ["descending"] = request.Descending.ToString(),
-                ["page"] = request.Page.ToString(),
-                ["pageSize"] = request.PageSize.ToString()
-            });
-        
+        var parameters = new Dictionary<string, string?>
+        {
+            ["sortBy"] = request.SortBy,
+            ["descending"] = request.Descending.ToString(),
+            ["page"] = request.Page.ToString(),
+            ["pageSize"] = request.PageSize.ToString()
+        };
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+            parameters["search"] = request.Search.Trim();
+
+        if (request.RoleId.HasValue)
+            parameters["roleId"] = request.RoleId.Value.ToString();
+
+        if (request.IsActive.HasValue)
+            parameters["isActive"] = request.IsActive.Value.ToString();
+
+        if (request.CreatedFrom.HasValue)
+            parameters["createdFrom"] = request.CreatedFrom.Value.ToString("yyyy-MM-dd");
+
+        if (request.CreatedTo.HasValue)
+            parameters["createdTo"] = request.CreatedTo.Value.ToString("yyyy-MM-dd");
+
+        var url = QueryHelpers.AddQueryString("api/users", parameters);
+
         Console.WriteLine(url);
 
         return await httpClient.GetFromJsonAsync<PagedResult<UserDto>>(
@@ -60,8 +70,7 @@ public sealed class UsersService(HttpClient httpClient)
             ]);
         }
 
-        var responseData = await response.Content.ReadFromJsonAsync<CreateUserResponse>(
-            cancellationToken);
+        var responseData = await response.Content.ReadFromJsonAsync<CreateUserResponse>(cancellationToken);
 
         if (responseData is null)
         {
@@ -75,5 +84,26 @@ public sealed class UsersService(HttpClient httpClient)
         }
 
         return new UserOnlyNameDto(request.LastName, request.FirstName, request.MiddleName);
+    }
+    
+    public async Task<UserStatsDto?> GetStatsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await httpClient.GetFromJsonAsync<UserStatsDto>(
+            "api/users/stats",
+            cancellationToken);
+    }
+    
+    public async Task ChangeStatusAsync(
+        Guid userId,
+        bool isActive,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PatchAsJsonAsync(
+            $"api/users/{userId}/status",
+            new ChangeUserStatusRequest(isActive),
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
     }
 }

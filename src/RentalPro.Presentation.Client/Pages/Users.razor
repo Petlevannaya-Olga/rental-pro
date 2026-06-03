@@ -9,40 +9,17 @@
 
 @using RentalPro.Contracts.Roles
 @using RentalPro.Presentation.Client.Models.Users
+@using RentalPro.Presentation.Client.Shared.Components.Users
 @inject RolesService RolesService
 @inject FakeUserGeneratorService FakeUserGeneratorService
 
 <div class="users-page">
 
-    <div class="users-stats">
-
-        <StatCard Title="Всего"
-                  Value="@_totalCount.ToString()"
-                  Icon="bi bi-people"
-                  Color="blue" />
-
-        <StatCard Title="Активные"
-                  Value="@_activeCount.ToString()"
-                  Icon="bi bi-person-check"
-                  Color="green" />
-
-        <StatCard Title="Администраторы"
-                  Value="@_adminCount.ToString()"
-                  Icon="bi bi-person-gear"
-                  Color="orange" />
-
-        <StatCard Title="Заблокированные"
-                  Value="@_blockedCount.ToString()"
-                  Icon="bi bi-person-x"
-                  Color="red" />
-
-        <button class="users-add-card"
-                @onclick="OpenCreateModal">
-            <i class="bi bi-plus-lg"></i>
-            <span>Добавить пользователя</span>
-        </button>
-
-    </div>
+    <UsersStats TotalCount="_totalCount"
+                ActiveCount="_activeCount"
+                AdminCount="_adminCount"
+                BlockedCount="_blockedCount"
+                AddUserClicked="OpenCreateModal" />
 
     <div class="users-table-card">
 
@@ -56,8 +33,8 @@
                         <i class="bi bi-search"></i>
 
                         <input placeholder="ФИО, логин, email или телефон..."
-                               @bind="_search"
-                               @bind:event="oninput" />
+                               value="@_search"
+                               @oninput="OnSearchChanged" />
                     </div>
                 </div>
 
@@ -73,7 +50,7 @@
                 <div class="filter-group">
                     <label>Роль</label>
 
-                    <select class="filter-select" @bind="_roleId">
+                    <select class="filter-select" @bind="_roleId" @bind:after="ApplyFilters">
                         <option value="">Все роли</option>
 
                         @foreach (var role in _roles)
@@ -86,7 +63,7 @@
                 <div class="filter-group">
                     <label>Статус</label>
 
-                    <select class="filter-select" @bind="_status">
+                    <select class="filter-select" @bind="_status" @bind:after="ApplyFilters">
                         <option value="">Все статусы</option>
                         <option value="active">Активен</option>
                         <option value="blocked">Заблокирован</option>
@@ -99,13 +76,15 @@
                     <div class="date-range-row">
                         <input type="date"
                                class="filter-select date-input"
-                               @bind="_createdFrom"/>
+                               @bind="_createdFrom"
+                               @bind:after="ApplyFilters"/>
 
                         <span class="date-separator">—</span>
 
                         <input type="date"
                                class="filter-select date-input"
-                               @bind="_createdTo"/>
+                               @bind="_createdTo"
+                               @bind:after="ApplyFilters"/>
                     </div>
                 </div>
 
@@ -211,7 +190,7 @@
                         <td>@user.CreatedAt.ToString("dd.MM.yyyy")</td>
 
                         <td class="actions-cell">
-                            <button class="icon-button" @onclick="() => OpenActionsMenu(user.Login)">
+                            <button class="icon-button" @onclick="() => OpenActionsMenu(user)">
                                 <i class="bi bi-three-dots"></i>
                             </button>
                         </td>
@@ -333,7 +312,7 @@
                 <div class="actions-modal-header">
                     <div>
                         <h3>Действия с пользователем</h3>
-                        <p>@_selectedLogin</p>
+                        <p>@_selectedUserName</p>
                     </div>
 
                     <button type="button" @onclick="CloseActionsMenu">
@@ -341,27 +320,141 @@
                     </button>
                 </div>
 
-                <button class="menu-item" @onclick='() => ExecuteAction("Редактирование")'>
+                <button class="menu-item" @onclick='OpenDetailsModal'>
+                    <i class="bi bi-eye"></i>
+                    Просмотр
+                </button>
+                
+                <button class="menu-item" @onclick="OpenEditModal">
                     <i class="bi bi-pencil"></i>
                     Редактировать
                 </button>
 
-                <button class="menu-item" @onclick='() => ExecuteAction("Смена пароля")'>
+                <button class="menu-item" @onclick="OpenChangePasswordModal">
                     <i class="bi bi-key"></i>
                     Сменить пароль
                 </button>
 
-                <button class="menu-item" @onclick='() => ExecuteAction("Блокировка")'>
+                <button class="menu-item" @onclick="OpenBlockModal">
                     <i class="bi bi-person-x"></i>
-                    Заблокировать
+                    @(_selectedUser?.IsActive == true ? "Заблокировать" : "Разблокировать")
                 </button>
 
                 <div class="menu-divider"></div>
 
-                <button class="menu-item menu-danger" @onclick='() => ExecuteAction("Удаление")'>
+                <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
                     <i class="bi bi-trash"></i>
                     Удалить
                 </button>
+            </div>
+        </div>
+    }
+    
+    @if (_isDetailsModalOpen && _selectedUser is not null)
+{
+    <div class="actions-backdrop">
+        <div class="user-details-modal" @onclick:stopPropagation="true">
+            <div class="actions-modal-header">
+                <div>
+                    <h3>Просмотр пользователя</h3>
+                    <p>@_selectedUser.FullName</p>
+                </div>
+
+                <button type="button" @onclick="CloseDetailsModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="user-details-grid">
+                <div>
+                    <span>ФИО</span>
+                    <strong>@_selectedUser.FullName</strong>
+                </div>
+
+                <div>
+                    <span>Логин</span>
+                    <strong>@_selectedUser.Login</strong>
+                </div>
+
+                <div>
+                    <span>Email</span>
+                    <strong>@_selectedUser.Email</strong>
+                </div>
+
+                <div>
+                    <span>Телефон</span>
+                    <strong>@_selectedUser.PhoneNumber</strong>
+                </div>
+
+                <div>
+                    <span>Роль</span>
+                    <strong>@_selectedUser.RoleName</strong>
+                </div>
+
+                <div>
+                    <span>Статус</span>
+                    <strong class="@(_selectedUser.IsActive ? "status-active" : "status-blocked")">
+                        @(_selectedUser.IsActive ? "Активен" : "Заблокирован")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Дата создания</span>
+                    <strong>@_selectedUser.CreatedAt.ToString("dd.MM.yyyy HH:mm")</strong>
+                </div>
+
+                <div>
+                    <span>Дата изменения</span>
+                    <strong>@(_selectedUser.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong>
+                </div>
+            </div>
+
+            <div class="tool-form-actions modal-footer">
+                <button class="secondary-button" type="button" @onclick="CloseDetailsModal">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+}
+    
+    @if (_isBlockModalOpen && _selectedUser is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="confirm-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>@(_selectedUser.IsActive ? "Заблокировать пользователя" : "Разблокировать пользователя")</h3>
+                        <p>@_selectedUser.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseBlockModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <p class="confirm-text">
+                    @if (_selectedUser.IsActive)
+                    {
+                        <text>Пользователь не сможет войти в систему. Продолжить?</text>
+                    }
+                    else
+                    {
+                        <text>Пользователь снова сможет работать в системе. Продолжить?</text>
+                    }
+                </p>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseBlockModal">
+                        Отмена
+                    </button>
+
+                    <button class="@(_selectedUser.IsActive ? "danger-button" : "primary-button")"
+                            type="button"
+                            @onclick="ToggleUserStatus">
+                        @(_selectedUser.IsActive ? "Заблокировать" : "Разблокировать")
+                    </button>
+                </div>
             </div>
         </div>
     }
@@ -369,6 +462,7 @@
 
 @code
 {
+    private CancellationTokenSource? _searchCts;
     private const int PageSize = 5;
 
     private List<UserDto> _users = [];
@@ -385,7 +479,7 @@
     private bool _isActionsMenuOpen;
     private bool _isCreateModalOpen;
 
-    private string? _selectedLogin;
+    private string? _selectedUserName;
     private string? _search;
     private string? _status;
     private string? _sortBy = "createdat";
@@ -394,10 +488,18 @@
     private Guid? _roleId;
     private DateTime? _createdFrom;
     private DateTime? _createdTo;
+    
+    private bool _isDetailsModalOpen;
+    private UserDto? _selectedUser;
 
     private CreateUserFormModel _createUser = new();
 
     private List<RoleDto> _roles = [];
+    
+    private bool _isEditModalOpen;
+    private bool _isChangePasswordModalOpen;
+    private bool _isBlockModalOpen;
+    private bool _isDeleteModalOpen;
 
     private int PageStart =>
         _totalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
@@ -408,6 +510,7 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadRolesAsync();
+        await LoadStatsAsync();
         await LoadUsersAsync();
     }
 
@@ -447,8 +550,6 @@
             _users = result?.Items.ToList() ?? [];
             _totalCount = result?.TotalCount ?? 0;
             _totalPages = result?.TotalPages ?? 0;
-
-            RecalculateCurrentPageStats();
         }
         catch(Exception ex)
         {
@@ -503,31 +604,25 @@
         };
     }
 
-    private void RecalculateCurrentPageStats()
+    private void OpenActionsMenu(UserDto user)
     {
-        _activeCount = _users.Count(x => x.IsActive);
-        _blockedCount = _users.Count(x => !x.IsActive);
-        _adminCount = _users.Count(x => x.RoleName == "Администратор");
-    }
-
-    private void OpenActionsMenu(string login)
-    {
-        _selectedLogin = login;
+        _selectedUser = user;
+        _selectedUserName = user.FullName;
         _isActionsMenuOpen = true;
     }
 
     private void CloseActionsMenu()
     {
         _isActionsMenuOpen = false;
-        _selectedLogin = null;
+        _selectedUserName = null;
     }
 
     private void ExecuteAction(string action)
     {
-        if (string.IsNullOrWhiteSpace(_selectedLogin))
+        if (string.IsNullOrWhiteSpace(_selectedUserName))
             return;
 
-        NotificationService.Info($"{action}: {_selectedLogin}");
+        NotificationService.Info($"{action}: {_selectedUserName}");
 
         CloseActionsMenu();
     }
@@ -587,6 +682,7 @@
             _currentPage = 1;
 
             await LoadUsersAsync();
+            await LoadStatsAsync();
         }
         catch (Exception ex)
         {
@@ -668,6 +764,7 @@
 
         _currentPage = 1;
         await LoadUsersAsync();
+        await LoadStatsAsync();
     }
     
     private async Task ResetFilters()
@@ -681,5 +778,131 @@
         _currentPage = 1;
 
         await LoadUsersAsync();
+    }
+    
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString();
+
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        try
+        {
+            await Task.Delay(500, token);
+
+            _currentPage = 1;
+            await LoadUsersAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            // ignored
+        }
+    }
+    
+    private async Task LoadStatsAsync()
+    {
+        try
+        {
+            var stats = await UsersApiClient.GetStatsAsync();
+
+            if (stats is null)
+                return;
+
+            _totalCount = stats.TotalCount;
+            _activeCount = stats.ActiveCount;
+            _adminCount = stats.AdminCount;
+            _blockedCount = stats.BlockedCount;
+        }
+        catch
+        {
+            NotificationService.Error("Не удалось загрузить статистику пользователей");
+        }
+    }
+    
+    private void OpenDetailsModal()
+    {
+        if (_selectedUser is null)
+            return;
+
+        _isActionsMenuOpen = false;
+        _isDetailsModalOpen = true;
+    }
+
+    private void CloseDetailsModal()
+    {
+        _isDetailsModalOpen = false;
+    }
+    
+    private void OpenEditModal()
+    {
+        if (_selectedUser is null)
+            return;
+
+        _isActionsMenuOpen = false;
+        _isEditModalOpen = true;
+    }
+
+    private void OpenChangePasswordModal()
+    {
+        if (_selectedUser is null)
+            return;
+
+        _isActionsMenuOpen = false;
+        _isChangePasswordModalOpen = true;
+    }
+
+    private void OpenBlockModal()
+    {
+        if (_selectedUser is null)
+            return;
+
+        _isActionsMenuOpen = false;
+        _isBlockModalOpen = true;
+    }
+
+    private void CloseBlockModal()
+    {
+        _isBlockModalOpen = false;
+    }
+
+    private void OpenDeleteModal()
+    {
+        if (_selectedUser is null)
+            return;
+
+        _isActionsMenuOpen = false;
+        _isDeleteModalOpen = true;
+    }
+    
+    private async Task ToggleUserStatus()
+    {
+        if (_selectedUser is null)
+            return;
+
+        try
+        {
+            await UsersApiClient.ChangeStatusAsync(
+                _selectedUser.Id,
+                !_selectedUser.IsActive);
+
+            NotificationService.Success(
+                _selectedUser.IsActive
+                    ? "Пользователь успешно заблокирован"
+                    : "Пользователь успешно разблокирован");
+
+            CloseBlockModal();
+
+            await LoadUsersAsync();
+            await LoadStatsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Error(
+                $"Не удалось изменить статус пользователя: {ex.Message}");
+        }
     }
 }
