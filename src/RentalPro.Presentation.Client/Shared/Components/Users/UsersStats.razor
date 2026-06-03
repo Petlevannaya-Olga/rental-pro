@@ -1,26 +1,43 @@
 <div class="users-stats">
 
-    <StatCard Title="Всего"
-              Value="@TotalCount.ToString()"
-              Icon="bi bi-people"
-              Color="blue" />
+    <button class="stat-card-button @(ActiveFilter == "all" ? "active" : "")"
+            type="button"
+            @onclick='() => OnFilterSelected.InvokeAsync("all")'>
+        <StatCard Title="Всего"
+                  Value="@TotalCount.ToString()"
+                  Icon="bi bi-people"
+                  Color="blue" />
+    </button>
 
-    <StatCard Title="Активные"
-              Value="@ActiveCount.ToString()"
-              Icon="bi bi-person-check"
-              Color="green" />
+    <button class="stat-card-button @(ActiveFilter == "active" ? "active" : "")"
+            type="button"
+            @onclick='() => OnFilterSelected.InvokeAsync("active")'>
+        <StatCard Title="Активные"
+                  Value="@ActiveCount.ToString()"
+                  Icon="bi bi-person-check"
+                  Color="green" />
+    </button>
 
-    <StatCard Title="Администраторы"
-              Value="@AdminCount.ToString()"
-              Icon="bi bi-person-gear"
-              Color="orange" />
+    <button class="stat-card-button @(ActiveFilter == "admin" ? "active" : "")"
+            type="button"
+            @onclick='() => OnFilterSelected.InvokeAsync("admin")'>
+        <StatCard Title="Администраторы"
+                  Value="@AdminCount.ToString()"
+                  Icon="bi bi-person-gear"
+                  Color="orange" />
+    </button>
 
-    <StatCard Title="Заблокированные"
-              Value="@BlockedCount.ToString()"
-              Icon="bi bi-person-x"
-              Color="red" />
+    <button class="stat-card-button @(ActiveFilter == "blocked" ? "active" : "")"
+            type="button"
+            @onclick='() => OnFilterSelected.InvokeAsync("blocked")'>
+        <StatCard Title="Заблокированные"
+                  Value="@BlockedCount.ToString()"
+                  Icon="bi bi-person-x"
+                  Color="red" />
+    </button>
 
     <button class="users-add-card"
+            type="button"
             @onclick="AddUserClicked">
         <i class="bi bi-plus-lg"></i>
         <span>Добавить пользователя</span>
@@ -35,4 +52,8 @@
     [Parameter] public int BlockedCount { get; set; }
 
     [Parameter] public EventCallback AddUserClicked { get; set; }
+
+    [Parameter] public EventCallback<string> OnFilterSelected { get; set; }
+
+    [Parameter] public string ActiveFilter { get; set; } = "all";
 }

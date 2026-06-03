@@ -15,11 +15,14 @@
 
 <div class="users-page">
 
-    <UsersStats TotalCount="_totalCount"
-                ActiveCount="_activeCount"
-                AdminCount="_adminCount"
-                BlockedCount="_blockedCount"
-                AddUserClicked="OpenCreateModal"/>
+    <UsersStats
+        TotalCount="_totalCount"
+        ActiveCount="_activeCount"
+        AdminCount="_adminCount"
+        BlockedCount="_blockedCount"
+        ActiveFilter="_activeStatsFilter"
+        OnFilterSelected="ApplyStatsFilter"
+        AddUserClicked="OpenCreateModal" />
 
     <div class="users-table-card">
 
@@ -658,6 +661,7 @@
     private string? _status;
     private string? _sortBy = "createdat";
     private bool _descending = true;
+    private bool? _isActive;
 
     private Guid? _roleId;
     private DateTime? _createdFrom;
@@ -679,6 +683,7 @@
     private string _oldPassword = string.Empty;
     private string _newPassword = string.Empty;
     private string _confirmPassword = string.Empty;
+    private string _activeStatsFilter = "all";
 
     private int PageStart =>
         _totalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
@@ -1225,5 +1230,41 @@
         _editUser.Login = fakeUser.Login;
         _editUser.Email = fakeUser.Email;
         _editUser.PhoneNumber = fakeUser.PhoneNumber;
+    }
+    
+    private async Task ApplyStatsFilter(string filter)
+    {
+        _activeStatsFilter = filter;
+
+        switch (filter)
+        {
+            case "all":
+                _roleId = null;
+                _status = null;
+                break;
+
+            case "active":
+                _roleId = null;
+                _status = "active";
+                break;
+
+            case "blocked":
+                _roleId = null;
+                _status = "blocked";
+                break;
+
+            case "admin":
+                _status = null;
+
+                var adminRole = _roles
+                    .FirstOrDefault(x => x.Name == "Администратор");
+
+                _roleId = adminRole?.Id;
+                break;
+        }
+
+        _currentPage = 1;
+
+        await LoadUsersAsync();
     }
 }
