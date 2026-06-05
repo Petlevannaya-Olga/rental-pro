@@ -1,10 +1,9 @@
 using System.Linq.Expressions;
 using CSharpFunctionalExtensions;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using RentalPro.Application;
 using RentalPro.Application.Database;
+using RentalPro.Application.Repositories;
 using RentalPro.Domain.Payments;
 using RentalPro.Shared;
 
@@ -122,20 +121,5 @@ public sealed class PaymentMethodsRepository(
                 "get.payment.method.from.db.exception",
                 "Failed to retrieve payment method");
         }
-    }
-
-    private static SqlException? GetSqlException(Exception exception)
-    {
-        Exception? current = exception;
-
-        while (current is not null)
-        {
-            if (current is SqlException sqlException)
-                return sqlException;
-
-            current = current.InnerException;
-        }
-
-        return null;
     }
 }

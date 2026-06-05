@@ -1,10 +1,9 @@
-using RentalPro.Domain.Payments;
-
-namespace RentalPro.Application;
-
 using System.Linq.Expressions;
 using CSharpFunctionalExtensions;
-using Shared;
+using RentalPro.Domain.Payments;
+using RentalPro.Shared;
+
+namespace RentalPro.Application.Repositories;
 
 public interface IPaymentMethodsRepository
 {

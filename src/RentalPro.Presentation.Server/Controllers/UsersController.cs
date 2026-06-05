@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application;
+using RentalPro.Application.Repositories;
 using RentalPro.Application.Services;
 using RentalPro.Application.Users.ChangeUserPasswordCommand;
 using RentalPro.Application.Users.ChangeUserStatusCommand;

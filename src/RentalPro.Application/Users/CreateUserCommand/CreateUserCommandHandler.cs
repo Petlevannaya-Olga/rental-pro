@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using RentalPro.Application.Extensions;
+using RentalPro.Application.Repositories;
 using RentalPro.Contracts.Users;
 using RentalPro.Domain.Roles;
 using RentalPro.Domain.Users;

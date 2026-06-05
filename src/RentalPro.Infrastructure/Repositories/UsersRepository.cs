@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RentalPro.Application;
 using RentalPro.Application.Database;
+using RentalPro.Application.Repositories;
 using RentalPro.Domain.Roles;
 using RentalPro.Domain.Users;
 using RentalPro.Shared;

@@ -20,5 +20,7 @@ builder.Services.AddScoped<RolesService>();
 builder.Services.AddScoped<FakeUserGeneratorService>();
 builder.Services.AddScoped<DictionariesService>();
 builder.Services.AddScoped<PaymentMethodsService>();
+builder.Services.AddScoped<PaymentTypesService>();
+builder.Services.AddScoped<OrderStatusesService>();
 
 await builder.Build().RunAsync();

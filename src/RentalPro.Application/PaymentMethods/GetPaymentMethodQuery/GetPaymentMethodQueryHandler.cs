@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using RentalPro.Application.Extensions;
+using RentalPro.Application.Repositories;
 using RentalPro.Contracts.PaymentMethods;
 using RentalPro.Shared;
 using RentalPro.Shared.Abstractions;

@@ -54,3 +54,66 @@
     font-weight: 800;
     color: #0f172a;
 }
+
+.danger-icon-button {
+    color: #dc2626;
+}
+
+.danger-icon-button:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.actions-cell {
+    width: 120px;
+}
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.action-button {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #f1f5f9;
+    color: #475569;
+
+    cursor: pointer;
+
+    transition: all .15s ease;
+}
+
+.action-button:hover {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.action-button-danger:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.action-button i {
+    font-size: 16px;
+}
+
+.action-button {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+}
+
+.table-actions {
+    gap: 6px;
+}

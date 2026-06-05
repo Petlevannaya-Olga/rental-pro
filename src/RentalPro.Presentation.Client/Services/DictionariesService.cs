@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using CSharpFunctionalExtensions;
 using RentalPro.Contracts.PaymentMethods;
+using RentalPro.Contracts.PaymentTypes;
 using RentalPro.Presentation.Client.Extensions;
 using RentalPro.Shared;
 
@@ -15,6 +16,16 @@ public sealed class DictionariesService(HttpClient httpClient)
             "api/payment-methods",
             "payment.methods.load.failed",
             "Не удалось загрузить способы оплаты",
+            cancellationToken);
+    }
+    
+    public Task<Result<List<PaymentTypeDto>, Errors>> GetPaymentTypesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return GetListAsync<PaymentTypeDto>(
+            "api/payment-types",
+            "payment.types.load.failed",
+            "Не удалось загрузить типы оплат",
             cancellationToken);
     }
 

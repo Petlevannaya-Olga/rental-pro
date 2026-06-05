@@ -90,6 +90,7 @@ using (var scope = app.Services.CreateScope())
     await UserSeeder.SeedAsync(context);
     await PaymentMethodSeeder.SeedAsync(context);
     await PaymentTypeSeeder.SeedAsync(context);
+    await OrderStatusesSeeder.SeedAsync(context);
 }
 
 app.Run();

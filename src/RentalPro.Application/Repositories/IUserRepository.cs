@@ -1,10 +1,9 @@
 ﻿using System.Linq.Expressions;
 using CSharpFunctionalExtensions;
-using RentalPro.Domain.Roles;
 using RentalPro.Domain.Users;
 using RentalPro.Shared;
 
-namespace RentalPro.Application;
+namespace RentalPro.Application.Repositories;
 
 public interface IUserRepository
 {

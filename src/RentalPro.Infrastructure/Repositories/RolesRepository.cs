@@ -3,6 +3,7 @@ using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RentalPro.Application;
+using RentalPro.Application.Repositories;
 using RentalPro.Domain.Roles;
 using RentalPro.Shared;
 

@@ -3,7 +3,7 @@ using CSharpFunctionalExtensions;
 using RentalPro.Domain.Roles;
 using RentalPro.Shared;
 
-namespace RentalPro.Application;
+namespace RentalPro.Application.Repositories;
 
 public interface IRoleRepository
 {

@@ -2,6 +2,8 @@
 @layout AdminLayout
 
 @using RentalPro.Contracts.PaymentMethods
+@using RentalPro.Contracts.PaymentTypes
+@using RentalPro.Contracts.OrderStatuses
 @using RentalPro.Presentation.Client.Models.Dictionaries
 @using RentalPro.Presentation.Client.Services
 
@@ -9,6 +11,8 @@
 @inject DictionariesService DictionariesService
 @inject NotificationService NotificationService
 @inject PaymentMethodsService PaymentMethodsService
+@inject PaymentTypesService PaymentTypesService
+@inject OrderStatusesService OrderStatusesService
 
 <div class="dictionary-details-page">
 
@@ -39,7 +43,7 @@
                     <th>Название</th>
                     <th>Дата создания</th>
                     <th>Дата изменения</th>
-                    <th></th>
+                    <th>Действия</th>
                 </tr>
                 </thead>
 
@@ -47,18 +51,10 @@
                 @for (var i = 0; i < 5; i++)
                 {
                     <tr>
-                        <td>
-                            <div class="skeleton skeleton-text"></div>
-                        </td>
-                        <td>
-                            <div class="skeleton skeleton-date"></div>
-                        </td>
-                        <td>
-                            <div class="skeleton skeleton-date"></div>
-                        </td>
-                        <td>
-                            <div class="skeleton skeleton-icon"></div>
-                        </td>
+                        <td><div class="skeleton skeleton-text"></div></td>
+                        <td><div class="skeleton skeleton-date"></div></td>
+                        <td><div class="skeleton skeleton-date"></div></td>
+                        <td><div class="skeleton skeleton-icon"></div></td>
                     </tr>
                 }
                 </tbody>
@@ -76,7 +72,7 @@
                     <th>Название</th>
                     <th>Дата создания</th>
                     <th>Дата изменения</th>
-                    <th></th>
+                    <th>Действия</th>
                 </tr>
                 </thead>
 
@@ -84,16 +80,25 @@
                 @foreach (var item in _items)
                 {
                     <tr>
-                        <td>
-                            <strong>@item.Name</strong>
-                        </td>
+                        <td><strong>@item.Name</strong></td>
                         <td>@item.CreatedAt</td>
                         <td>@item.UpdatedAt</td>
                         <td class="actions-cell">
-                            <button class="icon-button"
-                                    @onclick="() => OpenActionsMenu(item)">
-                                <i class="bi bi-three-dots"></i>
-                            </button>
+                            <div class="table-actions">
+
+                                <button class="action-button"
+                                        title="Редактировать"
+                                        @onclick="() => OpenEditModal(item)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <button class="action-button action-button-danger"
+                                        title="Удалить"
+                                        @onclick="() => OpenDeleteModal(item)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+
+                            </div>
                         </td>
                     </tr>
                 }
@@ -102,36 +107,6 @@
         }
     </div>
 
-    @if (_isActionsMenuOpen && _selectedItem is not null)
-    {
-        <div class="actions-backdrop" @onclick="CloseActionsMenu">
-            <div class="actions-modal" @onclick:stopPropagation="true">
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Действия с записью</h3>
-                        <p>@_selectedItem.Name</p>
-                    </div>
-
-                    <button type="button" @onclick="CloseActionsMenu">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-                <button class="menu-item" @onclick="OpenEditModal">
-                    <i class="bi bi-pencil"></i>
-                    Редактировать
-                </button>
-
-                <div class="menu-divider"></div>
-
-                <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
-                    <i class="bi bi-trash"></i>
-                    Удалить
-                </button>
-            </div>
-        </div>
-    }
-
     @if (_isEditModalOpen && _selectedItem is not null)
     {
         <div class="actions-backdrop" @onclick="CloseEditModal">
@@ -139,7 +114,7 @@
 
                 <div class="actions-modal-header">
                     <div>
-                        <h3>Редактировать способ оплаты</h3>
+                        <h3>Редактировать запись</h3>
                         <p>@_selectedItem.Name</p>
                     </div>
 
@@ -158,7 +133,7 @@
                         Отмена
                     </button>
 
-                    <button class="primary-button" type="button" @onclick="UpdatePaymentMethod">
+                    <button class="primary-button" type="button" @onclick="UpdateDictionaryItem">
                         Сохранить
                     </button>
                 </div>
@@ -166,6 +141,7 @@
             </div>
         </div>
     }
+
     @if (_isDeleteModalOpen && _selectedItem is not null)
     {
         <div class="actions-backdrop" @onclick="CloseDeleteModal">
@@ -191,7 +167,7 @@
                         Отмена
                     </button>
 
-                    <button class="danger-button" type="button" @onclick="DeletePaymentMethod">
+                    <button class="danger-button" type="button" @onclick="DeleteDictionaryItem">
                         Удалить
                     </button>
                 </div>
@@ -199,7 +175,7 @@
             </div>
         </div>
     }
-    
+
     @if (_isCreateModalOpen)
     {
         <div class="actions-backdrop" @onclick="CloseCreateModal">
@@ -207,7 +183,7 @@
 
                 <div class="actions-modal-header">
                     <div>
-                        <h3>Добавить способ оплаты</h3>
+                        <h3>Добавить запись</h3>
                         <p>Создание новой записи справочника</p>
                     </div>
 
@@ -231,7 +207,7 @@
 
                     <button class="primary-button"
                             type="button"
-                            @onclick="CreatePaymentMethod">
+                            @onclick="CreateDictionaryItem">
                         Сохранить
                     </button>
                 </div>
@@ -249,12 +225,11 @@
     private List<DictionaryItem> _items = [];
     private DictionaryItem? _selectedItem;
 
-    private bool _isActionsMenuOpen;
     private bool _isEditModalOpen;
     private bool _isDeleteModalOpen;
     private bool _isCreateModalOpen;
-    private string _createName = string.Empty;
 
+    private string _createName = string.Empty;
     private string _editName = string.Empty;
 
     private string DictionaryTitle => DictionaryCode switch
@@ -280,19 +255,36 @@
     {
         _isLoading = true;
         _items = [];
+        _selectedItem = null;
 
-        if (DictionaryCode != "payment-methods")
+        switch (DictionaryCode)
         {
-            _isLoading = false;
-            NotificationService.Error("Этот справочник пока не подключен");
-            return;
+            case "payment-methods":
+                await LoadPaymentMethodsAsync();
+                break;
+
+            case "payment-types":
+                await LoadPaymentTypesAsync();
+                break;
+
+            case "order-statuses":
+                await LoadOrderStatusesAsync();
+                break;
+
+            default:
+                NotificationService.Error("Этот справочник пока не подключен");
+                break;
         }
 
+        _isLoading = false;
+    }
+
+    private async Task LoadPaymentMethodsAsync()
+    {
         var result = await DictionariesService.GetPaymentMethodsAsync();
 
         if (result.IsFailure)
         {
-            _isLoading = false;
             NotificationService.Error(result.Error.Message);
             return;
         }
@@ -304,8 +296,44 @@
                 x.CreatedAt.ToString("dd.MM.yyyy"),
                 x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
             .ToList();
+    }
 
-        _isLoading = false;
+    private async Task LoadPaymentTypesAsync()
+    {
+        var result = await DictionariesService.GetPaymentTypesAsync();
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _items = result.Value
+            .Select(x => new DictionaryItem(
+                x.Id,
+                x.Name,
+                x.CreatedAt.ToString("dd.MM.yyyy"),
+                x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
+            .ToList();
+    }
+
+    private async Task LoadOrderStatusesAsync()
+    {
+        var result = await OrderStatusesService.GetOrderStatusesAsync();
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _items = result.Value
+            .Select(x => new DictionaryItem(
+                x.Id,
+                x.Name,
+                x.CreatedAt.ToString("dd.MM.yyyy"),
+                x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
+            .ToList();
     }
 
     private void GoBack()
@@ -324,26 +352,11 @@
         _isCreateModalOpen = false;
         _createName = string.Empty;
     }
-    
-    private void OpenActionsMenu(DictionaryItem item)
+
+    private void OpenEditModal(DictionaryItem item)
     {
         _selectedItem = item;
-        _isActionsMenuOpen = true;
-    }
-
-    private void CloseActionsMenu()
-    {
-        _isActionsMenuOpen = false;
-    }
-
-    private void OpenEditModal()
-    {
-        if (_selectedItem is null)
-            return;
-
-        _editName = _selectedItem.Name;
-
-        _isActionsMenuOpen = false;
+        _editName = item.Name;
         _isEditModalOpen = true;
     }
 
@@ -353,16 +366,44 @@
         _editName = string.Empty;
     }
 
-    private void OpenDeleteModal()
+    private void OpenDeleteModal(DictionaryItem item)
     {
-        if (_selectedItem is null)
-            return;
-
-        _isActionsMenuOpen = false;
+        _selectedItem = item;
         _isDeleteModalOpen = true;
     }
 
-    private async Task UpdatePaymentMethod()
+    private void CloseDeleteModal()
+    {
+        _isDeleteModalOpen = false;
+    }
+
+    private async Task CreateDictionaryItem()
+    {
+        if (string.IsNullOrWhiteSpace(_createName))
+        {
+            NotificationService.Error("Введите название");
+            return;
+        }
+
+        var name = _createName.Trim();
+
+        switch (DictionaryCode)
+        {
+            case "payment-methods":
+                await CreatePaymentMethod(name);
+                break;
+
+            case "payment-types":
+                await CreatePaymentType(name);
+                break;
+
+            case "order-statuses":
+                await CreateOrderStatus(name);
+                break;
+        }
+    }
+
+    private async Task UpdateDictionaryItem()
     {
         if (_selectedItem is null)
             return;
@@ -373,9 +414,71 @@
             return;
         }
 
+        var name = _editName.Trim();
+
+        switch (DictionaryCode)
+        {
+            case "payment-methods":
+                await UpdatePaymentMethod(name);
+                break;
+
+            case "payment-types":
+                await UpdatePaymentType(name);
+                break;
+
+            case "order-statuses":
+                await UpdateOrderStatus(name);
+                break;
+        }
+    }
+
+    private async Task DeleteDictionaryItem()
+    {
+        if (_selectedItem is null)
+            return;
+
+        switch (DictionaryCode)
+        {
+            case "payment-methods":
+                await DeletePaymentMethod();
+                break;
+
+            case "payment-types":
+                await DeletePaymentType();
+                break;
+
+            case "order-statuses":
+                await DeleteOrderStatus();
+                break;
+        }
+    }
+
+    private async Task CreatePaymentMethod(string name)
+    {
+        var result = await PaymentMethodsService.CreatePaymentMethodAsync(
+            new CreatePaymentMethodRequest(name));
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Способ оплаты создан");
+
+        CloseCreateModal();
+
+        await LoadDictionaryAsync();
+    }
+
+    private async Task UpdatePaymentMethod(string name)
+    {
+        if (_selectedItem is null)
+            return;
+
         var result = await PaymentMethodsService.UpdatePaymentMethodAsync(
             _selectedItem.Id,
-            new UpdatePaymentMethodRequest(_editName.Trim()));
+            new UpdatePaymentMethodRequest(name));
 
         if (result.IsFailure)
         {
@@ -388,11 +491,6 @@
         CloseEditModal();
 
         await LoadDictionaryAsync();
-    }
-    
-    private void CloseDeleteModal()
-    {
-        _isDeleteModalOpen = false;
     }
 
     private async Task DeletePaymentMethod()
@@ -413,21 +511,13 @@
 
         CloseDeleteModal();
 
-        _selectedItem = null;
-
         await LoadDictionaryAsync();
     }
-    
-    private async Task CreatePaymentMethod()
-    {
-        if (string.IsNullOrWhiteSpace(_createName))
-        {
-            NotificationService.Error("Введите название");
-            return;
-        }
 
-        var result = await PaymentMethodsService.CreatePaymentMethodAsync(
-            new CreatePaymentMethodRequest(_createName.Trim()));
+    private async Task CreatePaymentType(string name)
+    {
+        var result = await PaymentTypesService.CreatePaymentTypeAsync(
+            new CreatePaymentTypeRequest(name));
 
         if (result.IsFailure)
         {
@@ -435,9 +525,113 @@
             return;
         }
 
-        NotificationService.Success("Способ оплаты создан");
+        NotificationService.Success("Тип оплаты создан");
 
         CloseCreateModal();
+
+        await LoadDictionaryAsync();
+    }
+
+    private async Task UpdatePaymentType(string name)
+    {
+        if (_selectedItem is null)
+            return;
+
+        var result = await PaymentTypesService.UpdatePaymentTypeAsync(
+            _selectedItem.Id,
+            new UpdatePaymentTypeRequest(name));
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Тип оплаты обновлен");
+
+        CloseEditModal();
+
+        await LoadDictionaryAsync();
+    }
+
+    private async Task DeletePaymentType()
+    {
+        if (_selectedItem is null)
+            return;
+
+        var result = await PaymentTypesService.DeletePaymentTypeAsync(
+            _selectedItem.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Тип оплаты удален");
+
+        CloseDeleteModal();
+
+        await LoadDictionaryAsync();
+    }
+
+    private async Task CreateOrderStatus(string name)
+    {
+        var result = await OrderStatusesService.CreateOrderStatusAsync(
+            new CreateOrderStatusRequest(name));
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Статус заказа создан");
+
+        CloseCreateModal();
+
+        await LoadDictionaryAsync();
+    }
+
+    private async Task UpdateOrderStatus(string name)
+    {
+        if (_selectedItem is null)
+            return;
+
+        var result = await OrderStatusesService.UpdateOrderStatusAsync(
+            _selectedItem.Id,
+            new UpdateOrderStatusRequest(name));
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Статус заказа обновлен");
+
+        CloseEditModal();
+
+        await LoadDictionaryAsync();
+    }
+
+    private async Task DeleteOrderStatus()
+    {
+        if (_selectedItem is null)
+            return;
+
+        var result = await OrderStatusesService.DeleteOrderStatusAsync(
+            _selectedItem.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Статус заказа удален");
+
+        CloseDeleteModal();
 
         await LoadDictionaryAsync();
     }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RentalPro.Application;
 using RentalPro.Application.Auth;
 using RentalPro.Application.Database;
+using RentalPro.Application.Repositories;
 using RentalPro.Application.Services;
 using RentalPro.Infrastructure.Auth;
 using RentalPro.Infrastructure.Database;
@@ -27,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<IUsersReadRepository, UsersReadRepository>();
         services.AddScoped<IRoleRepository, RolesRepository>();
         services.AddScoped<IPaymentMethodsRepository, PaymentMethodsRepository>();
+        services.AddScoped<IPaymentTypesRepository, PaymentTypesRepository>();
+        services.AddScoped<IOrderStatusesRepository, OrderStatusesRepository>();
         
         services.AddScoped<ITransactionManager, TransactionManager>();
         
