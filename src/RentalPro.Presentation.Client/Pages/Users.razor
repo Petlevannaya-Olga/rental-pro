@@ -41,7 +41,7 @@
                     </div>
                 </div>
 
-                <button class="secondary-button">
+                <button class="secondary-button" @onclick="ExportUsers">
                     <i class="bi bi-download"></i>
                     Экспорт
                 </button>
@@ -1266,5 +1266,21 @@
         _currentPage = 1;
 
         await LoadUsersAsync();
+    }
+    
+    private async Task ExportUsers()
+    {
+        var request = new ExportUsersRequest
+        {
+            Search = _search,
+            RoleId = _roleId,
+            IsActive = GetIsActiveFilter(),
+            CreatedFrom = _createdFrom,
+            CreatedTo = _createdTo,
+            SortBy = _sortBy,
+            Descending = _descending
+        };
+
+        await UsersApiClient.ExportUsersAsync(request);
     }
 }

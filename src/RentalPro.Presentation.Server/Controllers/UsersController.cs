@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application;
+using RentalPro.Application.Services;
 using RentalPro.Application.Users.ChangeUserPasswordCommand;
 using RentalPro.Application.Users.ChangeUserStatusCommand;
 using RentalPro.Application.Users.CreateUserCommand;
 using RentalPro.Application.Users.DeleteUserCommand;
 using RentalPro.Application.Users.UpdateUserCommand;
 using RentalPro.Contracts.Users;
+using RentalPro.Domain.Roles;
 using RentalPro.Domain.Users;
 using RentalPro.Shared;
 using RentalPro.Shared.Abstractions;
@@ -17,6 +19,7 @@ namespace RentalPro.Presentation.Server.Controllers;
 [Route("api/users")]
 public sealed class UsersController(
     IUsersReadRepository usersReadRepository,
+    IUsersExportService usersExportService,
     IQueryHandler<PagedResult<UserDto>, GetUsersQuery> getUsersHandler,
     ICommandHandler<Guid, CreateUserCommand> createUserHandler,
     ICommandHandler<ChangeUserStatusCommand> changeUserStatusHandler,
@@ -173,5 +176,45 @@ public sealed class UsersController(
             return BadRequest(result.Error);
 
         return NoContent();
+    }
+    
+    [HttpGet("export")]
+    public async Task<IActionResult> ExportUsers(
+        [FromQuery] ExportUsersRequest request,
+        CancellationToken cancellationToken)
+    {
+        RoleId? roleId = null;
+
+        if (request.RoleId.HasValue)
+        {
+            var roleIdResult = RoleId.Create(request.RoleId.Value);
+
+            if (roleIdResult.IsFailure)
+                return BadRequest(roleIdResult.Error);
+
+            roleId = roleIdResult.Value;
+        }
+
+        var usersResult = await usersReadRepository.GetForExportAsync(
+            request.Search,
+            roleId,
+            request.IsActive,
+            request.CreatedFrom,
+            request.CreatedTo,
+            request.SortBy,
+            request.Descending,
+            cancellationToken);
+
+        if (usersResult.IsFailure)
+            return BadRequest(usersResult.Error);
+
+        var fileBytes = usersExportService.ExportToExcel(usersResult.Value);
+
+        var fileName = $"users_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx";
+
+        return File(
+            fileBytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
     }
 }

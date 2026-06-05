@@ -21,4 +21,14 @@ public interface IUsersReadRepository
     
     Task<Result<UserStatsDto, Errors>> GetStatsAsync(
         CancellationToken cancellationToken);
+    
+    Task<Result<IReadOnlyList<UserDto>, Errors>> GetForExportAsync(
+        string? search,
+        RoleId? roleId,
+        bool? isActive,
+        DateTime? createdFrom,
+        DateTime? createdTo,
+        string? sortBy,
+        bool descending,
+        CancellationToken cancellationToken);
 }

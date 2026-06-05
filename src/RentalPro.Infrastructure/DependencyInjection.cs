@@ -4,9 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using RentalPro.Application;
 using RentalPro.Application.Auth;
 using RentalPro.Application.Database;
+using RentalPro.Application.Services;
 using RentalPro.Infrastructure.Auth;
 using RentalPro.Infrastructure.Database;
 using RentalPro.Infrastructure.Repositories;
+using RentalPro.Infrastructure.Services;
 
 namespace RentalPro.Infrastructure;
 
@@ -26,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<IRoleRepository, RolesRepository>();
         
         services.AddScoped<ITransactionManager, TransactionManager>();
+        
+        services.AddScoped<IUsersExportService, UsersExportService>();
         
         return services;
     }

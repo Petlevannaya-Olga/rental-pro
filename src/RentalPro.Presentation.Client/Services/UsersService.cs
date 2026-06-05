@@ -3,12 +3,13 @@ using System.Net.Http.Json;
 using System.Reflection.PortableExecutable;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.JSInterop;
 using RentalPro.Contracts.Users;
 using RentalPro.Shared;
 
 namespace RentalPro.Presentation.Client.Services;
 
-public sealed class UsersService(HttpClient httpClient)
+public sealed class UsersService(HttpClient httpClient, IJSRuntime jsRuntime)
 {
     public async Task<PagedResult<UserDto>?> GetUsersAsync(
         GetUsersRequest request,
@@ -142,5 +143,30 @@ public sealed class UsersService(HttpClient httpClient)
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task ExportUsersAsync(
+        ExportUsersRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var url = QueryHelpers.AddQueryString(
+            "api/users/export",
+            new Dictionary<string, string?>
+            {
+                ["search"] = request.Search,
+                ["roleId"] = request.RoleId?.ToString(),
+                ["isActive"] = request.IsActive?.ToString(),
+                ["createdFrom"] = request.CreatedFrom?.ToString("yyyy-MM-dd"),
+                ["createdTo"] = request.CreatedTo?.ToString("yyyy-MM-dd"),
+                ["sortBy"] = request.SortBy,
+                ["descending"] = request.Descending.ToString()
+            });
+
+        var bytes = await httpClient.GetByteArrayAsync(url, cancellationToken);
+
+        await jsRuntime.InvokeVoidAsync(
+            "downloadFile", cancellationToken, "users.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            bytes);
     }
 }
