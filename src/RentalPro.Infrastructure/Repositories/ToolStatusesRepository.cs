@@ -101,7 +101,7 @@ public sealed class ToolStatusesRepository(
         try
         {
             return await dbContext.ToolStatuses
-                .OrderBy(x => x.Name.Value)
+                .OrderBy(x => x.Name)
                 .ToListAsync(cancellationToken);
         }
         catch (OperationCanceledException)

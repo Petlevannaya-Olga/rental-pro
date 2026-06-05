@@ -482,6 +482,21 @@
                 UpdateErrorMessage: "Не удалось обновить категорию инструментов",
                 DeleteErrorMessage: "Не удалось удалить категорию инструментов"),
 
+            "tool-statuses" => new DictionarySettings(
+                Title: "Статусы инструментов",
+                Url: "api/tool-statuses",
+                CreateSuccessMessage: "Статус инструмента создан",
+                UpdateSuccessMessage: "Статус инструмента обновлен",
+                DeleteSuccessMessage: "Статус инструмента удален",
+                LoadErrorCode: "tool.statuses.load.failed",
+                CreateErrorCode: "tool.status.create.failed",
+                UpdateErrorCode: "tool.status.update.failed",
+                DeleteErrorCode: "tool.status.delete.failed",
+                LoadErrorMessage: "Не удалось загрузить статусы инструментов",
+                CreateErrorMessage: "Не удалось создать статус инструмента",
+                UpdateErrorMessage: "Не удалось обновить статус инструмента",
+                DeleteErrorMessage: "Не удалось удалить статус инструмента"),
+            
             _ => null
         };
     }
