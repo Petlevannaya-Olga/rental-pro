@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RentalPro.Domain.Tools;
-using RentalPro.Domain.ValueObjects;
 
 namespace RentalPro.Infrastructure.Configurations;
 
@@ -28,16 +27,6 @@ public sealed class ToolCategoryConfiguration : IEntityTypeConfiguration<ToolCat
                 value => ToolCategoryName.Create(value).Value)
             .HasMaxLength(ToolCategoryName.MAX_LENGTH)
             .IsRequired();
-
-        builder
-            .Property(x => x.Description)
-            .HasColumnName("description")
-            .HasConversion(
-                description => description == null ? null : description.Value,
-                value => string.IsNullOrWhiteSpace(value)
-                    ? null
-                    : Description.Create(value).Value)
-            .HasMaxLength(Description.MAX_LENGTH);
 
         builder
             .Property(x => x.CreatedAt)

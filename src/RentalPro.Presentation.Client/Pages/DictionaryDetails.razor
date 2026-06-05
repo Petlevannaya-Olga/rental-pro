@@ -1,18 +1,13 @@
 ﻿@page "/dictionaries/{DictionaryCode}"
 @layout AdminLayout
 
-@using RentalPro.Contracts.PaymentMethods
-@using RentalPro.Contracts.PaymentTypes
-@using RentalPro.Contracts.OrderStatuses
+@using RentalPro.Presentation.Client.Models
 @using RentalPro.Presentation.Client.Models.Dictionaries
 @using RentalPro.Presentation.Client.Services
 
 @inject NavigationManager NavigationManager
-@inject DictionariesService DictionariesService
 @inject NotificationService NotificationService
-@inject PaymentMethodsService PaymentMethodsService
-@inject PaymentTypesService PaymentTypesService
-@inject OrderStatusesService OrderStatusesService
+@inject DictionaryCrudService DictionaryCrudService
 
 <div class="dictionary-details-page">
 
@@ -232,19 +227,8 @@
     private string _createName = string.Empty;
     private string _editName = string.Empty;
 
-    private string DictionaryTitle => DictionaryCode switch
-    {
-        "tool-categories" => "Категории инструментов",
-        "tool-statuses" => "Статусы инструментов",
-        "manufacturers" => "Производители",
-        "order-statuses" => "Статусы заказов",
-        "payment-methods" => "Способы оплаты",
-        "payment-types" => "Типы оплат",
-        "maintenance-statuses" => "Статусы обслуживания",
-        "roles" => "Роли пользователей",
-        "suppliers" => "Поставщики",
-        _ => "Справочник"
-    };
+    private string DictionaryTitle =>
+        GetSettings()?.Title ?? "Справочник";
 
     protected override async Task OnParametersSetAsync()
     {
@@ -257,83 +241,36 @@
         _items = [];
         _selectedItem = null;
 
-        switch (DictionaryCode)
+        var settings = GetSettings();
+
+        if (settings is null)
         {
-            case "payment-methods":
-                await LoadPaymentMethodsAsync();
-                break;
-
-            case "payment-types":
-                await LoadPaymentTypesAsync();
-                break;
-
-            case "order-statuses":
-                await LoadOrderStatusesAsync();
-                break;
-
-            default:
-                NotificationService.Error("Этот справочник пока не подключен");
-                break;
+            NotificationService.Error("Этот справочник пока не подключен");
+            _isLoading = false;
+            return;
         }
+
+        var result = await DictionaryCrudService.GetListAsync<DictionaryDto>(
+            settings.Url,
+            settings.LoadErrorCode,
+            settings.LoadErrorMessage);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            _isLoading = false;
+            return;
+        }
+
+        _items = result.Value
+            .Select(x => new DictionaryItem(
+                x.Id,
+                x.Name,
+                x.CreatedAt.ToString("dd.MM.yyyy"),
+                x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
+            .ToList();
 
         _isLoading = false;
-    }
-
-    private async Task LoadPaymentMethodsAsync()
-    {
-        var result = await DictionariesService.GetPaymentMethodsAsync();
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        _items = result.Value
-            .Select(x => new DictionaryItem(
-                x.Id,
-                x.Name,
-                x.CreatedAt.ToString("dd.MM.yyyy"),
-                x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
-            .ToList();
-    }
-
-    private async Task LoadPaymentTypesAsync()
-    {
-        var result = await DictionariesService.GetPaymentTypesAsync();
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        _items = result.Value
-            .Select(x => new DictionaryItem(
-                x.Id,
-                x.Name,
-                x.CreatedAt.ToString("dd.MM.yyyy"),
-                x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
-            .ToList();
-    }
-
-    private async Task LoadOrderStatusesAsync()
-    {
-        var result = await OrderStatusesService.GetOrderStatusesAsync();
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        _items = result.Value
-            .Select(x => new DictionaryItem(
-                x.Id,
-                x.Name,
-                x.CreatedAt.ToString("dd.MM.yyyy"),
-                x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
-            .ToList();
     }
 
     private void GoBack()
@@ -385,22 +322,31 @@
             return;
         }
 
-        var name = _createName.Trim();
+        var settings = GetSettings();
 
-        switch (DictionaryCode)
+        if (settings is null)
         {
-            case "payment-methods":
-                await CreatePaymentMethod(name);
-                break;
-
-            case "payment-types":
-                await CreatePaymentType(name);
-                break;
-
-            case "order-statuses":
-                await CreateOrderStatus(name);
-                break;
+            NotificationService.Error("Этот справочник пока не подключен");
+            return;
         }
+
+        var result = await DictionaryCrudService.CreateAsync(
+            settings.Url,
+            new DictionaryNameRequest(_createName.Trim()),
+            settings.CreateErrorCode,
+            settings.CreateErrorMessage);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success(settings.CreateSuccessMessage);
+
+        CloseCreateModal();
+
+        await LoadDictionaryAsync();
     }
 
     private async Task UpdateDictionaryItem()
@@ -414,22 +360,31 @@
             return;
         }
 
-        var name = _editName.Trim();
+        var settings = GetSettings();
 
-        switch (DictionaryCode)
+        if (settings is null)
         {
-            case "payment-methods":
-                await UpdatePaymentMethod(name);
-                break;
-
-            case "payment-types":
-                await UpdatePaymentType(name);
-                break;
-
-            case "order-statuses":
-                await UpdateOrderStatus(name);
-                break;
+            NotificationService.Error("Этот справочник пока не подключен");
+            return;
         }
+
+        var result = await DictionaryCrudService.UpdateAsync(
+            $"{settings.Url}/{_selectedItem.Id}",
+            new DictionaryNameRequest(_editName.Trim()),
+            settings.UpdateErrorCode,
+            settings.UpdateErrorMessage);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success(settings.UpdateSuccessMessage);
+
+        CloseEditModal();
+
+        await LoadDictionaryAsync();
     }
 
     private async Task DeleteDictionaryItem()
@@ -437,26 +392,18 @@
         if (_selectedItem is null)
             return;
 
-        switch (DictionaryCode)
+        var settings = GetSettings();
+
+        if (settings is null)
         {
-            case "payment-methods":
-                await DeletePaymentMethod();
-                break;
-
-            case "payment-types":
-                await DeletePaymentType();
-                break;
-
-            case "order-statuses":
-                await DeleteOrderStatus();
-                break;
+            NotificationService.Error("Этот справочник пока не подключен");
+            return;
         }
-    }
 
-    private async Task CreatePaymentMethod(string name)
-    {
-        var result = await PaymentMethodsService.CreatePaymentMethodAsync(
-            new CreatePaymentMethodRequest(name));
+        var result = await DictionaryCrudService.DeleteAsync(
+            $"{settings.Url}/{_selectedItem.Id}",
+            settings.DeleteErrorCode,
+            settings.DeleteErrorMessage);
 
         if (result.IsFailure)
         {
@@ -464,175 +411,78 @@
             return;
         }
 
-        NotificationService.Success("Способ оплаты создан");
-
-        CloseCreateModal();
-
-        await LoadDictionaryAsync();
-    }
-
-    private async Task UpdatePaymentMethod(string name)
-    {
-        if (_selectedItem is null)
-            return;
-
-        var result = await PaymentMethodsService.UpdatePaymentMethodAsync(
-            _selectedItem.Id,
-            new UpdatePaymentMethodRequest(name));
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Способ оплаты обновлен");
-
-        CloseEditModal();
-
-        await LoadDictionaryAsync();
-    }
-
-    private async Task DeletePaymentMethod()
-    {
-        if (_selectedItem is null)
-            return;
-
-        var result = await PaymentMethodsService.DeletePaymentMethodAsync(
-            _selectedItem.Id);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Способ оплаты удален");
+        NotificationService.Success(settings.DeleteSuccessMessage);
 
         CloseDeleteModal();
 
         await LoadDictionaryAsync();
     }
 
-    private async Task CreatePaymentType(string name)
+    private DictionarySettings? GetSettings()
     {
-        var result = await PaymentTypesService.CreatePaymentTypeAsync(
-            new CreatePaymentTypeRequest(name));
-
-        if (result.IsFailure)
+        return DictionaryCode switch
         {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
+            "payment-methods" => new DictionarySettings(
+                Title: "Способы оплаты",
+                Url: "api/payment-methods",
+                CreateSuccessMessage: "Способ оплаты создан",
+                UpdateSuccessMessage: "Способ оплаты обновлен",
+                DeleteSuccessMessage: "Способ оплаты удален",
+                LoadErrorCode: "payment.methods.load.failed",
+                CreateErrorCode: "payment.method.create.failed",
+                UpdateErrorCode: "payment.method.update.failed",
+                DeleteErrorCode: "payment.method.delete.failed",
+                LoadErrorMessage: "Не удалось загрузить способы оплаты",
+                CreateErrorMessage: "Не удалось создать способ оплаты",
+                UpdateErrorMessage: "Не удалось обновить способ оплаты",
+                DeleteErrorMessage: "Не удалось удалить способ оплаты"),
 
-        NotificationService.Success("Тип оплаты создан");
+            "payment-types" => new DictionarySettings(
+                Title: "Типы оплат",
+                Url: "api/payment-types",
+                CreateSuccessMessage: "Тип оплаты создан",
+                UpdateSuccessMessage: "Тип оплаты обновлен",
+                DeleteSuccessMessage: "Тип оплаты удален",
+                LoadErrorCode: "payment.types.load.failed",
+                CreateErrorCode: "payment.type.create.failed",
+                UpdateErrorCode: "payment.type.update.failed",
+                DeleteErrorCode: "payment.type.delete.failed",
+                LoadErrorMessage: "Не удалось загрузить типы оплат",
+                CreateErrorMessage: "Не удалось создать тип оплаты",
+                UpdateErrorMessage: "Не удалось обновить тип оплаты",
+                DeleteErrorMessage: "Не удалось удалить тип оплаты"),
 
-        CloseCreateModal();
+            "order-statuses" => new DictionarySettings(
+                Title: "Статусы заказов",
+                Url: "api/order-statuses",
+                CreateSuccessMessage: "Статус заказа создан",
+                UpdateSuccessMessage: "Статус заказа обновлен",
+                DeleteSuccessMessage: "Статус заказа удален",
+                LoadErrorCode: "order.statuses.load.failed",
+                CreateErrorCode: "order.status.create.failed",
+                UpdateErrorCode: "order.status.update.failed",
+                DeleteErrorCode: "order.status.delete.failed",
+                LoadErrorMessage: "Не удалось загрузить статусы заказов",
+                CreateErrorMessage: "Не удалось создать статус заказа",
+                UpdateErrorMessage: "Не удалось обновить статус заказа",
+                DeleteErrorMessage: "Не удалось удалить статус заказа"),
 
-        await LoadDictionaryAsync();
-    }
+            "tool-categories" => new DictionarySettings(
+                Title: "Категории инструментов",
+                Url: "api/tool-categories",
+                CreateSuccessMessage: "Категория инструментов создана",
+                UpdateSuccessMessage: "Категория инструментов обновлена",
+                DeleteSuccessMessage: "Категория инструментов удалена",
+                LoadErrorCode: "tool.categories.load.failed",
+                CreateErrorCode: "tool.category.create.failed",
+                UpdateErrorCode: "tool.category.update.failed",
+                DeleteErrorCode: "tool.category.delete.failed",
+                LoadErrorMessage: "Не удалось загрузить категории инструментов",
+                CreateErrorMessage: "Не удалось создать категорию инструментов",
+                UpdateErrorMessage: "Не удалось обновить категорию инструментов",
+                DeleteErrorMessage: "Не удалось удалить категорию инструментов"),
 
-    private async Task UpdatePaymentType(string name)
-    {
-        if (_selectedItem is null)
-            return;
-
-        var result = await PaymentTypesService.UpdatePaymentTypeAsync(
-            _selectedItem.Id,
-            new UpdatePaymentTypeRequest(name));
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Тип оплаты обновлен");
-
-        CloseEditModal();
-
-        await LoadDictionaryAsync();
-    }
-
-    private async Task DeletePaymentType()
-    {
-        if (_selectedItem is null)
-            return;
-
-        var result = await PaymentTypesService.DeletePaymentTypeAsync(
-            _selectedItem.Id);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Тип оплаты удален");
-
-        CloseDeleteModal();
-
-        await LoadDictionaryAsync();
-    }
-
-    private async Task CreateOrderStatus(string name)
-    {
-        var result = await OrderStatusesService.CreateOrderStatusAsync(
-            new CreateOrderStatusRequest(name));
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Статус заказа создан");
-
-        CloseCreateModal();
-
-        await LoadDictionaryAsync();
-    }
-
-    private async Task UpdateOrderStatus(string name)
-    {
-        if (_selectedItem is null)
-            return;
-
-        var result = await OrderStatusesService.UpdateOrderStatusAsync(
-            _selectedItem.Id,
-            new UpdateOrderStatusRequest(name));
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Статус заказа обновлен");
-
-        CloseEditModal();
-
-        await LoadDictionaryAsync();
-    }
-
-    private async Task DeleteOrderStatus()
-    {
-        if (_selectedItem is null)
-            return;
-
-        var result = await OrderStatusesService.DeleteOrderStatusAsync(
-            _selectedItem.Id);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Статус заказа удален");
-
-        CloseDeleteModal();
-
-        await LoadDictionaryAsync();
+            _ => null
+        };
     }
 }

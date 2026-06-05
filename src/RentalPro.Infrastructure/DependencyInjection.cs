@@ -30,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<IPaymentMethodsRepository, PaymentMethodsRepository>();
         services.AddScoped<IPaymentTypesRepository, PaymentTypesRepository>();
         services.AddScoped<IOrderStatusesRepository, OrderStatusesRepository>();
+        services.AddScoped<IToolStatusesRepository, ToolStatusesRepository>();
+        services.AddScoped<IToolCategoriesRepository, ToolCategoriesRepository>();
         
         services.AddScoped<ITransactionManager, TransactionManager>();
         
