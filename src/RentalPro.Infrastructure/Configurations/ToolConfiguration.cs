@@ -159,15 +159,18 @@ public sealed class ToolConfiguration : IEntityTypeConfiguration<Tool>
 
         builder
             .HasIndex(x => x.ArticleNumber)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder
             .HasIndex(x => x.SerialNumber)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder
             .HasIndex(x => x.InventoryNumber)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder
             .HasIndex(x => x.CategoryId);

@@ -54,7 +54,8 @@ public sealed class ToolCategoryConfiguration : IEntityTypeConfiguration<ToolCat
 
         builder
             .HasIndex(x => x.Name)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder.HasQueryFilter(x => x.DeletedAt == null);
     }

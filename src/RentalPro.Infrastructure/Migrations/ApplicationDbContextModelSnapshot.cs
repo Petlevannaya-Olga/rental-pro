@@ -55,10 +55,12 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("PhoneNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("customers", (string)null);
                 });
@@ -242,7 +244,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("manufacturers", (string)null);
                 });
@@ -397,7 +400,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("order_statuses", (string)null);
                 });
@@ -542,7 +546,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("payment_methods", (string)null);
                 });
@@ -574,7 +579,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("payment_types", (string)null);
                 });
@@ -606,7 +612,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("roles", (string)null);
                 });
@@ -650,7 +657,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasIndex("Email");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("PhoneNumber");
 
@@ -739,17 +747,20 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("InventoryNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("ManufacturerId");
 
                     b.HasIndex("SerialNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("StatusId");
 
@@ -788,7 +799,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("tool_categories", (string)null);
                 });
@@ -871,7 +883,8 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.ToTable("tool_statuses", (string)null);
                 });
@@ -979,13 +992,16 @@ namespace RentalPro.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("Login")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("PhoneNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[deleted_at] IS NULL");
 
                     b.HasIndex("RoleId");
 
@@ -1098,7 +1114,8 @@ namespace RentalPro.Infrastructure.Migrations
                             b1.HasKey("CustomerId");
 
                             b1.HasIndex("Series", "Number")
-                                .IsUnique();
+                                .IsUnique()
+                                .HasFilter("[deleted_at] IS NULL");
 
                             b1.ToTable("customers");
 

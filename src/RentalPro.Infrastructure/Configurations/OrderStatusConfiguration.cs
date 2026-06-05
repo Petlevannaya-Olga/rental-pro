@@ -43,7 +43,8 @@ public sealed class OrderStatusConfiguration : IEntityTypeConfiguration<OrderSta
 
         builder
             .HasIndex(x => x.Name)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");
 
         builder.HasQueryFilter(x => x.DeletedAt == null);
     }

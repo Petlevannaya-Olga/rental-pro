@@ -79,7 +79,8 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
                 passport
                     .HasIndex(x => new { x.Series, x.Number })
-                    .IsUnique();
+                    .IsUnique()
+                    .HasFilter("[deleted_at] IS NULL");;
             });
 
         builder.OwnsOne(
@@ -137,11 +138,13 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
         builder
             .HasIndex(x => x.PhoneNumber)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder
             .HasIndex(x => x.Email)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder.HasQueryFilter(x => x.DeletedAt == null);
     }

@@ -114,15 +114,18 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder
             .HasIndex(x => x.Login)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder
             .HasIndex(x => x.PhoneNumber)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder
             .HasIndex(x => x.Email)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[deleted_at] IS NULL");;
 
         builder.HasQueryFilter(x => x.DeletedAt == null);
     }
