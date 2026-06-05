@@ -157,9 +157,9 @@
 
         _isLoading = false;
 
-        if (result is null || !result.Success)
+        if (result.IsFailure)
         {
-            _errorMessage = result?.Message ?? "Неверный логин или пароль";
+            _errorMessage = result.Error.Message;
             return;
         }
 

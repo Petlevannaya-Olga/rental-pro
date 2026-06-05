@@ -17,14 +17,14 @@ public static class CommonErrors
             $"Значение должно быть длиной от {minLength} до {maxLength} символов для {propertyName}",
             ErrorType.VALIDATION,
             propertyName);
-    
+
     public static Error ValueIsGreaterThanMax(string propertyName, double value, double max)
         => new(
             $"{propertyName.ToLowerInvariant()}.length.is.greater.than.max",
             $"Значение {value} не должно превышать {max} для {propertyName}",
             ErrorType.VALIDATION,
             propertyName);
-    
+
     public static Error ValueIsLessThanMin(string propertyName, double value, double min)
         => new(
             $"{propertyName.ToLowerInvariant()}.length.is.greater.than.min",
@@ -76,4 +76,25 @@ public static class CommonErrors
 
     public static Error CollectionContainsDublicates(string? code = null)
         => new(code ?? "collection.contains.dublicates", "Коллекция содержит дубликаты", ErrorType.VALIDATION);
+
+    public static Error AuthFailed(string? code, string message) =>
+        new(code ?? "auth.failed", message, ErrorType.FAILURE);
+
+    public static Error EmptyResponse(string? code, string message) =>
+        new(
+            code ?? "empty.response",
+            "Сервер вернул пустой ответ",
+            ErrorType.FAILURE);
+
+    public static Error LoadFailed(string? code, string message) =>
+        new(code ?? "load.failed", message, ErrorType.FAILURE);
+
+    public static Error CreateFailed(string? code, string message) =>
+        new(code ?? "create.failed", message, ErrorType.FAILURE);
+    
+    public static Error UpdateFailed(string? code, string message) =>
+        new(code ?? "update.failed", message, ErrorType.FAILURE);
+    
+    public static Error DeleteFailed(string? code, string message) =>
+        new(code ?? "delete.failed", message, ErrorType.FAILURE);
 }

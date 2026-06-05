@@ -661,7 +661,6 @@
     private string? _status;
     private string? _sortBy = "createdat";
     private bool _descending = true;
-    private bool? _isActive;
 
     private Guid? _roleId;
     private DateTime? _createdFrom;
@@ -671,7 +670,6 @@
     private UserDto? _selectedUser;
 
     private CreateUserFormModel _createUser = new();
-
     private EditUserFormModel _editUser = new();
 
     private List<RoleDto> _roles = [];
@@ -680,6 +678,7 @@
     private bool _isChangePasswordModalOpen;
     private bool _isBlockModalOpen;
     private bool _isDeleteModalOpen;
+
     private string _oldPassword = string.Empty;
     private string _newPassword = string.Empty;
     private string _confirmPassword = string.Empty;
@@ -693,61 +692,81 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadRolesAsync();
         await LoadStatsAsync();
         await LoadUsersAsync();
+        await LoadRolesAsync();
     }
 
     private async Task LoadRolesAsync()
     {
-        try
+        var result = await RolesService.GetRolesAsync();
+
+        if (result.IsFailure)
         {
-            _roles = await RolesService.GetRolesAsync();
+            _roles = [];
+            NotificationService.Error(result.Error.Message);
+            return;
         }
-        catch
-        {
-            NotificationService.Error("Не удалось загрузить роли пользователей");
-        }
+
+        _roles = result.Value;
     }
 
     private async Task LoadUsersAsync()
     {
         _isLoading = true;
 
-        try
+        var request = new GetUsersRequest
         {
-            var request = new GetUsersRequest
-            {
-                Search = _search,
-                RoleId = _roleId,
-                IsActive = GetIsActiveFilter(),
-                CreatedFrom = _createdFrom,
-                CreatedTo = _createdTo,
-                SortBy = _sortBy,
-                Descending = _descending,
-                Page = _currentPage,
-                PageSize = PageSize
-            };
+            Search = _search,
+            RoleId = _roleId,
+            IsActive = GetIsActiveFilter(),
+            CreatedFrom = _createdFrom,
+            CreatedTo = _createdTo,
+            SortBy = _sortBy,
+            Descending = _descending,
+            Page = _currentPage,
+            PageSize = PageSize
+        };
 
-            var result = await UsersApiClient.GetUsersAsync(request);
+        var result = await UsersApiClient.GetUsersAsync(request);
 
-            _users = result?.Items.ToList() ?? [];
-            _totalCount = result?.TotalCount ?? 0;
-            _totalPages = result?.TotalPages ?? 0;
-        }
-        catch (Exception ex)
+        if (result.IsFailure)
         {
-            Console.WriteLine(ex);
             _users = [];
             _totalCount = 0;
             _totalPages = 0;
-
-            NotificationService.Error("Не удалось загрузить пользователей");
-        }
-        finally
-        {
             _isLoading = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
         }
+
+        _users = result.Value.Items.ToList();
+        _totalCount = result.Value.TotalCount;
+        _totalPages = result.Value.TotalPages;
+
+        _isLoading = false;
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        var result = await UsersApiClient.GetStatsAsync();
+
+        if (result.IsFailure)
+        {
+            _totalCount = 0;
+            _activeCount = 0;
+            _adminCount = 0;
+            _blockedCount = 0;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _totalCount = result.Value.TotalCount;
+        _activeCount = result.Value.ActiveCount;
+        _adminCount = result.Value.AdminCount;
+        _blockedCount = result.Value.BlockedCount;
     }
 
     private async Task ApplyFilters()
@@ -801,16 +820,6 @@
         _selectedUserName = null;
     }
 
-    private void ExecuteAction(string action)
-    {
-        if (string.IsNullOrWhiteSpace(_selectedUserName))
-            return;
-
-        NotificationService.Info($"{action}: {_selectedUserName}");
-
-        CloseActionsMenu();
-    }
-
     private void OpenCreateModal()
     {
         _createUser = new CreateUserFormModel();
@@ -837,41 +846,35 @@
             return;
         }
 
-        try
+        var request = new CreateUserRequest
         {
-            if (_createUser.RoleId is null)
-            {
-                NotificationService.Error("Выберите роль");
-                return;
-            }
+            Login = _createUser.Login,
+            Password = _createUser.Password,
+            LastName = _createUser.LastName,
+            FirstName = _createUser.FirstName,
+            MiddleName = _createUser.MiddleName,
+            PhoneNumber = _createUser.PhoneNumber,
+            Email = _createUser.Email,
+            RoleId = _createUser.RoleId.Value
+        };
 
-            var request = new CreateUserRequest
-            {
-                Login = _createUser.Login,
-                Password = _createUser.Password,
-                LastName = _createUser.LastName,
-                FirstName = _createUser.FirstName,
-                MiddleName = _createUser.MiddleName,
-                PhoneNumber = _createUser.PhoneNumber,
-                Email = _createUser.Email,
-                RoleId = _createUser.RoleId.Value
-            };
+        var result = await UsersApiClient.CreateUserAsync(request);
 
-            await UsersApiClient.CreateUserAsync(request);
-
-            NotificationService.Success("Пользователь успешно создан");
-
-            CloseCreateModal();
-
-            _currentPage = 1;
-
-            await LoadUsersAsync();
-            await LoadStatsAsync();
-        }
-        catch (Exception ex)
+        if (result.IsFailure)
         {
-            NotificationService.Error($"Не удалось создать пользователя: {ex.Message}");
+            NotificationService.Error(result.Error.Message);
+            return;
         }
+
+        NotificationService.Success(
+            $"Пользователь {result.Value.LastName} {result.Value.FirstName} {result.Value.MiddleName} успешно создан");
+
+        CloseCreateModal();
+
+        _currentPage = 1;
+
+        await LoadUsersAsync();
+        await LoadStatsAsync();
     }
 
     private static string GetUserStatusClass(bool isActive)
@@ -908,6 +911,7 @@
         }
 
         NotificationService.Info("Началось создание тестовых данных");
+
         var count = 10;
         var createdCount = 0;
 
@@ -932,21 +936,20 @@
 
             if (result.IsFailure)
             {
-                NotificationService.Error(
-                    string.Join(
-                        Environment.NewLine,
-                        result.Error.Select(x => x.Message)));
-
+                NotificationService.Error(result.Error.Message);
                 return;
             }
 
             createdCount++;
-            NotificationService.Success($"Пользователь {result.Value.LastName} {result.Value.FirstName} {result.Value.MiddleName} успешно создан");
+
+            NotificationService.Success(
+                $"Пользователь {result.Value.LastName} {result.Value.FirstName} {result.Value.MiddleName} успешно создан");
         }
 
         NotificationService.Success($"Создано пользователей: {createdCount} из {count}");
 
         _currentPage = 1;
+
         await LoadUsersAsync();
         await LoadStatsAsync();
     }
@@ -984,26 +987,6 @@
         catch (OperationCanceledException)
         {
             // ignored
-        }
-    }
-
-    private async Task LoadStatsAsync()
-    {
-        try
-        {
-            var stats = await UsersApiClient.GetStatsAsync();
-
-            if (stats is null)
-                return;
-
-            _totalCount = stats.TotalCount;
-            _activeCount = stats.ActiveCount;
-            _adminCount = stats.AdminCount;
-            _blockedCount = stats.BlockedCount;
-        }
-        catch
-        {
-            NotificationService.Error("Не удалось загрузить статистику пользователей");
         }
     }
 
@@ -1055,7 +1038,10 @@
         if (_selectedUser is null)
             return;
 
+        _oldPassword = string.Empty;
         _newPassword = string.Empty;
+        _confirmPassword = string.Empty;
+
         _isActionsMenuOpen = false;
         _isChangePasswordModalOpen = true;
     }
@@ -1088,24 +1074,23 @@
             return;
         }
 
-        try
-        {
-            await UsersApiClient.ChangePasswordAsync(
-                _selectedUser.Id,
-                new ChangeUserPasswordRequest
-                {
-                    OldPassword = _oldPassword,
-                    NewPassword = _newPassword
-                });
+        var result = await UsersApiClient.ChangePasswordAsync(
+            _selectedUser.Id,
+            new ChangeUserPasswordRequest
+            {
+                OldPassword = _oldPassword,
+                NewPassword = _newPassword
+            });
 
-            NotificationService.Success("Пароль пользователя изменен");
-
-            CloseChangePasswordModal();
-        }
-        catch (Exception ex)
+        if (result.IsFailure)
         {
-            NotificationService.Error($"Не удалось изменить пароль: {ex.Message}");
+            NotificationService.Error(result.Error.Message);
+            return;
         }
+
+        NotificationService.Success("Пароль пользователя изменен");
+
+        CloseChangePasswordModal();
     }
 
     private void OpenBlockModal()
@@ -1141,26 +1126,25 @@
         if (_selectedUser is null)
             return;
 
-        try
+        var result = await UsersApiClient.DeleteUserAsync(_selectedUser.Id);
+
+        if (result.IsFailure)
         {
-            await UsersApiClient.DeleteUserAsync(_selectedUser.Id);
-
-            NotificationService.Success("Пользователь удален");
-
-            CloseDeleteModal();
-
-            _selectedUser = null;
-            _selectedUserName = null;
-
-            _currentPage = 1;
-
-            await LoadUsersAsync();
-            await LoadStatsAsync();
+            NotificationService.Error(result.Error.Message);
+            return;
         }
-        catch (Exception ex)
-        {
-            NotificationService.Error($"Не удалось удалить пользователя: {ex.Message}");
-        }
+
+        NotificationService.Success("Пользователь удален");
+
+        CloseDeleteModal();
+
+        _selectedUser = null;
+        _selectedUserName = null;
+
+        _currentPage = 1;
+
+        await LoadUsersAsync();
+        await LoadStatsAsync();
     }
 
     private async Task ToggleUserStatus()
@@ -1168,27 +1152,27 @@
         if (_selectedUser is null)
             return;
 
-        try
+        var wasActive = _selectedUser.IsActive;
+
+        var result = await UsersApiClient.ChangeStatusAsync(
+            _selectedUser.Id,
+            !wasActive);
+
+        if (result.IsFailure)
         {
-            await UsersApiClient.ChangeStatusAsync(
-                _selectedUser.Id,
-                !_selectedUser.IsActive);
-
-            NotificationService.Success(
-                _selectedUser.IsActive
-                    ? "Пользователь успешно заблокирован"
-                    : "Пользователь успешно разблокирован");
-
-            CloseBlockModal();
-
-            await LoadUsersAsync();
-            await LoadStatsAsync();
+            NotificationService.Error(result.Error.Message);
+            return;
         }
-        catch (Exception ex)
-        {
-            NotificationService.Error(
-                $"Не удалось изменить статус пользователя: {ex.Message}");
-        }
+
+        NotificationService.Success(
+            wasActive
+                ? "Пользователь успешно заблокирован"
+                : "Пользователь успешно разблокирован");
+
+        CloseBlockModal();
+
+        await LoadUsersAsync();
+        await LoadStatsAsync();
     }
 
     private async Task UpdateUser()
@@ -1210,7 +1194,15 @@
             RoleId = _editUser.RoleId.Value
         };
 
-        await UsersApiClient.UpdateUserAsync(_editUser.Id, request);
+        var result = await UsersApiClient.UpdateUserAsync(
+            _editUser.Id,
+            request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
 
         NotificationService.Success("Пользователь обновлен");
 
@@ -1219,7 +1211,7 @@
         await LoadUsersAsync();
         await LoadStatsAsync();
     }
-    
+
     private void FillEditUserWithFakeData()
     {
         var fakeUser = FakeUserGeneratorService.Generate();
@@ -1231,7 +1223,7 @@
         _editUser.Email = fakeUser.Email;
         _editUser.PhoneNumber = fakeUser.PhoneNumber;
     }
-    
+
     private async Task ApplyStatsFilter(string filter)
     {
         _activeStatsFilter = filter;
@@ -1267,7 +1259,7 @@
 
         await LoadUsersAsync();
     }
-    
+
     private async Task ExportUsers()
     {
         var request = new ExportUsersRequest
@@ -1281,6 +1273,14 @@
             Descending = _descending
         };
 
-        await UsersApiClient.ExportUsersAsync(request);
+        var result = await UsersApiClient.ExportUsersAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Пользователи экспортированы");
     }
 }

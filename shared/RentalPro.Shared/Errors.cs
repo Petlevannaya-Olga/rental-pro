@@ -5,6 +5,9 @@ namespace RentalPro.Shared;
 public class Errors(IEnumerable<Error> errors) : IEnumerable<Error>
 {
     private readonly List<Error> _errors = [..errors];
+    
+    public string Message =>
+        _errors.FirstOrDefault()?.Message ?? "Неизвестная ошибка";
 
     public IEnumerator<Error> GetEnumerator()
     {
