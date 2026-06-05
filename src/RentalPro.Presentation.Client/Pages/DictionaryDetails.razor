@@ -1,6 +1,15 @@
 ﻿@page "/dictionaries/{DictionaryCode}"
 @layout AdminLayout
 
+@using RentalPro.Contracts.PaymentMethods
+@using RentalPro.Presentation.Client.Models.Dictionaries
+@using RentalPro.Presentation.Client.Services
+
+@inject NavigationManager NavigationManager
+@inject DictionariesService DictionariesService
+@inject NotificationService NotificationService
+@inject PaymentMethodsService PaymentMethodsService
+
 <div class="dictionary-details-page">
 
     <div class="dictionary-header">
@@ -22,44 +31,231 @@
     </div>
 
     <div class="dictionary-details-card">
-        <table class="tools-table">
-            <thead>
-            <tr>
-                <th>Название</th>
-                <th>Описание</th>
-                <th>Дата создания</th>
-                <th></th>
-            </tr>
-            </thead>
-
-            <tbody>
-            @foreach (var item in Items)
-            {
+        @if (_isLoading)
+        {
+            <table class="tools-table">
+                <thead>
                 <tr>
-                    <td>
-                        <strong>@item.Name</strong>
-                    </td>
-                    <td>@item.Description</td>
-                    <td>@item.CreatedAt</td>
-                    <td class="actions-cell">
-                        <button class="icon-button">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                    </td>
+                    <th>Название</th>
+                    <th>Дата создания</th>
+                    <th>Дата изменения</th>
+                    <th></th>
                 </tr>
-            }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                @for (var i = 0; i < 5; i++)
+                {
+                    <tr>
+                        <td>
+                            <div class="skeleton skeleton-text"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-date"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-date"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-icon"></div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (_items.Count == 0)
+        {
+            <div class="table-empty">Записи не найдены</div>
+        }
+        else
+        {
+            <table class="tools-table">
+                <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Дата создания</th>
+                    <th>Дата изменения</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                @foreach (var item in _items)
+                {
+                    <tr>
+                        <td>
+                            <strong>@item.Name</strong>
+                        </td>
+                        <td>@item.CreatedAt</td>
+                        <td>@item.UpdatedAt</td>
+                        <td class="actions-cell">
+                            <button class="icon-button"
+                                    @onclick="() => OpenActionsMenu(item)">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
     </div>
 
+    @if (_isActionsMenuOpen && _selectedItem is not null)
+    {
+        <div class="actions-backdrop" @onclick="CloseActionsMenu">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Действия с записью</h3>
+                        <p>@_selectedItem.Name</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseActionsMenu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <button class="menu-item" @onclick="OpenEditModal">
+                    <i class="bi bi-pencil"></i>
+                    Редактировать
+                </button>
+
+                <div class="menu-divider"></div>
+
+                <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
+                    <i class="bi bi-trash"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_isEditModalOpen && _selectedItem is not null)
+    {
+        <div class="actions-backdrop" @onclick="CloseEditModal">
+            <div class="confirm-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Редактировать способ оплаты</h3>
+                        <p>@_selectedItem.Name</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseEditModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="user-form-field">
+                    <label>Название <span>*</span></label>
+                    <input @bind="_editName" placeholder="Введите название" />
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseEditModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button" type="button" @onclick="UpdatePaymentMethod">
+                        Сохранить
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+    @if (_isDeleteModalOpen && _selectedItem is not null)
+    {
+        <div class="actions-backdrop" @onclick="CloseDeleteModal">
+            <div class="confirm-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Удалить запись</h3>
+                        <p>@_selectedItem.Name</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseDeleteModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <p class="confirm-text">
+                    Запись будет удалена из справочника. Продолжить?
+                </p>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button" type="button" @onclick="CloseDeleteModal">
+                        Отмена
+                    </button>
+
+                    <button class="danger-button" type="button" @onclick="DeletePaymentMethod">
+                        Удалить
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+    
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseCreateModal">
+            <div class="confirm-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Добавить способ оплаты</h3>
+                        <p>Создание новой записи справочника</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="user-form-field">
+                    <label>Название <span>*</span></label>
+                    <input @bind="_createName"
+                           placeholder="Введите название" />
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseCreateModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="CreatePaymentMethod">
+                        Сохранить
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     [Parameter]
     public string DictionaryCode { get; set; } = string.Empty;
 
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = null!;
+    private bool _isLoading = true;
+    private List<DictionaryItem> _items = [];
+    private DictionaryItem? _selectedItem;
+
+    private bool _isActionsMenuOpen;
+    private bool _isEditModalOpen;
+    private bool _isDeleteModalOpen;
+    private bool _isCreateModalOpen;
+    private string _createName = string.Empty;
+
+    private string _editName = string.Empty;
 
     private string DictionaryTitle => DictionaryCode switch
     {
@@ -75,35 +271,42 @@
         _ => "Справочник"
     };
 
-    private List<DictionaryItem> Items => DictionaryCode switch
+    protected override async Task OnParametersSetAsync()
     {
-        "tool-categories" =>
-        [
-            new("Перфораторы", "Инструменты для бурения и сверления", "14.05.2024"),
-            new("Шуруповерты", "Аккумуляторные и сетевые шуруповерты", "14.05.2024"),
-            new("Болгарки", "Угловые шлифовальные машины", "14.05.2024")
-        ],
+        await LoadDictionaryAsync();
+    }
 
-        "tool-statuses" =>
-        [
-            new("Доступен", "Инструмент доступен для аренды", "14.05.2024"),
-            new("В аренде", "Инструмент находится у клиента", "14.05.2024"),
-            new("На ремонте", "Инструмент временно недоступен", "14.05.2024")
-        ],
+    private async Task LoadDictionaryAsync()
+    {
+        _isLoading = true;
+        _items = [];
 
-        "payment-methods" =>
-        [
-            new("Наличные", "Оплата наличными средствами", "14.05.2024"),
-            new("Банковская карта", "Оплата картой", "14.05.2024"),
-            new("Безналичный расчет", "Оплата по счету", "14.05.2024")
-        ],
+        if (DictionaryCode != "payment-methods")
+        {
+            _isLoading = false;
+            NotificationService.Error("Этот справочник пока не подключен");
+            return;
+        }
 
-        _ =>
-        [
-            new("Запись 1", "Описание записи", "14.05.2024"),
-            new("Запись 2", "Описание записи", "14.05.2024")
-        ]
-    };
+        var result = await DictionariesService.GetPaymentMethodsAsync();
+
+        if (result.IsFailure)
+        {
+            _isLoading = false;
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _items = result.Value
+            .Select(x => new DictionaryItem(
+                x.Id,
+                x.Name,
+                x.CreatedAt.ToString("dd.MM.yyyy"),
+                x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
+            .ToList();
+
+        _isLoading = false;
+    }
 
     private void GoBack()
     {
@@ -112,11 +315,130 @@
 
     private void OpenCreateModal()
     {
-        // Позже откроем модальное окно добавления записи
+        _createName = string.Empty;
+        _isCreateModalOpen = true;
     }
 
-    private sealed record DictionaryItem(
-        string Name,
-        string Description,
-        string CreatedAt);
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+        _createName = string.Empty;
+    }
+    
+    private void OpenActionsMenu(DictionaryItem item)
+    {
+        _selectedItem = item;
+        _isActionsMenuOpen = true;
+    }
+
+    private void CloseActionsMenu()
+    {
+        _isActionsMenuOpen = false;
+    }
+
+    private void OpenEditModal()
+    {
+        if (_selectedItem is null)
+            return;
+
+        _editName = _selectedItem.Name;
+
+        _isActionsMenuOpen = false;
+        _isEditModalOpen = true;
+    }
+
+    private void CloseEditModal()
+    {
+        _isEditModalOpen = false;
+        _editName = string.Empty;
+    }
+
+    private void OpenDeleteModal()
+    {
+        if (_selectedItem is null)
+            return;
+
+        _isActionsMenuOpen = false;
+        _isDeleteModalOpen = true;
+    }
+
+    private async Task UpdatePaymentMethod()
+    {
+        if (_selectedItem is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_editName))
+        {
+            NotificationService.Error("Введите название");
+            return;
+        }
+
+        var result = await PaymentMethodsService.UpdatePaymentMethodAsync(
+            _selectedItem.Id,
+            new UpdatePaymentMethodRequest(_editName.Trim()));
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Способ оплаты обновлен");
+
+        CloseEditModal();
+
+        await LoadDictionaryAsync();
+    }
+    
+    private void CloseDeleteModal()
+    {
+        _isDeleteModalOpen = false;
+    }
+
+    private async Task DeletePaymentMethod()
+    {
+        if (_selectedItem is null)
+            return;
+
+        var result = await PaymentMethodsService.DeletePaymentMethodAsync(
+            _selectedItem.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Способ оплаты удален");
+
+        CloseDeleteModal();
+
+        _selectedItem = null;
+
+        await LoadDictionaryAsync();
+    }
+    
+    private async Task CreatePaymentMethod()
+    {
+        if (string.IsNullOrWhiteSpace(_createName))
+        {
+            NotificationService.Error("Введите название");
+            return;
+        }
+
+        var result = await PaymentMethodsService.CreatePaymentMethodAsync(
+            new CreatePaymentMethodRequest(_createName.Trim()));
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Способ оплаты создан");
+
+        CloseCreateModal();
+
+        await LoadDictionaryAsync();
+    }
 }

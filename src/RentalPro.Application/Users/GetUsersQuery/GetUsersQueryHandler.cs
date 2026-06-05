@@ -1,5 +1,4 @@
 ﻿using CSharpFunctionalExtensions;
-using RentalPro.Application.Extensions;
 using RentalPro.Contracts.Users;
 using RentalPro.Domain.Roles;
 using RentalPro.Shared;

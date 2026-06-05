@@ -88,6 +88,8 @@ using (var scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
 
     await UserSeeder.SeedAsync(context);
+    await PaymentMethodSeeder.SeedAsync(context);
+    await PaymentTypeSeeder.SeedAsync(context);
 }
 
 app.Run();
