@@ -31,14 +31,13 @@ public sealed class ManufacturerConfiguration
             .IsRequired();
 
         builder
-            .Property(x => x.Description)
-            .HasColumnName("description")
+            .Property(x => x.Country)
+            .HasColumnName("country")
             .HasConversion(
-                description => description == null ? null : description.Value,
-                value => string.IsNullOrWhiteSpace(value)
-                    ? null
-                    : Description.Create(value).Value)
-            .HasMaxLength(Description.MAX_LENGTH);
+                name => name.Value,
+                value => ManufacturerCountryName.Create(value).Value)
+            .HasMaxLength(ManufacturerCountryName.MAX_LENGTH)
+            .IsRequired();
 
         builder
             .Property(x => x.CreatedAt)

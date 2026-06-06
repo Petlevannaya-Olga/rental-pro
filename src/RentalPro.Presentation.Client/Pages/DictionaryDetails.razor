@@ -36,6 +36,12 @@
                 <thead>
                 <tr>
                     <th>Название</th>
+
+                    @if (IsManufacturers)
+                    {
+                        <th>Страна</th>
+                    }
+
                     <th>Дата создания</th>
                     <th>Дата изменения</th>
                     <th>Действия</th>
@@ -47,6 +53,12 @@
                 {
                     <tr>
                         <td><div class="skeleton skeleton-text"></div></td>
+
+                        @if (IsManufacturers)
+                        {
+                            <td><div class="skeleton skeleton-text"></div></td>
+                        }
+
                         <td><div class="skeleton skeleton-date"></div></td>
                         <td><div class="skeleton skeleton-date"></div></td>
                         <td><div class="skeleton skeleton-icon"></div></td>
@@ -65,6 +77,12 @@
                 <thead>
                 <tr>
                     <th>Название</th>
+
+                    @if (IsManufacturers)
+                    {
+                        <th>Страна</th>
+                    }
+
                     <th>Дата создания</th>
                     <th>Дата изменения</th>
                     <th>Действия</th>
@@ -76,8 +94,15 @@
                 {
                     <tr>
                         <td><strong>@item.Name</strong></td>
+
+                        @if (IsManufacturers)
+                        {
+                            <td>@item.Country</td>
+                        }
+
                         <td>@item.CreatedAt</td>
                         <td>@item.UpdatedAt</td>
+
                         <td class="actions-cell">
                             <div class="table-actions">
 
@@ -122,6 +147,14 @@
                     <label>Название <span>*</span></label>
                     <input @bind="_editName" placeholder="Введите название" />
                 </div>
+
+                @if (IsManufacturers)
+                {
+                    <div class="user-form-field">
+                        <label>Страна <span>*</span></label>
+                        <input @bind="_editCountry" placeholder="Введите страну" />
+                    </div>
+                }
 
                 <div class="tool-form-actions modal-footer">
                     <button class="secondary-button" type="button" @onclick="CloseEditModal">
@@ -193,6 +226,15 @@
                            placeholder="Введите название" />
                 </div>
 
+                @if (IsManufacturers)
+                {
+                    <div class="user-form-field">
+                        <label>Страна <span>*</span></label>
+                        <input @bind="_createCountry"
+                               placeholder="Введите страну" />
+                    </div>
+                }
+
                 <div class="tool-form-actions modal-footer">
                     <button class="secondary-button"
                             type="button"
@@ -226,6 +268,11 @@
 
     private string _createName = string.Empty;
     private string _editName = string.Empty;
+
+    private string _createCountry = string.Empty;
+    private string _editCountry = string.Empty;
+
+    private bool IsManufacturers => DictionaryCode == "manufacturers";
 
     private string DictionaryTitle =>
         GetSettings()?.Title ?? "Справочник";
@@ -266,6 +313,7 @@
             .Select(x => new DictionaryItem(
                 x.Id,
                 x.Name,
+                x.Country,
                 x.CreatedAt.ToString("dd.MM.yyyy"),
                 x.UpdatedAt?.ToString("dd.MM.yyyy") ?? "-"))
             .ToList();
@@ -281,26 +329,35 @@
     private void OpenCreateModal()
     {
         _createName = string.Empty;
+        _createCountry = string.Empty;
+
         _isCreateModalOpen = true;
     }
 
     private void CloseCreateModal()
     {
         _isCreateModalOpen = false;
+
         _createName = string.Empty;
+        _createCountry = string.Empty;
     }
 
     private void OpenEditModal(DictionaryItem item)
     {
         _selectedItem = item;
+
         _editName = item.Name;
+        _editCountry = item.Country ?? string.Empty;
+
         _isEditModalOpen = true;
     }
 
     private void CloseEditModal()
     {
         _isEditModalOpen = false;
+
         _editName = string.Empty;
+        _editCountry = string.Empty;
     }
 
     private void OpenDeleteModal(DictionaryItem item)
@@ -330,9 +387,14 @@
             return;
         }
 
+        var request = CreateRequest(_createName.Trim());
+
+        if (request is null)
+            return;
+
         var result = await DictionaryCrudService.CreateAsync(
             settings.Url,
-            new DictionaryNameRequest(_createName.Trim()),
+            request,
             settings.CreateErrorCode,
             settings.CreateErrorMessage);
 
@@ -368,9 +430,14 @@
             return;
         }
 
+        var request = CreateRequest(_editName.Trim(), isEdit: true);
+
+        if (request is null)
+            return;
+
         var result = await DictionaryCrudService.UpdateAsync(
             $"{settings.Url}/{_selectedItem.Id}",
-            new DictionaryNameRequest(_editName.Trim()),
+            request,
             settings.UpdateErrorCode,
             settings.UpdateErrorMessage);
 
@@ -416,6 +483,28 @@
         CloseDeleteModal();
 
         await LoadDictionaryAsync();
+    }
+
+    private object? CreateRequest(
+        string name,
+        bool isEdit = false)
+    {
+        if (!IsManufacturers)
+            return new DictionaryNameRequest(name);
+
+        var country = isEdit
+            ? _editCountry
+            : _createCountry;
+
+        if (string.IsNullOrWhiteSpace(country))
+        {
+            NotificationService.Error("Введите страну");
+            return null;
+        }
+
+        return new ManufacturerDictionaryRequest(
+            name,
+            country.Trim());
     }
 
     private DictionarySettings? GetSettings()
@@ -496,7 +585,7 @@
                 CreateErrorMessage: "Не удалось создать статус инструмента",
                 UpdateErrorMessage: "Не удалось обновить статус инструмента",
                 DeleteErrorMessage: "Не удалось удалить статус инструмента"),
-            
+
             "roles" => new DictionarySettings(
                 Title: "Роли пользователей",
                 Url: "api/roles",
@@ -511,7 +600,22 @@
                 CreateErrorMessage: "Не удалось создать роль",
                 UpdateErrorMessage: "Не удалось обновить роль",
                 DeleteErrorMessage: "Не удалось удалить роль"),
-            
+
+            "manufacturers" => new DictionarySettings(
+                Title: "Производители",
+                Url: "api/manufacturers",
+                CreateSuccessMessage: "Производитель создан",
+                UpdateSuccessMessage: "Производитель обновлен",
+                DeleteSuccessMessage: "Производитель удален",
+                LoadErrorCode: "manufacturers.load.failed",
+                CreateErrorCode: "manufacturer.create.failed",
+                UpdateErrorCode: "manufacturer.update.failed",
+                DeleteErrorCode: "manufacturer.delete.failed",
+                LoadErrorMessage: "Не удалось загрузить производителей",
+                CreateErrorMessage: "Не удалось создать производителя",
+                UpdateErrorMessage: "Не удалось обновить производителя",
+                DeleteErrorMessage: "Не удалось удалить производителя"),
+
             _ => null
         };
     }

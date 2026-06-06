@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderStatusesRepository, OrderStatusesRepository>();
         services.AddScoped<IToolStatusesRepository, ToolStatusesRepository>();
         services.AddScoped<IToolCategoriesRepository, ToolCategoriesRepository>();
+        services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
         
         services.AddScoped<ITransactionManager, TransactionManager>();
         

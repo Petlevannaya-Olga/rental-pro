@@ -94,6 +94,7 @@ using (var scope = app.Services.CreateScope())
     await OrderStatusesSeeder.SeedAsync(context);
     await ToolCategoriesSeeder.SeedAsync(context);
     await ToolStatusesSeeder.SeedAsync(context);
+    await ManufacturersSeeder.SeedAsync(context);
 }
 
 app.Run();
