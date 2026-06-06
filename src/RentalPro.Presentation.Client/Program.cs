@@ -25,5 +25,6 @@ builder.Services.AddScoped<OrderStatusesService>();
 builder.Services.AddScoped<ToolCategoriesService>();
 builder.Services.AddScoped<DictionaryCrudService>();
 builder.Services.AddScoped<ToolsService>();
+builder.Services.AddScoped<FakeToolGeneratorService>();
 
 await builder.Build().RunAsync();

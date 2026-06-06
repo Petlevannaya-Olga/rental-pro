@@ -3,12 +3,14 @@
 
 @using System.ComponentModel.DataAnnotations
 @using RentalPro.Contracts.Tools
+@using RentalPro.Presentation.Client.Models
 @using RentalPro.Presentation.Client.Models.Dictionaries
 @using RentalPro.Presentation.Client.Services
 
 @inject NotificationService NotificationService
 @inject ToolsService ToolsService
 @inject DictionaryCrudService DictionaryCrudService
+@inject FakeToolGeneratorService FakeToolGeneratorService
 
 <div class="users-page">
 
@@ -272,7 +274,16 @@
                     TotalItems="_filteredTotalCount"
                     StartItem="PageStart"
                     EndItem="PageEnd"
-                    PageChanged="GoToPage"/>
+                    PageChanged="GoToPage">
+            <LeftContent>
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="GenerateFakeTools">
+                    <i class="bi bi-magic"></i>
+                    Заполнить тестовыми данными
+                </button>
+            </LeftContent>
+        </Pagination>
 
     </div>
 
@@ -362,7 +373,7 @@
                                 <div class="photo-preview">
                                     @if (!string.IsNullOrWhiteSpace(_photoPreviewUrl))
                                     {
-                                        <img src="@_photoPreviewUrl" alt="Фото инструмента" />
+                                        <img src="@_photoPreviewUrl" alt="Фото инструмента"/>
                                     }
                                     else
                                     {
@@ -381,13 +392,13 @@
                                 <p class="photo-formats">
                                     PNG, JPG, JPEG до 10 МБ
                                 </p>
-                                
+
                                 <label class="photo-button">
                                     <i class="bi bi-upload"></i>
                                     Выбрать файл
 
                                     <InputFile OnChange="HandlePhotoSelected"
-                                               accept="image/*" />
+                                               accept="image/*"/>
                                 </label>
 
                             </div>
@@ -497,7 +508,8 @@
                         </button>
 
                         <button class="secondary-button"
-                                type="button">
+                                type="button"
+                                @onclick="FillFakeToolData">
                             <i class="bi bi-magic"></i>
                             Заполнить тестовыми данными
                         </button>
@@ -513,10 +525,117 @@
         </div>
     }
 
+    @if (_isViewModalOpen && _viewTool is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="tool-view-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>@_viewTool.Name</h3>
+                        <p>Карточка инструмента</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseViewModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="tool-view-layout">
+
+                    <div class="tool-view-photo">
+                        @if (!string.IsNullOrWhiteSpace(_viewTool.PhotoPath))
+                        {
+                            <img src="@_viewTool.PhotoPath"
+                                 alt="@_viewTool.Name"/>
+                        }
+                        else
+                        {
+                            <div class="tool-view-photo-empty">
+                                <i class="bi bi-camera"></i>
+                                <span>Фотография не загружена</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="tool-view-info">
+
+                        <div class="tool-view-grid">
+                            <div class="tool-view-item">
+                                <span>Артикул</span>
+                                <strong>@_viewTool.ArticleNumber</strong>
+                            </div>
+
+                            <div class="tool-view-item">
+                                <span>Категория</span>
+                                <strong>@_viewTool.CategoryName</strong>
+                            </div>
+
+                            <div class="tool-view-item">
+                                <span>Производитель</span>
+                                <strong>@_viewTool.ManufacturerName</strong>
+                            </div>
+
+                            <div class="tool-view-item">
+                                <span>Статус</span>
+                                <strong>
+                                <span class="@GetToolStatusClass(_viewTool.StatusName)">
+                                    @_viewTool.StatusName
+                                </span>
+                                </strong>
+                            </div>
+
+                            <div class="tool-view-item">
+                                <span>Серийный номер</span>
+                                <strong>@_viewTool.SerialNumber</strong>
+                            </div>
+
+                            <div class="tool-view-item">
+                                <span>Инвентарный номер</span>
+                                <strong>@_viewTool.InventoryNumber</strong>
+                            </div>
+
+                            <div class="tool-view-item">
+                                <span>Аренда за день</span>
+                                <strong>@_viewTool.RentalPricePerDay.ToString("N0") ₽</strong>
+                            </div>
+
+                            <div class="tool-view-item">
+                                <span>Залог</span>
+                                <strong>@_viewTool.DepositAmount.ToString("N0") ₽</strong>
+                            </div>
+                        </div>
+
+                        <div class="tool-view-section">
+                            <span>Текущее состояние</span>
+                            <p>@(_viewTool.CurrentCondition ?? "Не указано")</p>
+                        </div>
+
+                        <div class="tool-view-section">
+                            <span>Описание</span>
+                            <p>@(_viewTool.Description ?? "Описание не указано")</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseViewModal">
+                        Закрыть
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+
 </div>
 
 @code
 {
+    private readonly Random _random = new();
     private CancellationTokenSource? _searchCts;
     private const int PageSize = 5;
 
@@ -550,6 +669,9 @@
     private bool _descending = true;
 
     private string _activeStatsFilter = "all";
+
+    private bool _isViewModalOpen;
+    private ToolDto? _viewTool;
 
     private int PageStart =>
         _filteredTotalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
@@ -787,6 +909,14 @@
         if (_selectedTool is null)
             return;
 
+        if (action == "Просмотр")
+        {
+            _viewTool = _selectedTool;
+            _isViewModalOpen = true;
+            CloseActionsMenu();
+            return;
+        }
+
         NotificationService.Info($"{action}: {_selectedTool.Name}");
 
         CloseActionsMenu();
@@ -838,6 +968,8 @@
 
         var toolId = result.Value;
 
+        var imageUploadFailed = false;
+
         if (_selectedImageFile is not null)
         {
             var uploadResult = await ToolsService.UploadToolImageAsync(
@@ -846,14 +978,22 @@
 
             if (uploadResult.IsFailure)
             {
-                NotificationService.Error(uploadResult.Error.Message);
-                return;
+                imageUploadFailed = true;
+                
+                NotificationService.Error(
+                    $"Инструмент создан, но фото не загружено: {uploadResult.Error.Message}");
             }
         }
 
-        NotificationService.Success($"Инструмент «{_newTool.Name}» успешно добавлен");
+        if (!imageUploadFailed)
+        {
+            NotificationService.Success($"Инструмент «{_newTool.Name}» успешно добавлен");
+        }
 
         CloseCreateModal();
+
+        _selectedImageFile = null;
+        _photoPreviewUrl = null;
 
         _currentPage = 1;
 
@@ -866,9 +1006,11 @@
         _selectedImageFile = e.File;
         _newTool.PhotoPath = e.File.Name;
 
-        await using var stream = e.File.OpenReadStream(10 * 1024 * 1024);
+        await using var stream = e.File.OpenReadStream(
+            maxAllowedSize: 10 * 1024 * 1024);
 
         using var memoryStream = new MemoryStream();
+
         await stream.CopyToAsync(memoryStream);
 
         var base64 = Convert.ToBase64String(memoryStream.ToArray());
@@ -918,39 +1060,95 @@
         };
     }
 
-    private sealed class ToolFormModel
+    private static T PickRandom<T>(
+        IReadOnlyList<T> items,
+        Random random)
     {
-        [Required(ErrorMessage = "Укажите артикул")]
-        public string ArticleNumber { get; set; } = string.Empty;
+        return items[random.Next(items.Count)];
+    }
 
-        [Required(ErrorMessage = "Укажите название")]
-        public string Name { get; set; } = string.Empty;
+    private void FillFakeToolData()
+    {
+        _newTool = FakeToolGeneratorService.Generate();
 
-        public string? Description { get; set; }
+        if (_categories.Count > 0)
+        {
+            _newTool.CategoryId =
+                PickRandom(_categories, _random).Id;
+        }
 
-        [Required(ErrorMessage = "Выберите категорию")]
-        public Guid? CategoryId { get; set; }
+        if (_manufacturers.Count > 0)
+        {
+            _newTool.ManufacturerId =
+                PickRandom(_manufacturers, _random).Id;
+        }
 
-        [Required(ErrorMessage = "Выберите производителя")]
-        public Guid? ManufacturerId { get; set; }
+        if (_statuses.Count > 0)
+        {
+            _newTool.StatusId =
+                PickRandom(_statuses, _random).Id;
+        }
+    }
 
-        [Required(ErrorMessage = "Выберите статус")]
-        public Guid? StatusId { get; set; }
+    private async Task GenerateFakeTools()
+    {
+        if (_categories.Count == 0 ||
+            _manufacturers.Count == 0 ||
+            _statuses.Count == 0)
+        {
+            NotificationService.Error(
+                "Не удалось загрузить справочники для генерации инструментов");
 
-        [Range(1, 1_000_000, ErrorMessage = "Стоимость аренды должна быть больше 0")]
-        public decimal RentalPricePerDay { get; set; }
+            return;
+        }
 
-        [Range(0, 1_000_000, ErrorMessage = "Залог не может быть отрицательным")]
-        public decimal DepositAmount { get; set; }
+        const int count = 10;
 
-        [Required(ErrorMessage = "Укажите серийный номер")]
-        public string SerialNumber { get; set; } = string.Empty;
+        for (var i = 0; i < count; i++)
+        {
+            var tool = FakeToolGeneratorService.Generate();
 
-        [Required(ErrorMessage = "Укажите инвентарный номер")]
-        public string InventoryNumber { get; set; } = string.Empty;
+            tool.CategoryId =
+                PickRandom(_categories, _random).Id;
 
-        public string? CurrentCondition { get; set; }
+            tool.ManufacturerId =
+                PickRandom(_manufacturers, _random).Id;
 
-        public string? PhotoPath { get; set; }
+            tool.StatusId =
+                PickRandom(_statuses, _random).Id;
+
+            var request = new CreateToolRequest(
+                ArticleNumber: tool.ArticleNumber,
+                Name: tool.Name,
+                Description: tool.Description,
+                CategoryId: tool.CategoryId!.Value,
+                ManufacturerId: tool.ManufacturerId!.Value,
+                StatusId: tool.StatusId!.Value,
+                RentalPricePerDay: tool.RentalPricePerDay,
+                DepositAmount: tool.DepositAmount,
+                SerialNumber: tool.SerialNumber,
+                InventoryNumber: tool.InventoryNumber,
+                CurrentCondition: tool.CurrentCondition);
+
+            var result = await ToolsService.CreateToolAsync(request);
+
+            if (result.IsFailure)
+            {
+                NotificationService.Error(result.Error.Message);
+                return;
+            }
+        }
+
+        await LoadStatsAsync();
+        await LoadToolsAsync();
+
+        NotificationService.Success(
+            $"Успешно создано {count} тестовых инструментов");
+    }
+
+    private void CloseViewModal()
+    {
+        _isViewModalOpen = false;
+        _viewTool = null;
     }
 }
