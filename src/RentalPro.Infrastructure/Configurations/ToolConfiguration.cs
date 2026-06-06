@@ -143,19 +143,22 @@ public sealed class ToolConfiguration : IEntityTypeConfiguration<Tool>
             .HasColumnName("deleted_at");
 
         builder
-            .HasOne<ToolCategory>()
+            .HasOne(x => x.Category)
             .WithMany()
-            .HasForeignKey(x => x.CategoryId);
+            .HasForeignKey(x => x.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
-            .HasOne<Manufacturer>()
+            .HasOne(x => x.Manufacturer)
             .WithMany()
-            .HasForeignKey(x => x.ManufacturerId);
+            .HasForeignKey(x => x.ManufacturerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
-            .HasOne<ToolStatus>()
+            .HasOne(x => x.Status)
             .WithMany()
-            .HasForeignKey(x => x.StatusId);
+            .HasForeignKey(x => x.StatusId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
             .HasIndex(x => x.ArticleNumber)

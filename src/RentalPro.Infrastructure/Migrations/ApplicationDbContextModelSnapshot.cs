@@ -1362,23 +1362,29 @@ namespace RentalPro.Infrastructure.Migrations
 
             modelBuilder.Entity("RentalPro.Domain.Tools.Tool", b =>
                 {
-                    b.HasOne("RentalPro.Domain.Tools.ToolCategory", null)
+                    b.HasOne("RentalPro.Domain.Tools.ToolCategory", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("RentalPro.Domain.Manufacturers.Manufacturer", null)
+                    b.HasOne("RentalPro.Domain.Manufacturers.Manufacturer", "Manufacturer")
                         .WithMany()
                         .HasForeignKey("ManufacturerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("RentalPro.Domain.Tools.ToolStatus", null)
+                    b.HasOne("RentalPro.Domain.Tools.ToolStatus", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Manufacturer");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("RentalPro.Domain.Tools.ToolPurchase", b =>

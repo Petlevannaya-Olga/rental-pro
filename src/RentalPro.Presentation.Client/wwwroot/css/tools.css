@@ -380,3 +380,142 @@
 .paging-actions {
     justify-self: end;
 }
+
+.stats-filter-card {
+    cursor: pointer;
+}
+
+.stats-filter-card.active {
+    outline: 2px solid #2563eb;
+    border-radius: 18px;
+}
+
+.tool-description-field {
+    grid-column: 1 / -1;
+}
+
+.tool-description-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.photo-upload {
+    height: 100%;
+    min-height: 360px;
+
+    border: 2px dashed #dbe4f0;
+    border-radius: 18px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    padding: 24px;
+    text-align: center;
+}
+
+.photo-preview {
+    font-size: 72px;
+    color: #d6dff5;
+}
+
+.photo-title {
+    margin: 0;
+
+    font-size: 28px;
+    font-weight: 600;
+    color: #24324b;
+}
+
+.photo-subtitle {
+    font-size: 18px;
+    color: #64748b;
+}
+
+.photo-hint {
+    color: #94a3b8;
+    font-size: 15px;
+}
+
+.photo-button {
+    margin-top: 12px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 12px 20px;
+
+    border: 1px solid #dbe4f0;
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    background: white;
+    color: #24324b;
+    font-weight: 600;
+}
+
+.photo-button:hover {
+    background: #f8fafc;
+}
+
+.photo-button input[type="file"] {
+    display: none;
+}
+
+.photo-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.photo-subtitle {
+    margin-top: 8px;
+    margin-bottom: 0;
+    font-size: 15px;
+    color: #6b7280;
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.photo-formats {
+    margin-top: 4px;
+    margin-bottom: 0;
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+.photo-button {
+    position: relative;
+    overflow: hidden;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 12px 18px;
+
+    border: 1px solid #d9e2ef;
+    border-radius: 12px;
+
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.photo-button input[type="file"] {
+    position: absolute;
+    inset: 0;
+
+    opacity: 0;
+    cursor: pointer;
+}

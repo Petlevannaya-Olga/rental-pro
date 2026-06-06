@@ -1,20 +1,20 @@
 ﻿<div class="table-paging">
 
+    <div class="table-paging-left">
+        @if (LeftContent is not null)
+        {
+            @LeftContent
+        }
+    </div>
+
     <span>
         @($"Показано {StartItem}-{EndItem} из {TotalItems}")
     </span>
 
-    @if (TotalPages > 1)
-    {
-        <div class="paging-actions">
-            
-            <div class="table-paging-left">
-                @if (LeftContent is not null)
-                {
-                    @LeftContent
-                }
-            </div>
+    <div class="paging-actions">
 
+        @if (TotalPages > 1)
+        {
             <button class="paging-button"
                     disabled="@(CurrentPage == 1)"
                     @onclick="PreviousClicked">
@@ -43,9 +43,9 @@
                     @onclick="NextClicked">
                 <i class="bi bi-chevron-right"></i>
             </button>
+        }
 
-        </div>
-    }
+    </div>
 
 </div>
 
@@ -64,7 +64,7 @@
 
     [Parameter]
     public int EndItem { get; set; }
-    
+
     [Parameter]
     public RenderFragment? LeftContent { get; set; }
 
@@ -94,6 +94,9 @@
             const int delta = 2;
 
             var pages = new List<int?>();
+
+            if (TotalPages <= 1)
+                return pages;
 
             if (TotalPages <= 7)
             {

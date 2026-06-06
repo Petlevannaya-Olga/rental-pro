@@ -2,149 +2,288 @@
 @layout AdminLayout
 
 @using System.ComponentModel.DataAnnotations
-@using Microsoft.AspNetCore.Components.Forms
+@using RentalPro.Contracts.Tools
+@using RentalPro.Presentation.Client.Models.Dictionaries
 @using RentalPro.Presentation.Client.Services
-@using RentalPro.Presentation.Client.Shared.Components
 
 @inject NotificationService NotificationService
+@inject ToolsService ToolsService
+@inject DictionaryCrudService DictionaryCrudService
 
-<div class="tools-page">
+<div class="users-page">
 
-    <div class="page-actions">
-        <button class="primary-button" @onclick="OpenCreateModal">
+    <div class="users-stats">
+
+        <div class="stats-filter-card @GetStatsCardClass("all")"
+             @onclick='() => ApplyStatsFilter("all")'>
+            <StatCard Title="Всего инструментов"
+                      Value="@_statsTotalCount.ToString()"
+                      Icon="bi bi-tools"
+                      Color="blue"/>
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("available")"
+             @onclick='() => ApplyStatsFilter("available")'>
+            <StatCard Title="Доступно"
+                      Value="@_availableCount.ToString()"
+                      Icon="bi bi-check-circle"
+                      Color="green"/>
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("rented")"
+             @onclick='() => ApplyStatsFilter("rented")'>
+            <StatCard Title="В аренде"
+                      Value="@_rentedCount.ToString()"
+                      Icon="bi bi-arrow-left-right"
+                      Color="orange"/>
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("repair")"
+             @onclick='() => ApplyStatsFilter("repair")'>
+            <StatCard Title="На ремонте"
+                      Value="@_repairCount.ToString()"
+                      Icon="bi bi-wrench-adjustable"
+                      Color="red"/>
+        </div>
+
+        <button class="users-add-card"
+                @onclick="OpenCreateModal">
             <i class="bi bi-plus-lg"></i>
-            Добавить инструмент
+            <span>Добавить инструмент</span>
         </button>
+
     </div>
 
-    @code
-    {
-        private int AvailableToolsCount =>
-            _tools.Count(x => x.Status == "Доступен");
+    <div class="users-table-card">
 
-        private int RentedToolsCount =>
-            _tools.Count(x => x.Status == "В аренде");
+        <div class="users-filters">
+            <div class="users-filters-top">
 
-        private int RepairToolsCount =>
-            _tools.Count(x => x.Status == "На ремонте");
-    }
-    
-    <div class="tools-stats">
-        <StatCard Title="Всего инструментов"
-                  Value="@_tools.Count.ToString()"
-                  Icon="bi bi-tools"
-                  Color="blue"/>
+                <div class="filter-group search-filter">
+                    <label>Поиск по названию, инвентарному или серийному номеру</label>
 
-        <StatCard Title="Доступно"
-                  Value="@_tools.Count(x => x.Status == "Доступен").ToString()"
-                  Icon="bi bi-check-circle"
-                  Color="green"/>
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
 
-        <StatCard Title="В аренде"
-                  Value="@_tools.Count(x => x.Status == "В аренде").ToString()"
-                  Icon="bi bi-arrow-left-right"
-                  Color="orange"/>
+                        <input placeholder="Название, инв. номер или серийный номер..."
+                               value="@_search"
+                               @oninput="OnSearchChanged"/>
+                    </div>
+                </div>
 
-        <StatCard Title="На ремонте"
-                  Value="@_tools.Count(x => x.Status == "На ремонте").ToString()"
-                  Icon="bi bi-wrench-adjustable"
-                  Color="red"/>
-    </div>
+                <button class="secondary-button" @onclick="ExportTools">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
 
-    <div class="tools-table-card">
+            </div>
 
-        <TableToolbar SearchText="@_searchText"
-                      SearchTextChanged="value => _searchText = value"
-                      SearchPlaceholder="Поиск по названию, артикулу или серийному номеру..."
-                      ExportClicked="ExportTools">
+            <div class="users-filters-bottom">
 
-            <select class="filter-select" @bind="_selectedCategory">
-                <option>Все категории</option>
-                <option>Перфораторы</option>
-                <option>Шуруповерты</option>
-                <option>Болгарки</option>
-            </select>
+                <div class="filter-group">
+                    <label>Категория</label>
 
-            <select class="filter-select" @bind="_selectedStatus">
-                <option>Все статусы</option>
-                <option>Доступен</option>
-                <option>В аренде</option>
-                <option>На ремонте</option>
-                <option>Списан</option>
-            </select>
+                    <select class="filter-select"
+                            @bind="_categoryId"
+                            @bind:after="ApplyFilters">
+                        <option value="">Все категории</option>
 
-        </TableToolbar>
+                        @foreach (var category in _categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
 
-        <table class="tools-table">
-            <thead>
-            <tr>
-                <th class="sortable-column">Инструмент <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Категория <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Артикул <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Серийный номер <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Стоимость/день <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Залог <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
-                <th></th>
-            </tr>
-            </thead>
+                <div class="filter-group">
+                    <label>Статус</label>
 
-            <tbody>
-            @foreach (var tool in PagedTools)
-            {
+                    <select class="filter-select"
+                            @bind="_statusId"
+                            @bind:after="ApplyFilters">
+                        <option value="">Все статусы</option>
+
+                        @foreach (var status in _statuses)
+                        {
+                            <option value="@status.Id">@status.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Производитель</label>
+
+                    <select class="filter-select"
+                            @bind="_manufacturerId"
+                            @bind:after="ApplyFilters">
+                        <option value="">Все производители</option>
+
+                        @foreach (var manufacturer in _manufacturers)
+                        {
+                            <option value="@manufacturer.Id">@manufacturer.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <button class="secondary-button filter-reset-button"
+                            @onclick="ResetFilters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        Сбросить
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        @if (_isLoading)
+        {
+            <table class="users-table">
+                <thead>
                 <tr>
-                    <td>
-                        <div class="tool-cell">
-                            <div class="tool-thumb @tool.Color">
-                                <i class="@tool.Icon"></i>
-                            </div>
-
-                            <div>
-                                <strong>@tool.Name</strong>
-                                <span>Инв. № @tool.InventoryNumber</span>
-                            </div>
-                        </div>
-                    </td>
-
-                    <td>@tool.Category</td>
-                    <td>@tool.ArticleNumber</td>
-                    <td>@tool.SerialNumber</td>
-                    <td>@tool.RentalPricePerDay.ToString("N0") ₽</td>
-                    <td>@tool.DepositAmount.ToString("N0") ₽</td>
-
-                    <td>
-                        <span class="@GetStatusClass(tool.Status)">
-                            @tool.Status
-                        </span>
-                    </td>
-
-                    <td class="actions-cell">
-                        <button class="icon-button" @onclick="() => OpenActionsMenu(tool.Name)">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                    </td>
+                    <th>Инструмент</th>
+                    <th>Категория</th>
+                    <th>Производитель</th>
+                    <th>Серийный номер</th>
+                    <th>Аренда/день</th>
+                    <th>Залог</th>
+                    <th>Статус</th>
+                    <th></th>
                 </tr>
-            }
-            </tbody>
-        </table>
+                </thead>
 
-        <Pagination
-            CurrentPage="_currentPage"
-            TotalPages="TotalPages"
-            TotalItems="_tools.Count"
-            StartItem="PageStart"
-            EndItem="PageEnd"
-            PageChanged="GoToPage" />
+                <tbody>
+                @for (var i = 0; i < PageSize; i++)
+                {
+                    <tr>
+                        <td>
+                            <div class="skeleton-user-cell">
+                                <div class="skeleton skeleton-avatar"></div>
+                                <div class="skeleton-lines">
+                                    <div class="skeleton skeleton-line wide"></div>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-badge"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-dot"></div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (_tools.Count == 0)
+        {
+            <div class="table-empty">Инструменты не найдены</div>
+        }
+        else
+        {
+            <table class="users-table">
+                <thead>
+                <tr>
+                    <th class="sortable-column" @onclick='() => ChangeSort("name")'>
+                        Инструмент <i class="bi bi-arrow-down-up"></i>
+                    </th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("category")'>
+                        Категория <i class="bi bi-arrow-down-up"></i>
+                    </th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("manufacturer")'>
+                        Производитель <i class="bi bi-arrow-down-up"></i>
+                    </th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("serialnumber")'>
+                        Серийный номер <i class="bi bi-arrow-down-up"></i>
+                    </th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("rentalprice")'>
+                        Аренда/день <i class="bi bi-arrow-down-up"></i>
+                    </th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("deposit")'>
+                        Залог <i class="bi bi-arrow-down-up"></i>
+                    </th>
+                    <th class="sortable-column" @onclick='() => ChangeSort("status")'>
+                        Статус <i class="bi bi-arrow-down-up"></i>
+                    </th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                @foreach (var tool in _tools)
+                {
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">
+                                    <i class="bi bi-tools"></i>
+                                </div>
+
+                                <div>
+                                    <strong>@tool.Name</strong>
+                                    <span>Инв. № @tool.InventoryNumber</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>@tool.CategoryName</td>
+                        <td>@tool.ManufacturerName</td>
+                        <td>@tool.SerialNumber</td>
+                        <td>@tool.RentalPricePerDay.ToString("N0") ₽</td>
+                        <td>@tool.DepositAmount.ToString("N0") ₽</td>
+
+                        <td>
+                            <span class="@GetToolStatusClass(tool.StatusName)">
+                                @tool.StatusName
+                            </span>
+                        </td>
+
+                        <td class="actions-cell">
+                            <button class="icon-button"
+                                    @onclick="() => OpenActionsMenu(tool)">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="TotalPages"
+                    TotalItems="_filteredTotalCount"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage"/>
+
     </div>
 
-    @if (_isActionsMenuOpen)
+    @if (_isActionsMenuOpen && _selectedTool is not null)
     {
         <div class="actions-backdrop" @onclick="CloseActionsMenu">
             <div class="actions-modal" @onclick:stopPropagation="true">
                 <div class="actions-modal-header">
                     <div>
                         <h3>Действия с инструментом</h3>
-                        <p>@_selectedToolName</p>
+                        <p>@_selectedTool.Name</p>
                     </div>
 
                     <button type="button" @onclick="CloseActionsMenu">
@@ -179,11 +318,6 @@
                     Перевести в ремонт
                 </button>
 
-                <button class="menu-item" @onclick='() => ExecuteToolAction("Возврат из ремонта")'>
-                    <i class="bi bi-check-circle"></i>
-                    Вернуть из ремонта
-                </button>
-
                 <button class="menu-item" @onclick='() => ExecuteToolAction("Списание")'>
                     <i class="bi bi-box-seam"></i>
                     Списать
@@ -201,13 +335,13 @@
 
     @if (_isCreateModalOpen)
     {
-        <div class="actions-backdrop" @onclick="CloseCreateModal">
+        <div class="actions-backdrop">
             <div class="tool-create-modal large" @onclick:stopPropagation="true">
 
-                <div class="tool-create-header">
+                <div class="actions-modal-header">
                     <div>
                         <h3>Добавить инструмент</h3>
-                        <p>Заполните основные данные инструмента</p>
+                        <p>Заполните данные инструмента</p>
                     </div>
 
                     <button type="button" @onclick="CloseCreateModal">
@@ -218,119 +352,158 @@
                 <EditForm Model="_newTool" OnValidSubmit="CreateTool">
                     <DataAnnotationsValidator/>
 
-                    <div class="tool-create-layout">
+                    <div class="tool-create-layout tool-create-layout-compact">
 
-                        <div class="photo-panel">
-                            <label>Фотография инструмента <span>*</span></label>
+                        <div class="photo-panel tool-photo-panel">
+                            <label>Фотография инструмента</label>
 
                             <div class="photo-upload">
-                                <button type="button" class="photo-remove">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
 
                                 <div class="photo-preview">
-                                    <i class="bi bi-tools"></i>
+                                    @if (!string.IsNullOrWhiteSpace(_photoPreviewUrl))
+                                    {
+                                        <img src="@_photoPreviewUrl" alt="Фото инструмента" />
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-tools"></i>
+                                    }
                                 </div>
 
-                                <div class="photo-upload-bottom">
-                                    <i class="bi bi-cloud-arrow-up"></i>
-                                    <p>Нажмите или перетащите файл сюда</p>
-                                    <small>PNG, JPG, JPEG до 10 МБ</small>
+                                <p class="photo-title">
+                                    Перетащите файл сюда
+                                </p>
 
-                                    <InputFile OnChange="HandlePhotoSelected" accept="image/*"/>
-                                </div>
+                                <p class="photo-subtitle">
+                                    или нажмите для выбора
+                                </p>
+
+                                <p class="photo-formats">
+                                    PNG, JPG, JPEG до 10 МБ
+                                </p>
+                                
+                                <label class="photo-button">
+                                    <i class="bi bi-upload"></i>
+                                    Выбрать файл
+
+                                    <InputFile OnChange="HandlePhotoSelected"
+                                               accept="image/*" />
+                                </label>
+
                             </div>
-
-                            @if (!string.IsNullOrWhiteSpace(_newTool.PhotoPath))
-                            {
-                                <div class="photo-file-name">
-                                    <i class="bi bi-image"></i>
-                                    @_newTool.PhotoPath
-                                </div>
-                            }
                         </div>
 
-                        <div class="tool-form-panel">
+                        <div class="tool-form-panel tool-form-panel-compact">
 
-                            <div class="tool-form-field wide">
-                                <label>Название инструмента <span>*</span></label>
-                                <InputText @bind-Value="_newTool.Name"
-                                           placeholder="Например: Перфоратор Bosch GBH 2-26"/>
-                                <ValidationMessage For="@(() => _newTool.Name)"/>
-                            </div>
-
-                            <div class="tool-form-grid compact">
-                                <div class="tool-form-field">
-                                    <label>Категория <span>*</span></label>
-                                    <InputSelect @bind-Value="_newTool.Category">
-                                        <option value="">Выберите категорию</option>
-                                        <option>Перфораторы</option>
-                                        <option>Шуруповерты</option>
-                                        <option>Болгарки</option>
-                                        <option>Измерительные</option>
-                                        <option>Садовая техника</option>
-                                    </InputSelect>
-                                    <ValidationMessage For="@(() => _newTool.Category)"/>
-                                </div>
+                            <div class="tool-form-grid tool-form-grid-compact">
 
                                 <div class="tool-form-field">
-                                    <label>Статус <span>*</span></label>
-                                    <InputSelect @bind-Value="_newTool.Status">
-                                        <option>Доступен</option>
-                                        <option>В аренде</option>
-                                        <option>На ремонте</option>
-                                        <option>Списан</option>
-                                    </InputSelect>
-                                    <ValidationMessage For="@(() => _newTool.Status)"/>
+                                    <label>Название <span>*</span></label>
+                                    <InputText @bind-Value="_newTool.Name"
+                                               placeholder="Введите название"/>
+                                    <ValidationMessage For="@(() => _newTool.Name)"/>
                                 </div>
 
                                 <div class="tool-form-field">
                                     <label>Артикул <span>*</span></label>
                                     <InputText @bind-Value="_newTool.ArticleNumber"
-                                               placeholder="Например: BOSCH-001"/>
+                                               placeholder="Введите артикул"/>
                                     <ValidationMessage For="@(() => _newTool.ArticleNumber)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Категория <span>*</span></label>
+                                    <InputSelect @bind-Value="_newTool.CategoryId">
+                                        <option value="">Выберите категорию</option>
+                                        @foreach (var category in _categories)
+                                        {
+                                            <option value="@category.Id">@category.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => _newTool.CategoryId)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Производитель <span>*</span></label>
+                                    <InputSelect @bind-Value="_newTool.ManufacturerId">
+                                        <option value="">Выберите производителя</option>
+                                        @foreach (var manufacturer in _manufacturers)
+                                        {
+                                            <option value="@manufacturer.Id">@manufacturer.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => _newTool.ManufacturerId)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Статус <span>*</span></label>
+                                    <InputSelect @bind-Value="_newTool.StatusId">
+                                        <option value="">Выберите статус</option>
+                                        @foreach (var status in _statuses)
+                                        {
+                                            <option value="@status.Id">@status.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => _newTool.StatusId)"/>
                                 </div>
 
                                 <div class="tool-form-field">
                                     <label>Серийный номер <span>*</span></label>
                                     <InputText @bind-Value="_newTool.SerialNumber"
-                                               placeholder="Например: SN-984512"/>
+                                               placeholder="Введите серийный номер"/>
                                     <ValidationMessage For="@(() => _newTool.SerialNumber)"/>
                                 </div>
 
                                 <div class="tool-form-field">
                                     <label>Инвентарный номер <span>*</span></label>
                                     <InputText @bind-Value="_newTool.InventoryNumber"
-                                               placeholder="Например: INV-001"/>
+                                               placeholder="Введите инвентарный номер"/>
                                     <ValidationMessage For="@(() => _newTool.InventoryNumber)"/>
                                 </div>
 
                                 <div class="tool-form-field">
-                                    <label>Стоимость аренды за день (₽) <span>*</span></label>
+                                    <label>Стоимость аренды за день <span>*</span></label>
                                     <InputNumber @bind-Value="_newTool.RentalPricePerDay"/>
                                     <ValidationMessage For="@(() => _newTool.RentalPricePerDay)"/>
                                 </div>
 
                                 <div class="tool-form-field">
-                                    <label>Залог (₽) <span>*</span></label>
+                                    <label>Залог <span>*</span></label>
                                     <InputNumber @bind-Value="_newTool.DepositAmount"/>
                                     <ValidationMessage For="@(() => _newTool.DepositAmount)"/>
                                 </div>
-                            </div>
 
-                            <div class="form-info">
-                                <i class="bi bi-info-circle"></i>
-                                <span>Поля, отмеченные <b>*</b>, обязательны для заполнения</span>
+                                <div class="tool-form-field">
+                                    <label>Текущее состояние</label>
+                                    <InputText @bind-Value="_newTool.CurrentCondition"
+                                               placeholder="Введите состояние"/>
+                                </div>
+
+                                <div class="tool-form-field tool-description-field">
+                                    <label>Описание</label>
+                                    <InputTextArea @bind-Value="_newTool.Description"
+                                                   placeholder="Краткое описание инструмента"/>
+                                </div>
+
                             </div>
                         </div>
                     </div>
 
                     <div class="tool-form-actions modal-footer">
-                        <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                        <button class="secondary-button"
+                                type="button"
+                                @onclick="CloseCreateModal">
                             Отмена
                         </button>
 
-                        <button class="primary-button" type="submit">
+                        <button class="secondary-button"
+                                type="button">
+                            <i class="bi bi-magic"></i>
+                            Заполнить тестовыми данными
+                        </button>
+
+                        <button class="primary-button"
+                                type="submit">
                             <i class="bi bi-check-lg"></i>
                             Сохранить инструмент
                         </button>
@@ -339,75 +512,291 @@
             </div>
         </div>
     }
+
 </div>
 
 @code
 {
+    private CancellationTokenSource? _searchCts;
     private const int PageSize = 5;
 
-    private int _currentPage = 1;
+    private List<ToolDto> _tools = [];
+    private ToolDto? _selectedTool;
+    private ToolFormModel _newTool = new();
+    private IBrowserFile? _selectedImageFile;
+    private string? _photoPreviewUrl;
+
+    private List<DictionaryItem> _categories = [];
+    private List<DictionaryItem> _manufacturers = [];
+    private List<DictionaryItem> _statuses = [];
+
+    private bool _isLoading = true;
     private bool _isActionsMenuOpen;
     private bool _isCreateModalOpen;
-    private string? _selectedToolName;
 
-    private ToolRow _newTool = CreateEmptyTool();
+    private int _currentPage = 1;
 
-    private readonly List<ToolRow> _tools =
-    [
-        new()
-        {
-            Name = "Перфоратор Bosch GBH 2-26",
-            Category = "Перфораторы",
-            ArticleNumber = "BOSCH-001",
-            SerialNumber = "SN-984512",
-            InventoryNumber = "INV-001",
-            RentalPricePerDay = 700,
-            DepositAmount = 5000,
-            Status = "Доступен",
-            Color = "blue",
-            Icon = "bi bi-tools"
-        }
-    ];
+    private int _statsTotalCount;
+    private int _filteredTotalCount;
+    private int _availableCount;
+    private int _rentedCount;
+    private int _repairCount;
 
-    private IEnumerable<ToolRow> PagedTools =>
-        _tools
-            .Skip((_currentPage - 1) * PageSize)
-            .Take(PageSize);
+    private string? _search;
+    private Guid? _categoryId;
+    private Guid? _statusId;
+    private Guid? _manufacturerId;
+    private string? _sortBy = "createdat";
+    private bool _descending = true;
 
-    private int TotalPages =>
-        (int)Math.Ceiling(_tools.Count / (double)PageSize);
+    private string _activeStatsFilter = "all";
 
     private int PageStart =>
-        _tools.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+        _filteredTotalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
 
     private int PageEnd =>
-        Math.Min(_currentPage * PageSize, _tools.Count);
+        Math.Min(_currentPage * PageSize, _filteredTotalCount);
 
-    private void OpenActionsMenu(string toolName)
+    private int TotalPages =>
+        _filteredTotalCount <= 0
+            ? 1
+            : (int)Math.Ceiling(_filteredTotalCount / (double)PageSize);
+
+    protected override async Task OnInitializedAsync()
     {
-        _selectedToolName = toolName;
+        await LoadDictionariesAsync();
+        await LoadStatsAsync();
+        await LoadToolsAsync();
+    }
+
+    private async Task LoadDictionariesAsync()
+    {
+        await LoadDictionaryAsync("api/tool-categories", _categories, "Не удалось загрузить категории инструментов");
+        await LoadDictionaryAsync("api/manufacturers", _manufacturers, "Не удалось загрузить производителей");
+        await LoadDictionaryAsync("api/tool-statuses", _statuses, "Не удалось загрузить статусы инструментов");
+    }
+
+    private async Task LoadDictionaryAsync(
+        string url,
+        List<DictionaryItem> target,
+        string errorMessage)
+    {
+        target.Clear();
+
+        var result = await DictionaryCrudService.GetListAsync<DictionaryItem>(
+            url,
+            "dictionary.load.failed",
+            errorMessage);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        target.AddRange(result.Value);
+    }
+
+    private async Task LoadToolsAsync()
+    {
+        _isLoading = true;
+
+        var request = new GetToolsRequest(
+            Search: _search,
+            CategoryId: _categoryId,
+            ManufacturerId: _manufacturerId,
+            StatusId: _statusId,
+            SortBy: _sortBy,
+            Descending: _descending,
+            Page: _currentPage,
+            PageSize: PageSize);
+
+        var result = await ToolsService.GetToolsAsync(request);
+
+        if (result.IsFailure)
+        {
+            _tools = [];
+            _filteredTotalCount = 0;
+            _isLoading = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _tools = result.Value.Items.ToList();
+        _filteredTotalCount = result.Value.TotalCount;
+
+        if (_currentPage > TotalPages)
+        {
+            _currentPage = TotalPages;
+            await LoadToolsAsync();
+            return;
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        var result = await ToolsService.GetStatsAsync();
+
+        if (result.IsFailure)
+        {
+            _statsTotalCount = 0;
+            _availableCount = 0;
+            _rentedCount = 0;
+            _repairCount = 0;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _statsTotalCount = result.Value.TotalCount;
+        _availableCount = result.Value.AvailableCount;
+        _rentedCount = result.Value.RentedCount;
+        _repairCount = result.Value.RepairCount;
+    }
+
+    private async Task ApplyStatsFilter(string filter)
+    {
+        _activeStatsFilter = filter;
+
+        switch (filter)
+        {
+            case "all":
+                _statusId = null;
+                break;
+
+            case "available":
+                _statusId = FindStatusId("Доступен");
+                break;
+
+            case "rented":
+                _statusId = FindStatusId("В аренде");
+                break;
+
+            case "repair":
+                _statusId = FindStatusId("На ремонте");
+                break;
+        }
+
+        _currentPage = 1;
+
+        await LoadToolsAsync();
+    }
+
+    private async Task ApplyFilters()
+    {
+        _activeStatsFilter = "custom";
+        _currentPage = 1;
+
+        await LoadToolsAsync();
+    }
+
+    private async Task ResetFilters()
+    {
+        _search = string.Empty;
+        _categoryId = null;
+        _statusId = null;
+        _manufacturerId = null;
+        _activeStatsFilter = "all";
+        _currentPage = 1;
+
+        await LoadToolsAsync();
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString();
+
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        try
+        {
+            await Task.Delay(500, token);
+
+            _currentPage = 1;
+            await LoadToolsAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            // ignored
+        }
+    }
+
+    private async Task ChangeSort(string sortBy)
+    {
+        if (_sortBy == sortBy)
+            _descending = !_descending;
+        else
+        {
+            _sortBy = sortBy;
+            _descending = false;
+        }
+
+        _currentPage = 1;
+
+        await LoadToolsAsync();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1)
+            return;
+
+        if (page > TotalPages)
+            return;
+
+        _currentPage = page;
+
+        await LoadToolsAsync();
+    }
+
+    private Guid? FindStatusId(string statusName)
+    {
+        return _statuses
+            .FirstOrDefault(x => x.Name == statusName)
+            ?.Id;
+    }
+
+    private string GetStatsCardClass(string filter)
+    {
+        return _activeStatsFilter == filter
+            ? "active"
+            : string.Empty;
+    }
+
+    private void OpenActionsMenu(ToolDto tool)
+    {
+        _selectedTool = tool;
         _isActionsMenuOpen = true;
     }
 
     private void CloseActionsMenu()
     {
         _isActionsMenuOpen = false;
-        _selectedToolName = null;
+        _selectedTool = null;
     }
 
     private void ExecuteToolAction(string action)
     {
-        if (string.IsNullOrWhiteSpace(_selectedToolName))
+        if (_selectedTool is null)
             return;
 
-        NotificationService.Info($"{action}: {_selectedToolName}");
+        NotificationService.Info($"{action}: {_selectedTool.Name}");
 
         CloseActionsMenu();
     }
 
     private void OpenCreateModal()
     {
-        _newTool = CreateEmptyTool();
+        _newTool = new ToolFormModel();
+        _selectedImageFile = null;
+        _photoPreviewUrl = null;
         _isCreateModalOpen = true;
     }
 
@@ -416,104 +805,137 @@
         _isCreateModalOpen = false;
     }
 
-    private void CreateTool()
+    private async Task CreateTool()
     {
-        var color = _newTool.Status switch
+        if (_newTool.CategoryId is null ||
+            _newTool.ManufacturerId is null ||
+            _newTool.StatusId is null)
         {
-            "Доступен" => "green",
-            "В аренде" => "blue",
-            "На ремонте" => "orange",
-            _ => "blue"
-        };
+            NotificationService.Error("Выберите категорию, производителя и статус");
+            return;
+        }
 
-        var createdTool = new ToolRow
+        var request = new CreateToolRequest(
+            ArticleNumber: _newTool.ArticleNumber,
+            Name: _newTool.Name,
+            Description: _newTool.Description,
+            CategoryId: _newTool.CategoryId.Value,
+            ManufacturerId: _newTool.ManufacturerId.Value,
+            StatusId: _newTool.StatusId.Value,
+            RentalPricePerDay: _newTool.RentalPricePerDay,
+            DepositAmount: _newTool.DepositAmount,
+            SerialNumber: _newTool.SerialNumber,
+            InventoryNumber: _newTool.InventoryNumber,
+            CurrentCondition: _newTool.CurrentCondition);
+
+        var result = await ToolsService.CreateToolAsync(request);
+
+        if (result.IsFailure)
         {
-            Name = _newTool.Name,
-            Category = _newTool.Category,
-            ArticleNumber = _newTool.ArticleNumber,
-            SerialNumber = _newTool.SerialNumber,
-            InventoryNumber = _newTool.InventoryNumber,
-            RentalPricePerDay = _newTool.RentalPricePerDay,
-            DepositAmount = _newTool.DepositAmount,
-            Status = _newTool.Status,
-            PhotoPath = _newTool.PhotoPath,
-            Color = color,
-            Icon = "bi bi-tools"
-        };
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
 
-        _tools.Insert(0, createdTool);
+        var toolId = result.Value;
+
+        if (_selectedImageFile is not null)
+        {
+            var uploadResult = await ToolsService.UploadToolImageAsync(
+                toolId,
+                _selectedImageFile);
+
+            if (uploadResult.IsFailure)
+            {
+                NotificationService.Error(uploadResult.Error.Message);
+                return;
+            }
+        }
+
+        NotificationService.Success($"Инструмент «{_newTool.Name}» успешно добавлен");
+
+        CloseCreateModal();
 
         _currentPage = 1;
-        _isCreateModalOpen = false;
 
-        NotificationService.Success($"Инструмент «{createdTool.Name}» успешно добавлен");
+        await LoadStatsAsync();
+        await LoadToolsAsync();
     }
 
-    private void PreviousPage()
+    private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
     {
-        if (_currentPage > 1)
-            _currentPage--;
+        _selectedImageFile = e.File;
+        _newTool.PhotoPath = e.File.Name;
+
+        await using var stream = e.File.OpenReadStream(10 * 1024 * 1024);
+
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+
+        var base64 = Convert.ToBase64String(memoryStream.ToArray());
+
+        _photoPreviewUrl = $"data:{e.File.ContentType};base64,{base64}";
     }
 
-    private void NextPage()
+    private void RemovePhoto()
     {
-        if (_currentPage < TotalPages)
-            _currentPage++;
+        _selectedImageFile = null;
+        _newTool.PhotoPath = null;
+        _photoPreviewUrl = null;
     }
 
-    private void GoToPage(int page)
+    private async Task ExportTools()
     {
-        _currentPage = page;
+        var request = new ExportToolsRequest
+        {
+            Search = _search,
+            CategoryId = _categoryId,
+            ManufacturerId = _manufacturerId,
+            StatusId = _statusId,
+            SortBy = _sortBy,
+            Descending = _descending
+        };
+
+        var result = await ToolsService.ExportToolsAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Инструменты экспортированы");
     }
 
-    private void HandlePhotoSelected(InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-        _newTool.PhotoPath = file.Name;
-    }
-
-    private static string GetStatusClass(string status)
+    private static string GetToolStatusClass(string status)
     {
         return status switch
         {
             "Доступен" => "status-badge available",
             "В аренде" => "status-badge rented",
             "На ремонте" => "status-badge repair",
+            "Списан" => "status-badge danger",
             _ => "status-badge"
         };
     }
 
-    private static ToolRow CreateEmptyTool()
+    private sealed class ToolFormModel
     {
-        return new ToolRow
-        {
-            Category = "Перфораторы",
-            Status = "Доступен",
-            Color = "green",
-            Icon = "bi bi-tools"
-        };
-    }
-
-    private sealed class ToolRow
-    {
-        [Required(ErrorMessage = "Укажите название")]
-        [MaxLength(100, ErrorMessage = "Название не должно быть длиннее 100 символов")]
-        public string Name { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Выберите категорию")]
-        public string Category { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Укажите артикул")]
-        [MaxLength(50, ErrorMessage = "Артикул не должен быть длиннее 50 символов")]
         public string ArticleNumber { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Укажите серийный номер")]
-        [MaxLength(100, ErrorMessage = "Серийный номер не должен быть длиннее 100 символов")]
-        public string SerialNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Укажите название")]
+        public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Укажите инвентарный номер")]
-        [MaxLength(100, ErrorMessage = "Инвентарный номер не должен быть длиннее 100 символов")]
-        public string InventoryNumber { get; set; } = string.Empty;
+        public string? Description { get; set; }
+
+        [Required(ErrorMessage = "Выберите категорию")]
+        public Guid? CategoryId { get; set; }
+
+        [Required(ErrorMessage = "Выберите производителя")]
+        public Guid? ManufacturerId { get; set; }
+
+        [Required(ErrorMessage = "Выберите статус")]
+        public Guid? StatusId { get; set; }
 
         [Range(1, 1_000_000, ErrorMessage = "Стоимость аренды должна быть больше 0")]
         public decimal RentalPricePerDay { get; set; }
@@ -521,23 +943,14 @@
         [Range(0, 1_000_000, ErrorMessage = "Залог не может быть отрицательным")]
         public decimal DepositAmount { get; set; }
 
-        [Required] public string Status { get; set; } = "Доступен";
+        [Required(ErrorMessage = "Укажите серийный номер")]
+        public string SerialNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Укажите инвентарный номер")]
+        public string InventoryNumber { get; set; } = string.Empty;
+
+        public string? CurrentCondition { get; set; }
 
         public string? PhotoPath { get; set; }
-
-        public string Color { get; set; } = "green";
-
-        public string Icon { get; set; } = "bi bi-tools";
-    }
-    
-    private string _searchText = string.Empty;
-
-    private string _selectedCategory = "Все категории";
-
-    private string _selectedStatus = "Все статусы";
-
-    private void ExportTools()
-    {
-        NotificationService.Info("Экспорт инструментов");
     }
 }

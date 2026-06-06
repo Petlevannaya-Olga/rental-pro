@@ -4,10 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using RentalPro.Application;
 using RentalPro.Application.Auth;
 using RentalPro.Application.Database;
+using RentalPro.Application.Files;
 using RentalPro.Application.Repositories;
 using RentalPro.Application.Services;
 using RentalPro.Infrastructure.Auth;
 using RentalPro.Infrastructure.Database;
+using RentalPro.Infrastructure.Files;
 using RentalPro.Infrastructure.Repositories;
 using RentalPro.Infrastructure.Services;
 
@@ -34,6 +36,9 @@ public static class DependencyInjection
         services.AddScoped<IToolCategoriesRepository, ToolCategoriesRepository>();
         services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
         services.AddScoped<IDictionaryStatsRepository, DictionaryStatsRepository>();
+        services.AddScoped<IToolsRepository, ToolsRepository>();
+        services.AddScoped<IToolsReadRepository, ToolsReadRepository>();
+        services.AddScoped<IFileStorage, LocalFileStorage>();
         
         services.AddScoped<ITransactionManager, TransactionManager>();
         

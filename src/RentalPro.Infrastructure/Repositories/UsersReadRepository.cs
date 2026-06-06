@@ -2,7 +2,6 @@ using CSharpFunctionalExtensions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using RentalPro.Application;
 using RentalPro.Application.Repositories;
 using RentalPro.Contracts.Users;
 using RentalPro.Domain.Roles;

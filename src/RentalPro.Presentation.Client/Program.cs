@@ -24,5 +24,6 @@ builder.Services.AddScoped<PaymentTypesService>();
 builder.Services.AddScoped<OrderStatusesService>();
 builder.Services.AddScoped<ToolCategoriesService>();
 builder.Services.AddScoped<DictionaryCrudService>();
+builder.Services.AddScoped<ToolsService>();
 
 await builder.Build().RunAsync();

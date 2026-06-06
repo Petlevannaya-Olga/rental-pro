@@ -8,6 +8,11 @@ namespace RentalPro.Domain.Tools;
 
 public sealed class Tool : AuditableEntity<ToolId>
 {
+    private Tool()
+        : base(ToolId.NewId())
+    {
+    }
+
     private Tool(
         ArticleNumber articleNumber,
         ToolName name,
@@ -61,6 +66,12 @@ public sealed class Tool : AuditableEntity<ToolId>
 
     public PhotoPath? PhotoPath { get; private set; }
 
+    public ToolCategory? Category { get; private set; }
+
+    public Manufacturer? Manufacturer { get; private set; }
+
+    public ToolStatus? Status { get; private set; }
+
     public static Result<Tool, Error> Create(
         string articleNumber,
         string name,
@@ -76,50 +87,62 @@ public sealed class Tool : AuditableEntity<ToolId>
         string? photoPath)
     {
         var articleNumberResult = ArticleNumber.Create(articleNumber);
+
         if (articleNumberResult.IsFailure)
             return articleNumberResult.Error;
 
         var nameResult = ToolName.Create(name);
+
         if (nameResult.IsFailure)
             return nameResult.Error;
 
         var descriptionResult = CreateDescription(description);
+
         if (descriptionResult.IsFailure)
             return descriptionResult.Error;
 
         var categoryIdResult = ToolCategoryId.Create(categoryId);
+
         if (categoryIdResult.IsFailure)
             return categoryIdResult.Error;
 
         var manufacturerIdResult = ManufacturerId.Create(manufacturerId);
+
         if (manufacturerIdResult.IsFailure)
             return manufacturerIdResult.Error;
 
         var statusIdResult = ToolStatusId.Create(statusId);
+
         if (statusIdResult.IsFailure)
             return statusIdResult.Error;
 
         var rentalPriceResult = Money.Create(rentalPricePerDay);
+
         if (rentalPriceResult.IsFailure)
             return rentalPriceResult.Error;
 
         var depositAmountResult = Money.Create(depositAmount);
+
         if (depositAmountResult.IsFailure)
             return depositAmountResult.Error;
 
         var serialNumberResult = SerialNumber.Create(serialNumber);
+
         if (serialNumberResult.IsFailure)
             return serialNumberResult.Error;
 
         var inventoryNumberResult = InventoryNumber.Create(inventoryNumber);
+
         if (inventoryNumberResult.IsFailure)
             return inventoryNumberResult.Error;
 
         var currentConditionResult = CreateCurrentCondition(currentCondition);
+
         if (currentConditionResult.IsFailure)
             return currentConditionResult.Error;
 
         var photoPathResult = CreatePhotoPath(photoPath);
+
         if (photoPathResult.IsFailure)
             return photoPathResult.Error;
 
@@ -144,6 +167,7 @@ public sealed class Tool : AuditableEntity<ToolId>
         string? description,
         Guid categoryId,
         Guid manufacturerId,
+        Guid statusId,
         decimal rentalPricePerDay,
         decimal depositAmount,
         string serialNumber,
@@ -152,46 +176,62 @@ public sealed class Tool : AuditableEntity<ToolId>
         string? photoPath)
     {
         var articleNumberResult = ArticleNumber.Create(articleNumber);
+
         if (articleNumberResult.IsFailure)
             return articleNumberResult.Error;
 
         var nameResult = ToolName.Create(name);
+
         if (nameResult.IsFailure)
             return nameResult.Error;
 
         var descriptionResult = CreateDescription(description);
+
         if (descriptionResult.IsFailure)
             return descriptionResult.Error;
 
         var categoryIdResult = ToolCategoryId.Create(categoryId);
+
         if (categoryIdResult.IsFailure)
             return categoryIdResult.Error;
 
         var manufacturerIdResult = ManufacturerId.Create(manufacturerId);
+
         if (manufacturerIdResult.IsFailure)
             return manufacturerIdResult.Error;
 
+        var statusIdResult = ToolStatusId.Create(statusId);
+
+        if (statusIdResult.IsFailure)
+            return statusIdResult.Error;
+
         var rentalPriceResult = Money.Create(rentalPricePerDay);
+
         if (rentalPriceResult.IsFailure)
             return rentalPriceResult.Error;
 
         var depositAmountResult = Money.Create(depositAmount);
+
         if (depositAmountResult.IsFailure)
             return depositAmountResult.Error;
 
         var serialNumberResult = SerialNumber.Create(serialNumber);
+
         if (serialNumberResult.IsFailure)
             return serialNumberResult.Error;
 
         var inventoryNumberResult = InventoryNumber.Create(inventoryNumber);
+
         if (inventoryNumberResult.IsFailure)
             return inventoryNumberResult.Error;
 
         var currentConditionResult = CreateCurrentCondition(currentCondition);
+
         if (currentConditionResult.IsFailure)
             return currentConditionResult.Error;
 
         var photoPathResult = CreatePhotoPath(photoPath);
+
         if (photoPathResult.IsFailure)
             return photoPathResult.Error;
 
@@ -200,6 +240,7 @@ public sealed class Tool : AuditableEntity<ToolId>
         Description = descriptionResult.Value;
         CategoryId = categoryIdResult.Value;
         ManufacturerId = manufacturerIdResult.Value;
+        StatusId = statusIdResult.Value;
         RentalPricePerDay = rentalPriceResult.Value;
         DepositAmount = depositAmountResult.Value;
         SerialNumber = serialNumberResult.Value;
@@ -226,12 +267,27 @@ public sealed class Tool : AuditableEntity<ToolId>
         return UnitResult.Success<Error>();
     }
 
+    public UnitResult<Error> SetPhotoPath(string? photoPath)
+    {
+        var photoPathResult = CreatePhotoPath(photoPath);
+
+        if (photoPathResult.IsFailure)
+            return photoPathResult.Error;
+
+        PhotoPath = photoPathResult.Value;
+
+        MarkUpdated();
+
+        return UnitResult.Success<Error>();
+    }
+
     public UnitResult<Error> Delete()
     {
         return MarkDeleted(nameof(Tool));
     }
 
-    private static Result<Description?, Error> CreateDescription(string? description)
+    private static Result<Description?, Error> CreateDescription(
+        string? description)
     {
         if (string.IsNullOrWhiteSpace(description))
             return (Description?)null;
@@ -244,7 +300,8 @@ public sealed class Tool : AuditableEntity<ToolId>
         return descriptionResult.Value;
     }
 
-    private static Result<ReturnCondition?, Error> CreateCurrentCondition(string? currentCondition)
+    private static Result<ReturnCondition?, Error> CreateCurrentCondition(
+        string? currentCondition)
     {
         if (string.IsNullOrWhiteSpace(currentCondition))
             return (ReturnCondition?)null;
@@ -257,7 +314,8 @@ public sealed class Tool : AuditableEntity<ToolId>
         return currentConditionResult.Value;
     }
 
-    private static Result<PhotoPath?, Error> CreatePhotoPath(string? photoPath)
+    private static Result<PhotoPath?, Error> CreatePhotoPath(
+        string? photoPath)
     {
         if (string.IsNullOrWhiteSpace(photoPath))
             return (PhotoPath?)null;
