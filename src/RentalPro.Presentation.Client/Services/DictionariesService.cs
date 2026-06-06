@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using CSharpFunctionalExtensions;
+using RentalPro.Contracts;
 using RentalPro.Contracts.PaymentMethods;
 using RentalPro.Contracts.PaymentTypes;
 using RentalPro.Presentation.Client.Extensions;
@@ -9,26 +10,6 @@ namespace RentalPro.Presentation.Client.Services;
 
 public sealed class DictionariesService(HttpClient httpClient)
 {
-    public Task<Result<List<PaymentMethodDto>, Errors>> GetPaymentMethodsAsync(
-        CancellationToken cancellationToken = default)
-    {
-        return GetListAsync<PaymentMethodDto>(
-            "api/payment-methods",
-            "payment.methods.load.failed",
-            "Не удалось загрузить способы оплаты",
-            cancellationToken);
-    }
-    
-    public Task<Result<List<PaymentTypeDto>, Errors>> GetPaymentTypesAsync(
-        CancellationToken cancellationToken = default)
-    {
-        return GetListAsync<PaymentTypeDto>(
-            "api/payment-types",
-            "payment.types.load.failed",
-            "Не удалось загрузить типы оплат",
-            cancellationToken);
-    }
-
     private async Task<Result<List<TDto>, Errors>> GetListAsync<TDto>(
         string url,
         string errorCode,
@@ -65,6 +46,47 @@ public sealed class DictionariesService(HttpClient httpClient)
         catch (Exception ex)
         {
             return ex.ToErrors(errorCode, errorMessage);
+        }
+    }
+    
+    public async Task<Result<DictionaryStatsDto, Errors>> GetStatsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                "api/dictionaries/stats",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content
+                    .ReadAsStringAsync(cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "dictionary.stats.load.failed",
+                        content.ExtractErrorMessage("Не удалось загрузить статистику справочников"))
+                    .ToErrors();
+            }
+
+            var stats = await response.Content
+                .ReadFromJsonAsync<DictionaryStatsDto>(cancellationToken);
+
+            if (stats is null)
+            {
+                return CommonErrors.EmptyResponse(
+                        "dictionary.stats.empty.response",
+                        "Сервер вернул пустую статистику справочников")
+                    .ToErrors();
+            }
+
+            return stats;
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "dictionary.stats.load.failed",
+                "Не удалось загрузить статистику справочников");
         }
     }
 }

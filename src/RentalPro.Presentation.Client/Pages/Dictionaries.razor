@@ -1,6 +1,12 @@
 ﻿@page "/dictionaries"
 @layout AdminLayout
+
+@using RentalPro.Contracts
+@using RentalPro.Presentation.Client.Services
+
 @inject NavigationManager NavigationManager
+@inject DictionariesService DictionariesService
+@inject NotificationService NotificationService
 
 <div class="dictionaries-page">
 
@@ -20,8 +26,8 @@
 
             <div class="dictionary-footer">
                 <div class="dictionary-count">
-                    <strong>24</strong>
-                    <span>записи</span>
+                    <strong>@GetCount(_stats?.ToolCategories)</strong>
+                    <span>@GetRecordWord(_stats?.ToolCategories)</span>
                 </div>
 
                 <i class="bi bi-arrow-right dictionary-arrow"></i>
@@ -42,8 +48,8 @@
 
             <div class="dictionary-footer">
                 <div class="dictionary-count">
-                    <strong>5</strong>
-                    <span>записей</span>
+                    <strong>@GetCount(_stats?.ToolStatuses)</strong>
+                    <span>@GetRecordWord(_stats?.ToolStatuses)</span>
                 </div>
 
                 <i class="bi bi-arrow-right dictionary-arrow"></i>
@@ -64,8 +70,8 @@
 
             <div class="dictionary-footer">
                 <div class="dictionary-count">
-                    <strong>6</strong>
-                    <span>записей</span>
+                    <strong>@GetCount(_stats?.OrderStatuses)</strong>
+                    <span>@GetRecordWord(_stats?.OrderStatuses)</span>
                 </div>
 
                 <i class="bi bi-arrow-right dictionary-arrow"></i>
@@ -86,8 +92,8 @@
 
             <div class="dictionary-footer">
                 <div class="dictionary-count">
-                    <strong>7</strong>
-                    <span>записей</span>
+                    <strong>@GetCount(_stats?.PaymentMethods)</strong>
+                    <span>@GetRecordWord(_stats?.PaymentMethods)</span>
                 </div>
 
                 <i class="bi bi-arrow-right dictionary-arrow"></i>
@@ -108,8 +114,8 @@
 
             <div class="dictionary-footer">
                 <div class="dictionary-count">
-                    <strong>9</strong>
-                    <span>записей</span>
+                    <strong>@GetCount(_stats?.PaymentTypes)</strong>
+                    <span>@GetRecordWord(_stats?.PaymentTypes)</span>
                 </div>
 
                 <i class="bi bi-arrow-right dictionary-arrow"></i>
@@ -130,8 +136,8 @@
 
             <div class="dictionary-footer">
                 <div class="dictionary-count">
-                    <strong>8</strong>
-                    <span>записей</span>
+                    <strong>@GetCount(_stats?.Roles)</strong>
+                    <span>@GetRecordWord(_stats?.Roles)</span>
                 </div>
 
                 <i class="bi bi-arrow-right dictionary-arrow"></i>
@@ -152,8 +158,8 @@
 
             <div class="dictionary-footer">
                 <div class="dictionary-count">
-                    <strong>12</strong>
-                    <span>записей</span>
+                    <strong>@GetCount(_stats?.Manufacturers)</strong>
+                    <span>@GetRecordWord(_stats?.Manufacturers)</span>
                 </div>
 
                 <i class="bi bi-arrow-right dictionary-arrow"></i>
@@ -166,8 +172,48 @@
 
 @code
 {
+    private DictionaryStatsDto? _stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatsAsync();
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        var result = await DictionariesService.GetStatsAsync();
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _stats = result.Value;
+    }
+
     private void OpenDictionary(string dictionaryCode)
     {
         NavigationManager.NavigateTo($"/dictionaries/{dictionaryCode}");
+    }
+
+    private static string GetCount(int? count)
+    {
+        return count?.ToString() ?? "0";
+    }
+
+    private static string GetRecordWord(int? count)
+    {
+        var value = count ?? 0;
+
+        if (value % 100 is >= 11 and <= 14)
+            return "записей";
+
+        return (value % 10) switch
+        {
+            1 => "запись",
+            2 or 3 or 4 => "записи",
+            _ => "записей"
+        };
     }
 }
