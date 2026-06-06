@@ -497,6 +497,21 @@
                 UpdateErrorMessage: "Не удалось обновить статус инструмента",
                 DeleteErrorMessage: "Не удалось удалить статус инструмента"),
             
+            "roles" => new DictionarySettings(
+                Title: "Роли пользователей",
+                Url: "api/roles",
+                CreateSuccessMessage: "Роль создана",
+                UpdateSuccessMessage: "Роль обновлена",
+                DeleteSuccessMessage: "Роль удалена",
+                LoadErrorCode: "roles.load.failed",
+                CreateErrorCode: "role.create.failed",
+                UpdateErrorCode: "role.update.failed",
+                DeleteErrorCode: "role.delete.failed",
+                LoadErrorMessage: "Не удалось загрузить роли пользователей",
+                CreateErrorMessage: "Не удалось создать роль",
+                UpdateErrorMessage: "Не удалось обновить роль",
+                DeleteErrorMessage: "Не удалось удалить роль"),
+            
             _ => null
         };
     }

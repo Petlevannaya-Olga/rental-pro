@@ -1,5 +1,7 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Xml;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
+using RentalPro.Application.Extensions;
 using RentalPro.Application.Repositories;
 using RentalPro.Contracts.Roles;
 using RentalPro.Shared;
@@ -23,9 +25,7 @@ public sealed class GetRolesQueryHandler(
             return rolesResult.Error.ToErrors();
 
         return rolesResult.Value
-            .Select(x => new RoleDto(
-                x.Id.Value,
-                x.Name.Value))
+            .Select(x => x.ToDto())
             .ToList();
     }
 }

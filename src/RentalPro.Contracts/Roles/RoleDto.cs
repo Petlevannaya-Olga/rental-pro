@@ -2,4 +2,6 @@
 
 public sealed record RoleDto(
     Guid Id,
-    string Name);
+    string Name,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);

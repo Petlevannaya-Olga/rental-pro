@@ -12,4 +12,8 @@ public interface IRoleRepository
         CancellationToken cancellationToken);
 
     Task<Result<List<Role>, Error>> GetAllAsync(CancellationToken cancellationToken);
+    
+    Task<Result<Role, Error>> AddAsync(
+        Role role,
+        CancellationToken cancellationToken);
 }
