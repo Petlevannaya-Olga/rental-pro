@@ -910,7 +910,7 @@
         _selectedTool = null;
     }
 
-    private void ExecuteToolAction(string action)
+    private async Task ExecuteToolAction(string action)
     {
         if (_selectedTool is null)
             return;
@@ -920,6 +920,12 @@
             _viewTool = _selectedTool;
             _isViewModalOpen = true;
             CloseActionsMenu();
+            return;
+        }
+
+        if (action == "Удаление")
+        {
+            await DeleteTool(_selectedTool);
             return;
         }
 
@@ -1196,5 +1202,23 @@
             return photoPath;
 
         return $"https://localhost:7099{photoPath}";
+    }
+    
+    private async Task DeleteTool(ToolDto tool)
+    {
+        var result = await ToolsService.DeleteToolAsync(tool.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success($"Инструмент «{tool.Name}» удалён");
+
+        CloseActionsMenu();
+
+        await LoadStatsAsync();
+        await LoadToolsAsync();
     }
 }
