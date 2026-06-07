@@ -447,15 +447,17 @@
                                 </div>
 
                                 <div class="tool-form-field">
-                                    <label>Статус <span>*</span></label>
-                                    <InputSelect @bind-Value="_newTool.StatusId">
-                                        <option value="">Выберите статус</option>
+                                    <label>Статус</label>
+
+                                    <InputSelect @bind-Value="_newTool.StatusId"
+                                                 disabled>
                                         @foreach (var status in _statuses)
                                         {
-                                            <option value="@status.Id">@status.Name</option>
+                                            <option value="@status.Id">
+                                                @status.Name
+                                            </option>
                                         }
                                     </InputSelect>
-                                    <ValidationMessage For="@(() => _newTool.StatusId)"/>
                                 </div>
 
                                 <div class="tool-form-field">
@@ -546,8 +548,8 @@
                     <div class="tool-view-photo">
                         @if (!string.IsNullOrWhiteSpace(_viewTool.PhotoPath))
                         {
-                            <img src="@_viewTool.PhotoPath"
-                                 alt="@_viewTool.Name"/>
+                            <img src="@GetToolImageUrl(_viewTool.PhotoPath)"
+                                 alt="@_viewTool.Name" />
                         }
                         else
                         {
@@ -667,6 +669,10 @@
     private Guid? _manufacturerId;
     private string? _sortBy = "createdat";
     private bool _descending = true;
+
+    private byte[]? _selectedImageBytes;
+    private string? _selectedImageFileName;
+    private string? _selectedImageContentType;
 
     private string _activeStatsFilter = "all";
 
@@ -925,8 +931,15 @@
     private void OpenCreateModal()
     {
         _newTool = new ToolFormModel();
-        _selectedImageFile = null;
-        _photoPreviewUrl = null;
+
+        var availableStatus = _statuses.FirstOrDefault(
+            x => x.Name == "Доступен");
+
+        if (availableStatus is not null)
+        {
+            _newTool.StatusId = availableStatus.Id;
+        }
+
         _isCreateModalOpen = true;
     }
 
@@ -970,16 +983,20 @@
 
         var imageUploadFailed = false;
 
-        if (_selectedImageFile is not null)
+        if (_selectedImageBytes is not null &&
+            !string.IsNullOrWhiteSpace(_selectedImageFileName) &&
+            !string.IsNullOrWhiteSpace(_selectedImageContentType))
         {
             var uploadResult = await ToolsService.UploadToolImageAsync(
                 toolId,
-                _selectedImageFile);
+                _selectedImageBytes,
+                _selectedImageFileName,
+                _selectedImageContentType);
 
             if (uploadResult.IsFailure)
             {
                 imageUploadFailed = true;
-                
+
                 NotificationService.Error(
                     $"Инструмент создан, но фото не загружено: {uploadResult.Error.Message}");
             }
@@ -992,7 +1009,9 @@
 
         CloseCreateModal();
 
-        _selectedImageFile = null;
+        _selectedImageBytes = null;
+        _selectedImageFileName = null;
+        _selectedImageContentType = null;
         _photoPreviewUrl = null;
 
         _currentPage = 1;
@@ -1003,19 +1022,24 @@
 
     private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
     {
-        _selectedImageFile = e.File;
-        _newTool.PhotoPath = e.File.Name;
+        var file = e.File;
 
-        await using var stream = e.File.OpenReadStream(
+        _selectedImageFileName = file.Name;
+        _selectedImageContentType = file.ContentType;
+        _newTool.PhotoPath = file.Name;
+
+        await using var stream = file.OpenReadStream(
             maxAllowedSize: 10 * 1024 * 1024);
 
         using var memoryStream = new MemoryStream();
 
         await stream.CopyToAsync(memoryStream);
 
-        var base64 = Convert.ToBase64String(memoryStream.ToArray());
+        _selectedImageBytes = memoryStream.ToArray();
 
-        _photoPreviewUrl = $"data:{e.File.ContentType};base64,{base64}";
+        var base64 = Convert.ToBase64String(_selectedImageBytes);
+
+        _photoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
     }
 
     private void RemovePhoto()
@@ -1069,7 +1093,11 @@
 
     private void FillFakeToolData()
     {
+        var availableStatusId = _newTool.StatusId;
+
         _newTool = FakeToolGeneratorService.Generate();
+
+        _newTool.StatusId = availableStatusId;
 
         if (_categories.Count > 0)
         {
@@ -1083,10 +1111,17 @@
                 PickRandom(_manufacturers, _random).Id;
         }
 
-        if (_statuses.Count > 0)
+        SetAvailableStatus();
+    }
+    
+    private void SetAvailableStatus()
+    {
+        var availableStatus = _statuses.FirstOrDefault(
+            x => x.Name == "Доступен");
+
+        if (availableStatus is not null)
         {
-            _newTool.StatusId =
-                PickRandom(_statuses, _random).Id;
+            _newTool.StatusId = availableStatus.Id;
         }
     }
 
@@ -1150,5 +1185,16 @@
     {
         _isViewModalOpen = false;
         _viewTool = null;
+    }
+    
+    private static string GetToolImageUrl(string? photoPath)
+    {
+        if (string.IsNullOrWhiteSpace(photoPath))
+            return string.Empty;
+
+        if (photoPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            return photoPath;
+
+        return $"https://localhost:7099{photoPath}";
     }
 }

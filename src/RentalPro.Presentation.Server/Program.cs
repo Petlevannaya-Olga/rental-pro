@@ -60,6 +60,8 @@ builder.Services.AddApplication();
 
 var app = builder.Build();
 
+app.UseStaticFiles();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -304,26 +304,24 @@ public sealed class ToolsService(HttpClient httpClient, IJSRuntime jsRuntime)
     
     public async Task<Result<bool, Errors>> UploadToolImageAsync(
         Guid toolId,
-        IBrowserFile file,
+        byte[] fileBytes,
+        string fileName,
+        string contentType,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            await using var stream = file.OpenReadStream(
-                maxAllowedSize: 10 * 1024 * 1024,
-                cancellationToken);
-
             using var content = new MultipartFormDataContent();
 
-            using var fileContent = new StreamContent(stream);
+            using var fileContent = new ByteArrayContent(fileBytes);
 
             fileContent.Headers.ContentType =
-                new MediaTypeHeaderValue(file.ContentType);
+                new MediaTypeHeaderValue(contentType);
 
             content.Add(
                 fileContent,
                 "file",
-                file.Name);
+                fileName);
 
             var response = await httpClient.PostAsync(
                 $"api/tools/{toolId}/image",
