@@ -37,6 +37,19 @@ public sealed class UploadToolImageCommandHandler(
                 .ToErrors();
         }
 
+        var tool = toolResult.Value;
+        var oldPhotoPath = tool.PhotoPath;
+
+        if (oldPhotoPath is not null)
+        {
+            var deleteOldImageResult = await fileStorage.DeleteToolImageAsync(
+                oldPhotoPath.Value,
+                cancellationToken);
+
+            if (deleteOldImageResult.IsFailure)
+                return deleteOldImageResult.Error.ToErrors();
+        }
+
         var saveFileResult = await fileStorage.SaveToolImageAsync(
             command.FileStream,
             command.FileName,
@@ -45,8 +58,7 @@ public sealed class UploadToolImageCommandHandler(
         if (saveFileResult.IsFailure)
             return saveFileResult.Error.ToErrors();
 
-        var setPhotoResult = toolResult.Value.SetPhotoPath(
-            saveFileResult.Value);
+        var setPhotoResult = tool.SetPhotoPath(saveFileResult.Value);
 
         if (setPhotoResult.IsFailure)
             return setPhotoResult.Error.ToErrors();

@@ -60,4 +60,38 @@ public sealed class LocalFileStorage(
 
         return $"/uploads/tools/{fileName}";
     }
+    
+    public Task<UnitResult<Error>> DeleteToolImageAsync(
+        string photoPath,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(photoPath))
+            return Task.FromResult(UnitResult.Success<Error>());
+
+        try
+        {
+            var webRootPath = environment.WebRootPath;
+
+            if (string.IsNullOrWhiteSpace(webRootPath))
+                webRootPath = Path.Combine(environment.ContentRootPath, "wwwroot");
+
+            var relativePath = photoPath.TrimStart('/')
+                .Replace('/', Path.DirectorySeparatorChar);
+
+            var filePath = Path.Combine(webRootPath, relativePath);
+
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+
+            return Task.FromResult(UnitResult.Success<Error>());
+        }
+        catch
+        {
+            return Task.FromResult(
+                UnitResult.Failure(
+                    CommonErrors.Failure(
+                        "tool.image.delete.failed",
+                        "Не удалось удалить старое фото инструмента")));
+        }
+    }
 }

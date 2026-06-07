@@ -549,7 +549,7 @@
                         @if (!string.IsNullOrWhiteSpace(_viewTool.PhotoPath))
                         {
                             <img src="@GetToolImageUrl(_viewTool.PhotoPath)"
-                                 alt="@_viewTool.Name" />
+                                 alt="@_viewTool.Name"/>
                         }
                         else
                         {
@@ -633,6 +633,176 @@
         </div>
     }
 
+    @if (_isEditModalOpen && _editingTool is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="tool-create-modal large" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Редактировать инструмент</h3>
+                        <p>Измените данные инструмента</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseEditModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <EditForm Model="_editTool" OnValidSubmit="UpdateTool">
+                    <DataAnnotationsValidator/>
+
+                    <div class="tool-create-layout tool-create-layout-compact">
+
+                        <div class="photo-panel tool-photo-panel">
+                            <label>Фотография инструмента</label>
+
+                            <div class="photo-upload tool-photo-upload">
+
+                                @if (!string.IsNullOrWhiteSpace(_editPhotoPreviewUrl))
+                                {
+                                    <div class="photo-preview image">
+                                        <img src="@_editPhotoPreviewUrl"
+                                             alt="@_editTool.Name"/>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="photo-preview">
+                                        <i class="bi bi-camera"></i>
+                                    </div>
+                                }
+
+                                <p class="photo-title">Перетащите файл сюда</p>
+                                <p class="photo-subtitle">или нажмите для выбора</p>
+                                <p class="photo-formats">PNG, JPG, JPEG до 10 МБ</p>
+
+                                <label class="photo-button">
+                                    <i class="bi bi-upload"></i>
+                                    Заменить фото
+
+                                    <InputFile OnChange="HandleEditPhotoSelected"
+                                               accept="image/*"/>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="tool-form-panel tool-form-panel-compact">
+
+                            <div class="tool-form-grid tool-form-grid-compact">
+
+                                <div class="tool-form-field">
+                                    <label>Название <span>*</span></label>
+                                    <InputText @bind-Value="_editTool.Name"
+                                               placeholder="Введите название"/>
+                                    <ValidationMessage For="@(() => _editTool.Name)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Артикул <span>*</span></label>
+                                    <InputText @bind-Value="_editTool.ArticleNumber"
+                                               placeholder="Введите артикул"/>
+                                    <ValidationMessage For="@(() => _editTool.ArticleNumber)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Категория <span>*</span></label>
+                                    <InputSelect @bind-Value="_editTool.CategoryId">
+                                        <option value="">Выберите категорию</option>
+                                        @foreach (var category in _categories)
+                                        {
+                                            <option value="@category.Id">@category.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => _editTool.CategoryId)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Производитель <span>*</span></label>
+                                    <InputSelect @bind-Value="_editTool.ManufacturerId">
+                                        <option value="">Выберите производителя</option>
+                                        @foreach (var manufacturer in _manufacturers)
+                                        {
+                                            <option value="@manufacturer.Id">@manufacturer.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => _editTool.ManufacturerId)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Статус <span>*</span></label>
+                                    <InputSelect @bind-Value="_editTool.StatusId">
+                                        <option value="">Выберите статус</option>
+                                        @foreach (var status in _statuses)
+                                        {
+                                            <option value="@status.Id">@status.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => _editTool.StatusId)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Серийный номер <span>*</span></label>
+                                    <InputText @bind-Value="_editTool.SerialNumber"
+                                               placeholder="Введите серийный номер"/>
+                                    <ValidationMessage For="@(() => _editTool.SerialNumber)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Инвентарный номер <span>*</span></label>
+                                    <InputText @bind-Value="_editTool.InventoryNumber"
+                                               placeholder="Введите инвентарный номер"/>
+                                    <ValidationMessage For="@(() => _editTool.InventoryNumber)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Стоимость аренды за день <span>*</span></label>
+                                    <InputNumber @bind-Value="_editTool.RentalPricePerDay"/>
+                                    <ValidationMessage For="@(() => _editTool.RentalPricePerDay)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Залог <span>*</span></label>
+                                    <InputNumber @bind-Value="_editTool.DepositAmount"/>
+                                    <ValidationMessage For="@(() => _editTool.DepositAmount)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Текущее состояние</label>
+                                    <InputText @bind-Value="_editTool.CurrentCondition"
+                                               placeholder="Введите состояние"/>
+                                </div>
+
+                                <div class="tool-form-field tool-description-field">
+                                    <label>Описание</label>
+                                    <InputTextArea @bind-Value="_editTool.Description"
+                                                   placeholder="Краткое описание инструмента"/>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="tool-form-actions modal-footer">
+                        <button class="secondary-button"
+                                type="button"
+                                @onclick="CloseEditModal">
+                            Отмена
+                        </button>
+
+                        <button class="primary-button"
+                                type="submit">
+                            <i class="bi bi-check-lg"></i>
+                            Сохранить изменения
+                        </button>
+                    </div>
+                </EditForm>
+
+            </div>
+        </div>
+    }
+
 </div>
 
 @code
@@ -678,6 +848,15 @@
 
     private bool _isViewModalOpen;
     private ToolDto? _viewTool;
+
+    private bool _isEditModalOpen;
+    private ToolDto? _editingTool;
+    private ToolFormModel _editTool = new();
+
+    private byte[]? _editImageBytes;
+    private string? _editImageFileName;
+    private string? _editImageContentType;
+    private string? _editPhotoPreviewUrl;
 
     private int PageStart =>
         _filteredTotalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
@@ -929,6 +1108,13 @@
             return;
         }
 
+        if (action == "Редактирование")
+        {
+            OpenEditModal(_selectedTool);
+            CloseActionsMenu();
+            return;
+        }
+
         NotificationService.Info($"{action}: {_selectedTool.Name}");
 
         CloseActionsMenu();
@@ -938,8 +1124,7 @@
     {
         _newTool = new ToolFormModel();
 
-        var availableStatus = _statuses.FirstOrDefault(
-            x => x.Name == "Доступен");
+        var availableStatus = _statuses.FirstOrDefault(x => x.Name == "Доступен");
 
         if (availableStatus is not null)
         {
@@ -1119,11 +1304,10 @@
 
         SetAvailableStatus();
     }
-    
+
     private void SetAvailableStatus()
     {
-        var availableStatus = _statuses.FirstOrDefault(
-            x => x.Name == "Доступен");
+        var availableStatus = _statuses.FirstOrDefault(x => x.Name == "Доступен");
 
         if (availableStatus is not null)
         {
@@ -1192,7 +1376,7 @@
         _isViewModalOpen = false;
         _viewTool = null;
     }
-    
+
     private static string GetToolImageUrl(string? photoPath)
     {
         if (string.IsNullOrWhiteSpace(photoPath))
@@ -1203,7 +1387,7 @@
 
         return $"https://localhost:7099{photoPath}";
     }
-    
+
     private async Task DeleteTool(ToolDto tool)
     {
         var result = await ToolsService.DeleteToolAsync(tool.Id);
@@ -1217,6 +1401,131 @@
         NotificationService.Success($"Инструмент «{tool.Name}» удалён");
 
         CloseActionsMenu();
+
+        await LoadStatsAsync();
+        await LoadToolsAsync();
+    }
+
+    private void OpenEditModal(ToolDto tool)
+    {
+        _editingTool = tool;
+
+        _editTool = new ToolFormModel
+        {
+            ArticleNumber = tool.ArticleNumber,
+            Name = tool.Name,
+            Description = tool.Description,
+            CategoryId = tool.CategoryId,
+            ManufacturerId = tool.ManufacturerId,
+            StatusId = tool.StatusId,
+            RentalPricePerDay = tool.RentalPricePerDay,
+            DepositAmount = tool.DepositAmount,
+            SerialNumber = tool.SerialNumber,
+            InventoryNumber = tool.InventoryNumber,
+            CurrentCondition = tool.CurrentCondition,
+            PhotoPath = tool.PhotoPath
+        };
+
+        _editPhotoPreviewUrl = GetToolImageUrl(tool.PhotoPath);
+
+        _editImageBytes = null;
+        _editImageFileName = null;
+        _editImageContentType = null;
+
+        _isEditModalOpen = true;
+    }
+
+    private void CloseEditModal()
+    {
+        _isEditModalOpen = false;
+        _editingTool = null;
+
+        _editTool = new ToolFormModel();
+
+        _editImageBytes = null;
+        _editImageFileName = null;
+        _editImageContentType = null;
+        _editPhotoPreviewUrl = null;
+    }
+
+    private async Task HandleEditPhotoSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        _editImageFileName = file.Name;
+        _editImageContentType = file.ContentType;
+        _editTool.PhotoPath = file.Name;
+
+        await using var stream = file.OpenReadStream(
+            maxAllowedSize: 10 * 1024 * 1024);
+
+        using var memoryStream = new MemoryStream();
+
+        await stream.CopyToAsync(memoryStream);
+
+        _editImageBytes = memoryStream.ToArray();
+
+        var base64 = Convert.ToBase64String(_editImageBytes);
+
+        _editPhotoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
+    }
+
+    private async Task UpdateTool()
+    {
+        if (_editingTool is null)
+            return;
+
+        if (_editTool.CategoryId is null ||
+            _editTool.ManufacturerId is null ||
+            _editTool.StatusId is null)
+        {
+            NotificationService.Error("Выберите категорию, производителя и статус");
+            return;
+        }
+
+        var request = new UpdateToolRequest(
+            ArticleNumber: _editTool.ArticleNumber,
+            Name: _editTool.Name,
+            Description: _editTool.Description,
+            CategoryId: _editTool.CategoryId.Value,
+            ManufacturerId: _editTool.ManufacturerId.Value,
+            StatusId: _editTool.StatusId.Value,
+            RentalPricePerDay: _editTool.RentalPricePerDay,
+            DepositAmount: _editTool.DepositAmount,
+            SerialNumber: _editTool.SerialNumber,
+            InventoryNumber: _editTool.InventoryNumber,
+            CurrentCondition: _editTool.CurrentCondition);
+
+        var result = await ToolsService.UpdateToolAsync(
+            _editingTool.Id,
+            request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        if (_editImageBytes is not null &&
+            !string.IsNullOrWhiteSpace(_editImageFileName) &&
+            !string.IsNullOrWhiteSpace(_editImageContentType))
+        {
+            var uploadResult = await ToolsService.UploadToolImageAsync(
+                _editingTool.Id,
+                _editImageBytes,
+                _editImageFileName,
+                _editImageContentType);
+
+            if (uploadResult.IsFailure)
+            {
+                NotificationService.Error(
+                    $"Инструмент изменён, но фото не загружено: {uploadResult.Error.Message}");
+            }
+        }
+
+        NotificationService.Success($"Инструмент «{_editTool.Name}» изменён");
+
+        CloseEditModal();
 
         await LoadStatsAsync();
         await LoadToolsAsync();

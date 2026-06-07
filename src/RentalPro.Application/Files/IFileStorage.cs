@@ -9,4 +9,8 @@ public interface IFileStorage
         Stream stream,
         string originalFileName,
         CancellationToken cancellationToken);
+    
+    Task<UnitResult<Error>> DeleteToolImageAsync(
+        string photoPath,
+        CancellationToken cancellationToken);
 }
