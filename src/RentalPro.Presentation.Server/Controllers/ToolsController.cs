@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RentalPro.Application.Tools.ChangeToolStatusCommand;
 using RentalPro.Application.Tools.CreateToolCommand;
 using RentalPro.Application.Tools.DeleteToolCommand;
 using RentalPro.Application.Tools.ExportToolsQuery;
@@ -20,7 +21,8 @@ public sealed class ToolsController(
     UpdateToolCommandHandler updateHandler,
     DeleteToolCommandHandler deleteHandler,
     ExportToolsQueryHandler exportHandler,
-    UploadToolImageCommandHandler uploadImageHandler)
+    UploadToolImageCommandHandler uploadImageHandler,
+    ChangeToolStatusCommandHandler changeToolStatusHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -167,6 +169,24 @@ public sealed class ToolsController(
                 stream,
                 file.FileName,
                 file.Length),
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+    
+    [HttpPut("{id:guid}/status")]
+    public async Task<IActionResult> ChangeStatus(
+        Guid id,
+        [FromBody] ChangeToolStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await changeToolStatusHandler.Handle(
+            new ChangeToolStatusCommand(
+                id,
+                request.StatusId),
             cancellationToken);
 
         if (result.IsFailure)

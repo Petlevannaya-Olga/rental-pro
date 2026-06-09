@@ -350,4 +350,30 @@ public sealed class ToolsService(HttpClient httpClient, IJSRuntime jsRuntime)
                 "Не удалось загрузить фото инструмента");
         }
     }
+    
+    public async Task<Result<bool, Errors>> ChangeToolStatusAsync(
+        Guid toolId,
+        Guid statusId,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/tools/{toolId}/status",
+            new ChangeToolStatusRequest(statusId),
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await ReadErrorMessageAsync(
+                response,
+                "Не удалось изменить статус инструмента",
+                cancellationToken);
+
+            return CommonErrors.Failure(
+                    "tool.status.change.failed",
+                    message)
+                .ToErrors();
+        }
+
+        return true;
+    }
 }

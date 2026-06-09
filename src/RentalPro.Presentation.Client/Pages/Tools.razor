@@ -1114,6 +1114,18 @@
             CloseActionsMenu();
             return;
         }
+        
+        if (action == "Перевод в ремонт")
+        {
+            await ChangeToolStatus(_selectedTool, "На ремонте");
+            return;
+        }
+
+        if (action == "Списание")
+        {
+            await ChangeToolStatus(_selectedTool, "Списан");
+            return;
+        }
 
         NotificationService.Info($"{action}: {_selectedTool.Name}");
 
@@ -1526,6 +1538,37 @@
         NotificationService.Success($"Инструмент «{_editTool.Name}» изменён");
 
         CloseEditModal();
+
+        await LoadStatsAsync();
+        await LoadToolsAsync();
+    }
+    
+    private async Task ChangeToolStatus(
+        ToolDto tool,
+        string statusName)
+    {
+        var status = _statuses.FirstOrDefault(x => x.Name == statusName);
+
+        if (status is null)
+        {
+            NotificationService.Error($"Статус «{statusName}» не найден");
+            return;
+        }
+
+        var result = await ToolsService.ChangeToolStatusAsync(
+            tool.Id,
+            status.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success(
+            $"Инструмент «{tool.Name}» переведён в статус «{statusName}»");
+
+        CloseActionsMenu();
 
         await LoadStatsAsync();
         await LoadToolsAsync();
