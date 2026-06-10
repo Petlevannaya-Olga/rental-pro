@@ -1,161 +1,248 @@
 ﻿@page "/customers"
 @layout AdminLayout
 
+@using RentalPro.Contracts.Customers
+@using RentalPro.Presentation.Client.Models.Customers
 @using RentalPro.Presentation.Client.Services
 
+@inject CustomersService CustomersService
 @inject NotificationService NotificationService
+@inject FakeCustomerGeneratorService FakeCustomerGeneratorService
 
-<div class="customers-page">
+<div class="users-page">
 
-    <div class="page-actions">
-        <button class="primary-button" @onclick="OpenCreateModal">
+    <div class="users-stats">
+
+        <div class="stats-filter-card @GetStatsCardClass("all")"
+             @onclick='() => ApplyStatsFilter("all")'>
+            <StatCard Title="Всего клиентов"
+                      Value="@_statsTotalCount.ToString()"
+                      Icon="bi bi-people"
+                      Color="blue" />
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("withOrders")"
+             @onclick='() => ApplyStatsFilter("withOrders")'>
+            <StatCard Title="С заказами"
+                      Value="@_withOrdersCount.ToString()"
+                      Icon="bi bi-receipt"
+                      Color="orange" />
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("withDebt")"
+             @onclick='() => ApplyStatsFilter("withDebt")'>
+            <StatCard Title="С задолженностью"
+                      Value="@_withDebtCount.ToString()"
+                      Icon="bi bi-exclamation-triangle"
+                      Color="red" />
+        </div>
+
+        <button class="users-add-card"
+                @onclick="OpenCreateModal">
             <i class="bi bi-plus-lg"></i>
-            Добавить клиента
+            <span>Добавить клиента</span>
         </button>
+
     </div>
 
-    <div class="customers-stats">
-        <div class="customers-stat-card">
-            <span class="customers-stat-icon blue">
-                <i class="bi bi-people"></i>
-            </span>
+    <div class="users-table-card">
 
-            <div>
-                <p>Всего клиентов</p>
-                <strong>@_customers.Count</strong>
-            </div>
-        </div>
+        <div class="customers-filters">
 
-        <div class="customers-stat-card">
-            <span class="customers-stat-icon green">
-                <i class="bi bi-person-check"></i>
-            </span>
+            <div class="filter-group search-filter">
+                <label>Поиск</label>
 
-            <div>
-                <p>Активные</p>
-                <strong>@_customers.Count(x => x.Status == "Активен")</strong>
-            </div>
-        </div>
-
-        <div class="customers-stat-card">
-            <span class="customers-stat-icon orange">
-                <i class="bi bi-receipt"></i>
-            </span>
-
-            <div>
-                <p>С заказами</p>
-                <strong>@_customers.Count(x => x.OrdersCount > 0)</strong>
-            </div>
-        </div>
-
-        <div class="customers-stat-card">
-            <span class="customers-stat-icon red">
-                <i class="bi bi-exclamation-triangle"></i>
-            </span>
-
-            <div>
-                <p>С задолженностью</p>
-                <strong>@_customers.Count(x => x.HasDebt)</strong>
-            </div>
-        </div>
-    </div>
-
-    <div class="customers-table-card">
-
-        <div class="table-toolbar">
-            <div class="toolbar-filters">
                 <div class="search-box">
                     <i class="bi bi-search"></i>
-                    <input placeholder="Поиск по ФИО, телефону, email или паспорту..." />
+
+                    <input placeholder="ФИО, телефон, email, паспорт или адрес..."
+                           value="@_search"
+                           @oninput="OnSearchChanged" />
                 </div>
+            </div>
 
-                <select class="filter-select">
-                    <option>Все статусы</option>
-                    <option>Активен</option>
-                    <option>Заблокирован</option>
-                </select>
+            <div class="filter-group">
+                <label>Заказы</label>
 
-                <select class="filter-select">
-                    <option>Все клиенты</option>
-                    <option>С заказами</option>
-                    <option>С задолженностью</option>
+                <select class="filter-select"
+                        @bind="_ordersFilter"
+                        @bind:after="ApplyFilters">
+                    <option value="">Все клиенты</option>
+                    <option value="withOrders">С заказами</option>
+                    <option value="withoutOrders">Без заказов</option>
                 </select>
             </div>
 
-            <button class="secondary-button">
+            <div class="filter-group">
+                <label>Задолженность</label>
+
+                <select class="filter-select"
+                        @bind="_debtFilter"
+                        @bind:after="ApplyFilters">
+                    <option value="">Все клиенты</option>
+                    <option value="withDebt">С задолженностью</option>
+                    <option value="withoutDebt">Без задолженности</option>
+                </select>
+            </div>
+
+            <button class="secondary-button"
+                    @onclick="ResetFilters">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                Сбросить
+            </button>
+
+            <button class="secondary-button"
+                    @onclick="ExportCustomers">
                 <i class="bi bi-download"></i>
                 Экспорт
             </button>
+
         </div>
 
-        <table class="customers-table">
-            <thead>
-            <tr>
-                <th class="sortable-column">Клиент <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Телефон <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Email <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Паспорт <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Заказов <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
-                <th></th>
-            </tr>
-            </thead>
-
-            <tbody>
-            @foreach (var customer in PagedCustomers)
-            {
+        @if (_isLoading)
+        {
+            <table class="users-table">
+                <thead>
                 <tr>
-                    <td>
-                        <div class="customer-cell">
-                            <div class="customer-avatar">
-                                @customer.Initials
-                            </div>
-
-                            <div>
-                                <strong>@customer.FullName</strong>
-                                <span>@customer.Address</span>
-                            </div>
-                        </div>
-                    </td>
-
-                    <td>@customer.PhoneNumber</td>
-                    <td>@customer.Email</td>
-                    <td>@customer.Passport</td>
-                    <td>@customer.OrdersCount</td>
-
-                    <td>
-                        <span class="@GetStatusClass(customer.Status)">
-                            @customer.Status
-                        </span>
-                    </td>
-
-                    <td class="actions-cell">
-                        <button class="icon-button" @onclick="() => OpenActionsMenu(customer.FullName)">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                    </td>
+                    <th>Клиент</th>
+                    <th>Телефон</th>
+                    <th>Email</th>
+                    <th>Паспорт</th>
+                    <th>Заказов</th>
+                    <th>Долг</th>
+                    <th></th>
                 </tr>
-            }
-            </tbody>
-        </table>
+                </thead>
 
-        <Pagination
-            CurrentPage="_currentPage"
-            TotalPages="TotalPages"
-            TotalItems="_customers.Count"
-            StartItem="PageStart"
-            EndItem="PageEnd"
-            PageChanged="GoToPage" />
+                <tbody>
+                @for (var i = 0; i < PageSize; i++)
+                {
+                    <tr>
+                        <td>
+                            <div class="skeleton-user-cell">
+                                <div class="skeleton skeleton-avatar"></div>
+                                <div class="skeleton-lines">
+                                    <div class="skeleton skeleton-line wide"></div>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-line small"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-dot"></div></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (_customers.Count == 0)
+        {
+            <div class="table-empty">Клиенты не найдены</div>
+        }
+        else
+        {
+            <table class="users-table">
+                <thead>
+                <tr>
+                    <th class="sortable-column" @onclick='() => ChangeSort("fullname")'>
+                        Клиент <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("phone")'>
+                        Телефон <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("email")'>
+                        Email <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("passport")'>
+                        Паспорт <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("orders")'>
+                        Заказов <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("hasdebt")'>
+                        Долг <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                @foreach (var customer in _customers)
+                {
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">
+                                    @GetInitials(customer)
+                                </div>
+
+                                <div>
+                                    <strong>@customer.FullName</strong>
+                                    <span>@GetAddressOrDash(customer)</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>@customer.PhoneNumber</td>
+                        <td>@customer.Email</td>
+                        <td>@customer.Passport</td>
+                        <td>@customer.OrdersCount</td>
+
+                        <td>
+                            <span class="@GetDebtClass(customer.HasDebt)">
+                                @(customer.HasDebt ? "Есть" : "Нет")
+                            </span>
+                        </td>
+
+                        <td class="actions-cell">
+                            <button class="icon-button"
+                                    @onclick="() => OpenActionsMenu(customer)">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+
+        <Pagination CurrentPage="_currentPage"
+                    TotalPages="TotalPages"
+                    TotalItems="_filteredTotalCount"
+                    StartItem="PageStart"
+                    EndItem="PageEnd"
+                    PageChanged="GoToPage">
+            <LeftContent>
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="GenerateFakeCustomers">
+                    <i class="bi bi-magic"></i>
+                    Заполнить тестовыми данными
+                </button>
+            </LeftContent>
+        </Pagination>
+
     </div>
 
-    @if (_isActionsMenuOpen)
+    @if (_isActionsMenuOpen && _selectedCustomer is not null)
     {
         <div class="actions-backdrop" @onclick="CloseActionsMenu">
             <div class="actions-modal" @onclick:stopPropagation="true">
+
                 <div class="actions-modal-header">
                     <div>
                         <h3>Действия с клиентом</h3>
-                        <p>@_selectedCustomerName</p>
+                        <p>@_selectedCustomer.FullName</p>
                     </div>
 
                     <button type="button" @onclick="CloseActionsMenu">
@@ -163,12 +250,12 @@
                     </button>
                 </div>
 
-                <button class="menu-item" @onclick='() => ExecuteCustomerAction("Просмотр")'>
+                <button class="menu-item" @onclick="OpenViewModal">
                     <i class="bi bi-eye"></i>
                     Просмотр
                 </button>
 
-                <button class="menu-item" @onclick='() => ExecuteCustomerAction("Редактирование")'>
+                <button class="menu-item" @onclick="OpenEditModal">
                     <i class="bi bi-pencil"></i>
                     Редактировать
                 </button>
@@ -185,10 +272,387 @@
 
                 <div class="menu-divider"></div>
 
-                <button class="menu-item menu-danger" @onclick='() => ExecuteCustomerAction("Удаление")'>
+                <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
                     <i class="bi bi-trash"></i>
                     Удалить
                 </button>
+
+            </div>
+        </div>
+    }
+
+    @if (_isCreateModalOpen)
+    {
+        <div class="actions-backdrop">
+            <div class="tool-create-modal large" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Добавить клиента</h3>
+                        <p>Заполните данные клиента</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCreateModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <EditForm Model="_newCustomer" OnValidSubmit="CreateCustomer">
+                    <DataAnnotationsValidator />
+
+                    <div class="tool-form-panel tool-form-panel-compact">
+                        <div class="tool-form-grid tool-form-grid-compact">
+
+                            <div class="tool-form-field">
+                                <label>Фамилия <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.LastName" />
+                                <ValidationMessage For="@(() => _newCustomer.LastName)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Имя <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.FirstName" />
+                                <ValidationMessage For="@(() => _newCustomer.FirstName)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Отчество <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.MiddleName" />
+                                <ValidationMessage For="@(() => _newCustomer.MiddleName)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Телефон <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.PhoneNumber" />
+                                <ValidationMessage For="@(() => _newCustomer.PhoneNumber)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Email <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.Email" />
+                                <ValidationMessage For="@(() => _newCustomer.Email)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Серия паспорта <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.PassportSeries" />
+                                <ValidationMessage For="@(() => _newCustomer.PassportSeries)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Номер паспорта <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.PassportNumber" />
+                                <ValidationMessage For="@(() => _newCustomer.PassportNumber)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Индекс <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.PostalCode" />
+                                <ValidationMessage For="@(() => _newCustomer.PostalCode)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Регион <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.Region" />
+                                <ValidationMessage For="@(() => _newCustomer.Region)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Город <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.City" />
+                                <ValidationMessage For="@(() => _newCustomer.City)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Улица <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.Street" />
+                                <ValidationMessage For="@(() => _newCustomer.Street)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Дом <span>*</span></label>
+                                <InputText @bind-Value="_newCustomer.House" />
+                                <ValidationMessage For="@(() => _newCustomer.House)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Корпус</label>
+                                <InputText @bind-Value="_newCustomer.Building" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Квартира/офис</label>
+                                <InputText @bind-Value="_newCustomer.Apartment" />
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="tool-form-actions modal-footer">
+                        <button class="secondary-button"
+                                type="button"
+                                @onclick="CloseCreateModal">
+                            Отмена
+                        </button>
+
+                        <button class="secondary-button"
+                                type="button"
+                                @onclick="FillFakeCustomerData">
+                            <i class="bi bi-magic"></i>
+                            Заполнить тестовыми данными
+                        </button>
+
+                        <button class="primary-button"
+                                type="submit">
+                            <i class="bi bi-check-lg"></i>
+                            Сохранить клиента
+                        </button>
+                    </div>
+                </EditForm>
+
+            </div>
+        </div>
+    }
+
+    @if (_isViewModalOpen && _viewCustomer is not null)
+{
+    <div class="actions-backdrop">
+        <div class="customer-view-modal" @onclick:stopPropagation="true">
+
+            <div class="actions-modal-header">
+                <div>
+                    <h3>Просмотр клиента</h3>
+                    <p>@_viewCustomer.FullName</p>
+                </div>
+
+                <button type="button" @onclick="CloseViewModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="customer-details-grid">
+
+                <div class="customer-detail-item">
+                    <span>ФИО</span>
+                    <strong>@_viewCustomer.FullName</strong>
+                </div>
+
+                <div class="customer-detail-item">
+                    <span>Телефон</span>
+                    <strong>@_viewCustomer.PhoneNumber</strong>
+                </div>
+
+                <div class="customer-detail-item">
+                    <span>Email</span>
+                    <strong>@_viewCustomer.Email</strong>
+                </div>
+
+                <div class="customer-detail-item">
+                    <span>Паспорт</span>
+                    <strong>@_viewCustomer.Passport</strong>
+                </div>
+
+                <div class="customer-detail-item">
+                    <span>Заказов</span>
+                    <strong>@_viewCustomer.OrdersCount</strong>
+                </div>
+
+                <div class="customer-detail-item">
+                    <span>Задолженность</span>
+                    <strong class="@GetDebtTextClass(_viewCustomer.HasDebt)">
+                        @(_viewCustomer.HasDebt ? "Есть" : "Нет")
+                    </strong>
+                </div>
+
+                <div class="customer-detail-item">
+                    <span>Дата создания</span>
+                    <strong>@_viewCustomer.CreatedAt.ToString("dd.MM.yyyy HH:mm")</strong>
+                </div>
+
+                <div class="customer-detail-item">
+                    <span>Дата изменения</span>
+                    <strong>@(_viewCustomer.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong>
+                </div>
+
+                <div class="customer-detail-item customer-address-item">
+                    <span>Адрес</span>
+                    <strong>@GetAddressOrDash(_viewCustomer)</strong>
+                </div>
+
+            </div>
+
+            <div class="customer-view-footer">
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="CloseViewModal">
+                    Закрыть
+                </button>
+            </div>
+
+        </div>
+    </div>
+}
+
+    @if (_isEditModalOpen && _editingCustomer is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="tool-create-modal large" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Редактировать клиента</h3>
+                        <p>@_editingCustomer.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseEditModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <EditForm Model="_editCustomer" OnValidSubmit="UpdateCustomer">
+                    <DataAnnotationsValidator />
+
+                    <div class="tool-form-panel tool-form-panel-compact">
+                        <div class="tool-form-grid tool-form-grid-compact">
+
+                            <div class="tool-form-field">
+                                <label>Фамилия <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.LastName" />
+                                <ValidationMessage For="@(() => _editCustomer.LastName)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Имя <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.FirstName" />
+                                <ValidationMessage For="@(() => _editCustomer.FirstName)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Отчество <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.MiddleName" />
+                                <ValidationMessage For="@(() => _editCustomer.MiddleName)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Телефон <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.PhoneNumber" />
+                                <ValidationMessage For="@(() => _editCustomer.PhoneNumber)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Email <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.Email" />
+                                <ValidationMessage For="@(() => _editCustomer.Email)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Серия паспорта <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.PassportSeries" />
+                                <ValidationMessage For="@(() => _editCustomer.PassportSeries)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Номер паспорта <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.PassportNumber" />
+                                <ValidationMessage For="@(() => _editCustomer.PassportNumber)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Индекс <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.PostalCode" />
+                                <ValidationMessage For="@(() => _editCustomer.PostalCode)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Регион <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.Region" />
+                                <ValidationMessage For="@(() => _editCustomer.Region)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Город <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.City" />
+                                <ValidationMessage For="@(() => _editCustomer.City)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Улица <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.Street" />
+                                <ValidationMessage For="@(() => _editCustomer.Street)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Дом <span>*</span></label>
+                                <InputText @bind-Value="_editCustomer.House" />
+                                <ValidationMessage For="@(() => _editCustomer.House)" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Корпус</label>
+                                <InputText @bind-Value="_editCustomer.Building" />
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Квартира/офис</label>
+                                <InputText @bind-Value="_editCustomer.Apartment" />
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="tool-form-actions modal-footer">
+                        <button class="secondary-button"
+                                type="button"
+                                @onclick="CloseEditModal">
+                            Отмена
+                        </button>
+
+                        <button class="primary-button"
+                                type="submit">
+                            <i class="bi bi-check-lg"></i>
+                            Сохранить изменения
+                        </button>
+                    </div>
+                </EditForm>
+
+            </div>
+        </div>
+    }
+
+    @if (_isDeleteModalOpen && _deletingCustomer is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Удалить клиента?</h3>
+                        <p>@_deletingCustomer.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseDeleteModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <p>
+                    Клиент будет удалён из системы. Это действие нельзя отменить.
+                </p>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDeleteModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="DeleteCustomer">
+                        Удалить
+                    </button>
+                </div>
+
             </div>
         </div>
     }
@@ -199,126 +663,551 @@
 {
     private const int PageSize = 5;
 
+    private CancellationTokenSource? _searchCts;
+
+    private List<CustomerDto> _customers = [];
+
+    private CustomerDto? _selectedCustomer;
+    private CustomerDto? _viewCustomer;
+    private CustomerDto? _editingCustomer;
+    private CustomerDto? _deletingCustomer;
+
+    private CustomerFormModel _newCustomer = new();
+    private CustomerFormModel _editCustomer = new();
+
+    private bool _isLoading = true;
+    private bool _isActionsMenuOpen;
+    private bool _isCreateModalOpen;
+    private bool _isViewModalOpen;
+    private bool _isEditModalOpen;
+    private bool _isDeleteModalOpen;
+
     private int _currentPage = 1;
 
-    private bool _isActionsMenuOpen;
+    private int _statsTotalCount;
+    private int _filteredTotalCount;
+    private int _withOrdersCount;
+    private int _withDebtCount;
 
-    private string? _selectedCustomerName;
+    private string? _search;
+    private string? _ordersFilter;
+    private string? _debtFilter;
 
-    private readonly List<CustomerRow> _customers =
-    [
-        new()
+    private string? _sortBy = "createdat";
+    private bool _descending = true;
+
+    private string _activeStatsFilter = "all";
+
+    private bool? HasOrders =>
+        _ordersFilter switch
         {
-            FullName = "Петров Александр Сергеевич",
-            Initials = "ПА",
-            PhoneNumber = "+7 900 111-22-33",
-            Email = "petrov@example.com",
-            Passport = "4512 345678",
-            Address = "Москва, ул. Ленина, 10",
-            OrdersCount = 3,
-            Status = "Активен",
-            HasDebt = false
-        },
-        new()
+            "withOrders" => true,
+            "withoutOrders" => false,
+            _ => null
+        };
+
+    private bool? HasDebt =>
+        _debtFilter switch
         {
-            FullName = "Сидоров Иван Петрович",
-            Initials = "СИ",
-            PhoneNumber = "+7 900 222-33-44",
-            Email = "sidorov@example.com",
-            Passport = "4513 111222",
-            Address = "Москва, ул. Мира, 25",
-            OrdersCount = 1,
-            Status = "Активен",
-            HasDebt = true
-        }
-    ];
-
-    private IEnumerable<CustomerRow> PagedCustomers =>
-        _customers
-            .Skip((_currentPage - 1) * PageSize)
-            .Take(PageSize);
-
-    private int TotalPages =>
-        (int)Math.Ceiling(_customers.Count / (double)PageSize);
+            "withDebt" => true,
+            "withoutDebt" => false,
+            _ => null
+        };
 
     private int PageStart =>
-        _customers.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+        _filteredTotalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
 
     private int PageEnd =>
-        Math.Min(_currentPage * PageSize, _customers.Count);
+        Math.Min(_currentPage * PageSize, _filteredTotalCount);
 
-    private void OpenCreateModal()
+    private int TotalPages =>
+        _filteredTotalCount <= 0
+            ? 1
+            : (int)Math.Ceiling(_filteredTotalCount / (double)PageSize);
+
+    protected override async Task OnInitializedAsync()
     {
-        NotificationService.Info("Открытие формы добавления клиента");
+        await LoadStatsAsync();
+        await LoadCustomersAsync();
     }
 
-    private void OpenActionsMenu(string customerName)
+    private async Task LoadCustomersAsync()
     {
-        _selectedCustomerName = customerName;
+        _isLoading = true;
+
+        var request = new GetCustomersRequest(
+            Search: _search,
+            HasOrders: HasOrders,
+            HasDebt: HasDebt,
+            SortBy: _sortBy,
+            Descending: _descending,
+            Page: _currentPage,
+            PageSize: PageSize);
+
+        var result = await CustomersService.GetCustomersAsync(request);
+
+        if (result.IsFailure)
+        {
+            _customers = [];
+            _filteredTotalCount = 0;
+            _isLoading = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _customers = result.Value.Items.ToList();
+        _filteredTotalCount = result.Value.TotalCount;
+
+        if (_currentPage > TotalPages)
+        {
+            _currentPage = TotalPages;
+            await LoadCustomersAsync();
+            return;
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        var result = await CustomersService.GetStatsAsync();
+
+        if (result.IsFailure)
+        {
+            _statsTotalCount = 0;
+            _withOrdersCount = 0;
+            _withDebtCount = 0;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _statsTotalCount = result.Value.TotalCount;
+        _withOrdersCount = result.Value.WithOrdersCount;
+        _withDebtCount = result.Value.WithDebtCount;
+    }
+
+    private async Task ApplyStatsFilter(string filter)
+    {
+        _activeStatsFilter = filter;
+
+        _ordersFilter = null;
+        _debtFilter = null;
+
+        switch (filter)
+        {
+            case "withOrders":
+                _ordersFilter = "withOrders";
+                break;
+
+            case "withDebt":
+                _debtFilter = "withDebt";
+                break;
+        }
+
+        _currentPage = 1;
+
+        await LoadCustomersAsync();
+    }
+
+    private async Task ApplyFilters()
+    {
+        _activeStatsFilter = "custom";
+        _currentPage = 1;
+
+        await LoadCustomersAsync();
+    }
+
+    private async Task ResetFilters()
+    {
+        _search = string.Empty;
+        _ordersFilter = null;
+        _debtFilter = null;
+        _activeStatsFilter = "all";
+        _currentPage = 1;
+
+        await LoadCustomersAsync();
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString();
+        _activeStatsFilter = "custom";
+
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        try
+        {
+            await Task.Delay(500, token);
+
+            _currentPage = 1;
+            await LoadCustomersAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task ChangeSort(string sortBy)
+    {
+        if (_sortBy == sortBy)
+            _descending = !_descending;
+        else
+        {
+            _sortBy = sortBy;
+            _descending = false;
+        }
+
+        _currentPage = 1;
+
+        await LoadCustomersAsync();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1)
+            return;
+
+        if (page > TotalPages)
+            return;
+
+        _currentPage = page;
+
+        await LoadCustomersAsync();
+    }
+
+    private string GetStatsCardClass(string filter)
+    {
+        return _activeStatsFilter == filter
+            ? "active"
+            : string.Empty;
+    }
+
+    private void OpenActionsMenu(CustomerDto customer)
+    {
+        _selectedCustomer = customer;
         _isActionsMenuOpen = true;
     }
 
     private void CloseActionsMenu()
     {
+        _selectedCustomer = null;
         _isActionsMenuOpen = false;
-        _selectedCustomerName = null;
+    }
+
+    private void OpenCreateModal()
+    {
+        _newCustomer = new CustomerFormModel();
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        _isCreateModalOpen = false;
+        _newCustomer = new CustomerFormModel();
+    }
+
+    private async Task CreateCustomer()
+    {
+        var request = new CreateCustomerRequest(
+            _newCustomer.LastName,
+            _newCustomer.FirstName,
+            _newCustomer.MiddleName,
+            _newCustomer.PhoneNumber,
+            _newCustomer.Email,
+            _newCustomer.PassportSeries,
+            _newCustomer.PassportNumber,
+            _newCustomer.PostalCode,
+            _newCustomer.Region,
+            _newCustomer.City,
+            _newCustomer.Street,
+            _newCustomer.House,
+            ToNullable(_newCustomer.Building),
+            ToNullable(_newCustomer.Apartment));
+
+        var result = await CustomersService.CreateCustomerAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success($"Клиент «{result.Value.FullName}» добавлен");
+
+        CloseCreateModal();
+
+        _currentPage = 1;
+
+        await LoadStatsAsync();
+        await LoadCustomersAsync();
+    }
+
+    private void OpenViewModal()
+    {
+        if (_selectedCustomer is null)
+            return;
+
+        _viewCustomer = _selectedCustomer;
+
+        CloseActionsMenu();
+
+        _isViewModalOpen = true;
+    }
+
+    private void CloseViewModal()
+    {
+        _viewCustomer = null;
+        _isViewModalOpen = false;
+    }
+
+    private void OpenEditModal()
+    {
+        if (_selectedCustomer is null)
+            return;
+
+        _editingCustomer = _selectedCustomer;
+        _editCustomer = ToFormModel(_selectedCustomer);
+
+        CloseActionsMenu();
+
+        _isEditModalOpen = true;
+    }
+
+    private void CloseEditModal()
+    {
+        _editingCustomer = null;
+        _editCustomer = new CustomerFormModel();
+        _isEditModalOpen = false;
+    }
+
+    private async Task UpdateCustomer()
+    {
+        if (_editingCustomer is null)
+            return;
+
+        var request = new UpdateCustomerRequest(
+            _editCustomer.LastName,
+            _editCustomer.FirstName,
+            _editCustomer.MiddleName,
+            _editCustomer.PhoneNumber,
+            _editCustomer.Email,
+            _editCustomer.PassportSeries,
+            _editCustomer.PassportNumber,
+            _editCustomer.PostalCode,
+            _editCustomer.Region,
+            _editCustomer.City,
+            _editCustomer.Street,
+            _editCustomer.House,
+            ToNullable(_editCustomer.Building),
+            ToNullable(_editCustomer.Apartment));
+
+        var result = await CustomersService.UpdateCustomerAsync(
+            _editingCustomer.Id,
+            request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success($"Клиент «{_editCustomer.FullName}» изменён");
+
+        CloseEditModal();
+
+        await LoadStatsAsync();
+        await LoadCustomersAsync();
+    }
+
+    private void OpenDeleteModal()
+    {
+        if (_selectedCustomer is null)
+            return;
+
+        _deletingCustomer = _selectedCustomer;
+
+        CloseActionsMenu();
+
+        _isDeleteModalOpen = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        _deletingCustomer = null;
+        _isDeleteModalOpen = false;
+    }
+
+    private async Task DeleteCustomer()
+    {
+        if (_deletingCustomer is null)
+            return;
+
+        var deletedName = _deletingCustomer.FullName;
+
+        var result = await CustomersService.DeleteCustomerAsync(
+            _deletingCustomer.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success($"Клиент «{deletedName}» удалён");
+
+        CloseDeleteModal();
+
+        await LoadStatsAsync();
+        await LoadCustomersAsync();
     }
 
     private void ExecuteCustomerAction(string action)
     {
-        if (string.IsNullOrWhiteSpace(_selectedCustomerName))
+        if (_selectedCustomer is null)
             return;
 
-        NotificationService.Info($"{action}: {_selectedCustomerName}");
+        NotificationService.Info($"{action}: {_selectedCustomer.FullName}");
 
         CloseActionsMenu();
     }
 
-    private void PreviousPage()
+    private async Task ExportCustomers()
     {
-        if (_currentPage > 1)
-            _currentPage--;
-    }
-
-    private void NextPage()
-    {
-        if (_currentPage < TotalPages)
-            _currentPage++;
-    }
-
-    private void GoToPage(int page)
-    {
-        _currentPage = page;
-    }
-
-    private static string GetStatusClass(string status)
-    {
-        return status switch
+        var request = new ExportCustomersRequest
         {
-            "Активен" => "status-badge available",
-            "Заблокирован" => "status-badge repair",
-            _ => "status-badge"
+            Search = _search,
+            HasOrders = HasOrders,
+            HasDebt = HasDebt,
+            SortBy = _sortBy,
+            Descending = _descending
+        };
+
+        var result = await CustomersService.ExportCustomersAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Клиенты экспортированы");
+    }
+
+    private void FillFakeCustomerData()
+    {
+        _newCustomer = FakeCustomerGeneratorService.Generate();
+    }
+
+    private async Task GenerateFakeCustomers()
+    {
+        const int count = 10;
+
+        for (var i = 0; i < count; i++)
+        {
+            var customer = FakeCustomerGeneratorService.Generate();
+
+            var request = new CreateCustomerRequest(
+                customer.LastName,
+                customer.FirstName,
+                customer.MiddleName,
+                customer.PhoneNumber,
+                customer.Email,
+                customer.PassportSeries,
+                customer.PassportNumber,
+                customer.PostalCode,
+                customer.Region,
+                customer.City,
+                customer.Street,
+                customer.House,
+                ToNullable(customer.Building),
+                ToNullable(customer.Apartment));
+
+            var result = await CustomersService.CreateCustomerAsync(request);
+
+            if (result.IsFailure)
+            {
+                NotificationService.Error(result.Error.Message);
+                return;
+            }
+        }
+
+        _currentPage = 1;
+
+        await LoadStatsAsync();
+        await LoadCustomersAsync();
+
+        NotificationService.Success($"Успешно создано {count} тестовых клиентов");
+    }
+
+    private static CustomerFormModel ToFormModel(CustomerDto customer)
+    {
+        return new CustomerFormModel
+        {
+            LastName = customer.LastName,
+            FirstName = customer.FirstName,
+            MiddleName = customer.MiddleName,
+            PhoneNumber = customer.PhoneNumber,
+            Email = customer.Email,
+            PassportSeries = customer.PassportSeries,
+            PassportNumber = customer.PassportNumber,
+            PostalCode = customer.PostalCode,
+            Region = customer.Region,
+            City = customer.City,
+            Street = customer.Street,
+            House = customer.House,
+            Building = customer.Building ?? string.Empty,
+            Apartment = customer.Apartment ?? string.Empty
         };
     }
 
-    private sealed class CustomerRow
+    private static string? ToNullable(string? value)
     {
-        public string FullName { get; set; } = string.Empty;
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
+    }
 
-        public string Initials { get; set; } = string.Empty;
+    private static string GetInitials(CustomerDto customer)
+    {
+        var lastNameInitial = string.IsNullOrWhiteSpace(customer.LastName)
+            ? string.Empty
+            : customer.LastName[0].ToString();
 
-        public string PhoneNumber { get; set; } = string.Empty;
+        var firstNameInitial = string.IsNullOrWhiteSpace(customer.FirstName)
+            ? string.Empty
+            : customer.FirstName[0].ToString();
 
-        public string Email { get; set; } = string.Empty;
+        var initials = $"{lastNameInitial}{firstNameInitial}";
 
-        public string Passport { get; set; } = string.Empty;
+        return string.IsNullOrWhiteSpace(initials)
+            ? "?"
+            : initials;
+    }
 
-        public string Address { get; set; } = string.Empty;
+    private static string GetDebtClass(bool hasDebt)
+    {
+        return hasDebt
+            ? "status-badge repair"
+            : "status-badge available";
+    }
 
-        public int OrdersCount { get; set; }
-
-        public string Status { get; set; } = string.Empty;
-
-        public bool HasDebt { get; set; }
+    private static string GetAddressOrDash(CustomerDto customer)
+    {
+        return string.IsNullOrWhiteSpace(customer.Address)
+            ? "Адрес не указан"
+            : customer.Address;
+    }
+    
+    private static string GetDebtTextClass(bool hasDebt)
+    {
+        return hasDebt
+            ? "customer-debt-danger"
+            : "customer-debt-success";
     }
 }

@@ -12,7 +12,7 @@ public sealed class Customer : AuditableEntity<CustomerId>
         : base(CustomerId.NewId())
     {
     }
-    
+
     private Customer(
         FullName fullName,
         PhoneNumber phoneNumber,
@@ -81,12 +81,14 @@ public sealed class Customer : AuditableEntity<CustomerId>
             address);
     }
 
-    public UnitResult<Error> UpdateProfile(
+    public UnitResult<Error> Update(
         string lastName,
         string firstName,
         string middleName,
         string phoneNumber,
         string email,
+        string passportSeries,
+        string passportNumber,
         Address? address)
     {
         var fullNameResult = FullName.Create(
@@ -107,9 +109,17 @@ public sealed class Customer : AuditableEntity<CustomerId>
         if (emailResult.IsFailure)
             return emailResult.Error;
 
+        var passportResult = PassportData.Create(
+            passportSeries,
+            passportNumber);
+
+        if (passportResult.IsFailure)
+            return passportResult.Error;
+
         FullName = fullNameResult.Value;
         PhoneNumber = phoneNumberResult.Value;
         Email = emailResult.Value;
+        PassportData = passportResult.Value;
         Address = address;
 
         MarkUpdated();

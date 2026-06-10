@@ -20,7 +20,7 @@ namespace RentalPro.Presentation.Server.Controllers;
 [Route("api/users")]
 public sealed class UsersController(
     IUsersReadRepository usersReadRepository,
-    IUsersExportService usersExportService,
+    IExcelExportService<UserDto> usersExportService,
     IQueryHandler<PagedResult<UserDto>, GetUsersQuery> getUsersHandler,
     ICommandHandler<Guid, CreateUserCommand> createUserHandler,
     ICommandHandler<ChangeUserStatusCommand> changeUserStatusHandler,
@@ -209,7 +209,7 @@ public sealed class UsersController(
         if (usersResult.IsFailure)
             return BadRequest(usersResult.Error);
 
-        var fileBytes = usersExportService.ExportToExcel(usersResult.Value);
+        var fileBytes = usersExportService.Export(usersResult.Value);
 
         var fileName = $"users_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx";
 

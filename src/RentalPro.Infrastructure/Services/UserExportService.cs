@@ -4,9 +4,9 @@ using RentalPro.Contracts.Users;
 
 namespace RentalPro.Infrastructure.Services;
 
-public sealed class UsersExportService : IUsersExportService
+public sealed class UsersExportService : IExcelExportService<UserDto>
 {
-    public byte[] ExportToExcel(IReadOnlyList<UserDto> users)
+    public byte[] Export(IReadOnlyList<UserDto> users)
     {
         using var workbook = new XLWorkbook();
 

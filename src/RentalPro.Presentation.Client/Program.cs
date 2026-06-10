@@ -26,5 +26,7 @@ builder.Services.AddScoped<ToolCategoriesService>();
 builder.Services.AddScoped<DictionaryCrudService>();
 builder.Services.AddScoped<ToolsService>();
 builder.Services.AddScoped<FakeToolGeneratorService>();
+builder.Services.AddScoped<CustomersService>();
+builder.Services.AddScoped<FakeCustomerGeneratorService>();
 
 await builder.Build().RunAsync();
