@@ -473,72 +473,83 @@
         }
     </div>
 }
+                    @if (_newOrder.Tools.Count > 0)
+                    {
+                        <div class="order-summary-card compact">
 
-                    <div class="order-summary-card compact">
+                            <div class="order-summary-row">
 
-                        <div class="order-summary-row">
 
-                            <div class="order-summary-item">
-                                <div class="summary-icon purple compact">
-                                    <i class="bi bi-tools"></i>
+                                <div class="order-summary-item">
+                                    <div class="summary-icon compact blue">
+                                        <i class="bi bi-calendar-range"></i>
+                                    </div>
+
+                                    <div>
+                                        <span>Период</span>
+
+                                        <strong>
+                                            @_newOrder.StartDate.ToString("dd.MM")
+                                            —
+                                            @_newOrder.EndDate.ToString("dd.MM")
+                                        </strong>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <span>Инструменты</span>
-                                    <strong>@SelectedToolsCount</strong>
-                                </div>
-                            </div>
-                            
-                            <div class="order-summary-item">
-                                <div class="summary-icon compact blue">
-                                    <i class="bi bi-calendar-range"></i>
+                                <div class="order-summary-item">
+                                    <div class="summary-icon compact green">
+                                        <i class="bi bi-calendar-check"></i>
+                                    </div>
+
+                                    <div>
+                                        <span>Дней</span>
+
+                                        <strong>
+                                            @RentalDaysText
+                                        </strong>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <span>Период</span>
+                                <div class="order-summary-item">
+                                    <div class="summary-icon compact yellow">
+                                        <i class="bi bi-wallet2"></i>
+                                    </div>
+
+                                    <div>
+                                        <span>Залог</span>
+
+                                        <strong>
+                                            @_newOrder.DepositAmount.ToString("N0") ₽
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="order-summary-item">
+                                    <div class="summary-icon compact green">
+                                        <i class="bi bi-cash-stack"></i>
+                                    </div>
+
+                                    <div>
+                                        <span>Аренда</span>
+
+                                        <strong>
+                                            @_newOrder.TotalAmount.ToString("N0") ₽
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="order-summary-total">
+                                    <span>К оплате</span>
 
                                     <strong>
-                                        @_newOrder.StartDate.ToString("dd.MM")
-                                        —
-                                        @_newOrder.EndDate.ToString("dd.MM")
+                                        @TotalToPay.ToString("N0") ₽
                                     </strong>
-
-                                    <small>
-                                        @RentalDaysText
-                                    </small>
-                                </div>
-                            </div>
-
-                            <div class="order-summary-item">
-                                <div class="summary-icon yellow compact">
-                                    <i class="bi bi-wallet2"></i>
                                 </div>
 
-                                <div>
-                                    <span>Залог</span>
-                                    <strong>@_newOrder.DepositAmount.ToString("N0") ₽</strong>
-                                </div>
-                            </div>
-
-                            <div class="order-summary-item">
-                                <div class="summary-icon green compact">
-                                    <i class="bi bi-cash-stack"></i>
-                                </div>
-
-                                <div>
-                                    <span>Аренда</span>
-                                    <strong>@_newOrder.TotalAmount.ToString("N0") ₽</strong>
-                                </div>
-                            </div>
-
-                            <div class="order-summary-total compact">
-                                <span>К оплате</span>
-                                <strong>@TotalToPay.ToString("N0") ₽</strong>
                             </div>
 
                         </div>
-
-                    </div>
+                    }
 
                 </div>
 
