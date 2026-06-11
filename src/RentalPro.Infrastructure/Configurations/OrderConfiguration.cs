@@ -21,6 +21,15 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasConversion(
                 id => id.Value,
                 value => OrderId.Restore(value));
+        
+        builder
+            .Property(x => x.Number)
+            .HasColumnName("number")
+            .HasConversion(
+                number => number.Value,
+                value => OrderNumber.Create(value).Value)
+            .HasMaxLength(OrderNumber.MAX_LENGTH)
+            .IsRequired();
 
         builder
             .Property(x => x.UserId)

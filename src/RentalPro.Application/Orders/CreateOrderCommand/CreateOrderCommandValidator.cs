@@ -28,7 +28,7 @@ public sealed class CreateOrderCommandValidator
 
         RuleFor(x => x.Comment)
             .MustBeValueObject(Comment.Create);
-
+        
         RuleFor(x => x.Items)
             .NotEmpty()
             .WithMessage("Order must contain at least one item");

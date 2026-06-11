@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using RentalPro.Domain.Common;
 using RentalPro.Domain.Customers;
 using RentalPro.Domain.Users;
@@ -26,6 +25,7 @@ public sealed class Order : AuditableEntity<OrderId>
         Comment? comment)
         : base(OrderId.NewId())
     {
+        Number = OrderNumber.Generate(Id, orderDate);
         UserId = userId;
         CustomerId = customerId;
         OrderDate = orderDate;
@@ -43,10 +43,12 @@ public sealed class Order : AuditableEntity<OrderId>
 
     public DateTime OrderDate { get; private set; }
 
+    public OrderNumber Number { get; private set; }
+
     public OrderStatusId StatusId { get; private set; }
 
     public OrderStatus Status { get; private set; } = null!;
-    
+
     public Comment? Comment { get; private set; }
 
     public IReadOnlyCollection<OrderItem> Items => _items;
