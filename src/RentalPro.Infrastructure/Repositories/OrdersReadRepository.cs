@@ -69,20 +69,32 @@ public sealed class OrdersReadRepository(
             var sql = $"""
                        SELECT
                            o.id AS Id,
-                           CONCAT(N'ORD-', FORMAT(o.order_date, 'yyyy'), N'-', RIGHT(CONCAT(N'000', ROW_NUMBER() OVER (ORDER BY o.created_at)), 3)) AS Number,
+                           CONCAT(
+                               N'ORD-',
+                               FORMAT(o.order_date, 'yyyy'),
+                               N'-',
+                               RIGHT(CONCAT(N'000', ROW_NUMBER() OVER (ORDER BY o.created_at)), 3)
+                           ) AS Number,
+
                            o.customer_id AS CustomerId,
-                           CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerName,
+                           CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+
                            o.user_id AS UserId,
-                           CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserName,
+                           CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+
                            o.status_id AS StatusId,
                            os.name AS StatusName,
+
+                           ISNULL(oa.ItemsCount, 0) AS ItemsCount,
+                           ISNULL(oa.ToolsNames, N'') AS ToolsNames,
+
                            o.order_date AS OrderDate,
                            oa.StartDate AS StartDate,
-                           oa.PlannedReturnDate AS PlannedReturnDate,
-                           oa.ToolNames AS ToolNames,
-                           oa.ItemsCount AS ItemsCount,
-                           o.total_cost AS TotalCost,
-                           o.deposit_total AS DepositTotal,
+                           oa.NearestReturnDate AS PlannedReturnDate,
+
+                           ISNULL(oa.TotalCost, 0) AS TotalCost,
+                           ISNULL(oa.DepositTotal, 0) AS DepositTotal,
+
                            o.comment AS Comment,
                            o.created_at AS CreatedAt,
                            o.updated_at AS UpdatedAt
@@ -255,42 +267,48 @@ public sealed class OrdersReadRepository(
     }
 
     private const string FromClause = """
-                                      FROM orders o
-                                      INNER JOIN customers c ON c.id = o.customer_id
-                                      INNER JOIN users u ON u.id = o.user_id
-                                      INNER JOIN order_statuses os ON os.id = o.status_id
-                                      OUTER APPLY
-                                      (
-                                          SELECT
-                                              MIN(oi.start_date) AS StartDate,
-                                              MAX(oi.planned_return_date) AS PlannedReturnDate,
-                                              COUNT(oi.id) AS ItemsCount,
-                                              STRING_AGG(t.name, N', ') AS ToolNames
-                                          FROM order_items oi
-                                          INNER JOIN tools t ON t.id = oi.tool_id
-                                          WHERE oi.order_id = o.id
-                                            AND oi.deleted_at IS NULL
-                                            AND t.deleted_at IS NULL
-                                      ) oa
-                                      """;
+                                  FROM orders o
+                                  INNER JOIN customers c ON c.id = o.customer_id
+                                  INNER JOIN users u ON u.id = o.user_id
+                                  INNER JOIN order_statuses os ON os.id = o.status_id
+                                  OUTER APPLY
+                                  (
+                                      SELECT
+                                          COUNT(oi.id) AS ItemsCount,
+                                          STRING_AGG(t.name, N', ') AS ToolsNames,
+                                          MIN(oi.start_date) AS StartDate,
+                                          MIN(oi.planned_return_date) AS NearestReturnDate,
+                                          SUM(oi.deposit_amount) AS DepositTotal,
+                                          SUM(
+                                              oi.rental_price_per_day *
+                                              DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                                          ) AS TotalCost
+                                      FROM order_items oi
+                                      INNER JOIN tools t ON t.id = oi.tool_id
+                                      WHERE oi.order_id = o.id
+                                        AND oi.deleted_at IS NULL
+                                        AND t.deleted_at IS NULL
+                                  ) oa
+                                  """;
 
-    private const string WhereClause = """
-                                       WHERE o.deleted_at IS NULL
-                                         AND c.deleted_at IS NULL
-                                         AND u.deleted_at IS NULL
-                                         AND os.deleted_at IS NULL
-                                         AND (
-                                             @search IS NULL
-                                             OR CONCAT(N'ORD-', FORMAT(o.order_date, 'yyyy'), N'-', CONVERT(nvarchar(36), o.id)) LIKE @searchPattern
-                                             OR CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) LIKE @fullNameSearchPattern
-                                             OR oa.ToolNames LIKE @searchPattern
-                                         )
-                                         AND (@statusId IS NULL OR o.status_id = @statusId)
-                                         AND (@startFrom IS NULL OR oa.StartDate >= @startFrom)
-                                         AND (@startTo IS NULL OR oa.StartDate <= @startTo)
-                                         AND (@endFrom IS NULL OR oa.PlannedReturnDate >= @endFrom)
-                                         AND (@endTo IS NULL OR oa.PlannedReturnDate <= @endTo)
-                                       """;
+private const string WhereClause = """
+                                   WHERE o.deleted_at IS NULL
+                                     AND c.deleted_at IS NULL
+                                     AND u.deleted_at IS NULL
+                                     AND os.deleted_at IS NULL
+                                     AND (
+                                         @search IS NULL
+                                         OR CONVERT(nvarchar(36), o.id) LIKE @searchPattern
+                                         OR CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) LIKE @fullNameSearchPattern
+                                         OR CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) LIKE @fullNameSearchPattern
+                                         OR oa.ToolsNames LIKE @searchPattern
+                                     )
+                                     AND (@statusId IS NULL OR o.status_id = @statusId)
+                                     AND (@startFrom IS NULL OR oa.StartDate >= @startFrom)
+                                     AND (@startTo IS NULL OR oa.StartDate <= @startTo)
+                                     AND (@endFrom IS NULL OR oa.NearestReturnDate >= @endFrom)
+                                     AND (@endTo IS NULL OR oa.NearestReturnDate <= @endTo)
+                                   """;
 
     private static SqlParameter CreateParameter(
         string name,
@@ -311,16 +329,23 @@ public sealed class OrdersReadRepository(
         {
             "number" => $"ORDER BY o.created_at {direction}",
             "customer" => $"ORDER BY c.last_name {direction}, c.first_name {direction}, c.middle_name {direction}",
-            "tool" => $"ORDER BY oa.ToolNames {direction}",
+            "user" => $"ORDER BY u.last_name {direction}, u.first_name {direction}, u.middle_name {direction}",
+            "status" => $"ORDER BY os.name {direction}",
+            "orderdate" => $"ORDER BY o.order_date {direction}",
+            "createdat" => $"ORDER BY o.created_at {direction}",
+            "updatedat" => $"ORDER BY o.updated_at {direction}",
+            "items" => $"ORDER BY oa.ItemsCount {direction}",
+            "itemscount" => $"ORDER BY oa.ItemsCount {direction}",
+            "deposit" => $"ORDER BY oa.DepositTotal {direction}",
+            "deposittotal" => $"ORDER BY oa.DepositTotal {direction}",
+            "amount" => $"ORDER BY oa.TotalCost {direction}",
+            "totalcost" => $"ORDER BY oa.TotalCost {direction}",
             "start" => $"ORDER BY oa.StartDate {direction}",
             "startdate" => $"ORDER BY oa.StartDate {direction}",
-            "end" => $"ORDER BY oa.PlannedReturnDate {direction}",
-            "plannedreturndate" => $"ORDER BY oa.PlannedReturnDate {direction}",
-            "amount" => $"ORDER BY o.total_cost {direction}",
-            "totalcost" => $"ORDER BY o.total_cost {direction}",
-            "deposit" => $"ORDER BY o.deposit_total {direction}",
-            "status" => $"ORDER BY os.name {direction}",
-            "createdat" => $"ORDER BY o.created_at {direction}",
+            "end" => $"ORDER BY oa.NearestReturnDate {direction}",
+            "plannedreturndate" => $"ORDER BY oa.NearestReturnDate {direction}",
+            "tool" => $"ORDER BY oa.ToolsNames {direction}",
+            "tools" => $"ORDER BY oa.ToolsNames {direction}",
             _ => "ORDER BY o.created_at DESC"
         };
     }

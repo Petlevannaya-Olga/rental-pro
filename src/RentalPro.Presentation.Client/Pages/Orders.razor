@@ -4,12 +4,24 @@
 @using RentalPro.Presentation.Client.Services
 @using RentalPro.Contracts.Customers
 @using RentalPro.Contracts.Tools
+@using RentalPro.Presentation.Client.Models
 @using RentalPro.Presentation.Client.Models.Dictionaries
+@using RentalPro.Contracts.Orders
+@using RentalPro.Contracts.OrderStatuses
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using RentalPro.Contracts.OrderStatuses
 
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject OrderStatusesService OrderStatusesService
+@inject OrdersService OrdersService
 @inject ToolsService ToolsService
 @inject NotificationService NotificationService
 @inject CustomersService CustomersService
 @inject DictionaryCrudService DictionaryCrudService
+@inject FakeOrderGeneratorService FakeOrderGenerator
 
 <div class="users-page orders-page">
 
@@ -26,7 +38,7 @@
         <div class="stats-filter-card @GetStatsCardClass("active")"
              @onclick='() => ApplyStatsFilter("active")'>
             <StatCard Title="Активные"
-                      Value="@_orders.Count(x => x.Status == "Активен").ToString()"
+                      Value="@_orders.Count(x => x.StatusName == "Активен").ToString()"
                       Icon="bi bi-play-circle"
                       Color="green"/>
         </div>
@@ -34,7 +46,7 @@
         <div class="stats-filter-card @GetStatsCardClass("completed")"
              @onclick='() => ApplyStatsFilter("completed")'>
             <StatCard Title="Завершённые"
-                      Value="@_orders.Count(x => x.Status == "Завершён").ToString()"
+                      Value="@_orders.Count(x => x.StatusName == "Завершён").ToString()"
                       Icon="bi bi-check-circle"
                       Color="cyan"/>
         </div>
@@ -42,7 +54,7 @@
         <div class="stats-filter-card @GetStatsCardClass("overdue")"
              @onclick='() => ApplyStatsFilter("overdue")'>
             <StatCard Title="Просроченные"
-                      Value="@_orders.Count(x => x.Status == "Просрочен").ToString()"
+                      Value="@_orders.Count(x => x.StatusName == "Просрочен").ToString()"
                       Icon="bi bi-exclamation-circle"
                       Color="red"/>
         </div>
@@ -115,7 +127,7 @@
 
         </div>
 
-        @if (FilteredOrders.Count == 0)
+        @if (_orders.Count == 0)
         {
             <div class="table-empty">Заказы не найдены</div>
         }
@@ -157,7 +169,7 @@
                 </thead>
 
                 <tbody>
-                @foreach (var order in PagedOrders)
+                @foreach (var order in _orders)
                 {
                     <tr>
                         <td>
@@ -165,15 +177,15 @@
                             <span class="table-subtitle">@order.CreatedAt.ToString("dd.MM.yyyy")</span>
                         </td>
 
-                        <td>@order.CustomerName</td>
-                        <td>@order.ToolName</td>
-                        <td>@order.StartDate.ToString("dd.MM.yyyy")</td>
-                        <td>@order.EndDate.ToString("dd.MM.yyyy")</td>
-                        <td>@order.TotalAmount.ToString("N0") ₽</td>
+                        <td>@order.CustomerFullName</td>
+                        <td>Информация об инструментах</td>
+                        <td>Дата</td>
+                        <td>Дата</td>
+                        <td>0 ₽</td>
 
                         <td>
-                            <span class="@GetOrderStatusClass(order.Status)">
-                                @order.Status
+                            <span class="@GetOrderStatusClass(order.StatusName)">
+                                @order.StatusName
                             </span>
                         </td>
 
@@ -250,83 +262,6 @@
         </div>
     }
 
-    @if (_isViewModalOpen && _viewOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="customer-view-modal" @onclick:stopPropagation="true">
-
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Просмотр заказа</h3>
-                        <p>@_viewOrder.Number</p>
-                    </div>
-
-                    <button type="button" @onclick="CloseViewModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-                <div class="customer-details-grid">
-
-                    <div class="customer-detail-item">
-                        <span>Номер заказа</span>
-                        <strong>@_viewOrder.Number</strong>
-                    </div>
-
-                    <div class="customer-detail-item">
-                        <span>Статус</span>
-                        <strong>@_viewOrder.Status</strong>
-                    </div>
-
-                    <div class="customer-detail-item">
-                        <span>Клиент</span>
-                        <strong>@_viewOrder.CustomerName</strong>
-                    </div>
-
-                    <div class="customer-detail-item">
-                        <span>Инструмент</span>
-                        <strong>@_viewOrder.ToolName</strong>
-                    </div>
-
-                    <div class="customer-detail-item">
-                        <span>Начало аренды</span>
-                        <strong>@_viewOrder.StartDate.ToString("dd.MM.yyyy")</strong>
-                    </div>
-
-                    <div class="customer-detail-item">
-                        <span>Окончание аренды</span>
-                        <strong>@_viewOrder.EndDate.ToString("dd.MM.yyyy")</strong>
-                    </div>
-
-                    <div class="customer-detail-item">
-                        <span>Сумма</span>
-                        <strong>@_viewOrder.TotalAmount.ToString("N0") ₽</strong>
-                    </div>
-
-                    <div class="customer-detail-item">
-                        <span>Залог</span>
-                        <strong>@_viewOrder.DepositAmount.ToString("N0") ₽</strong>
-                    </div>
-
-                    <div class="customer-detail-item customer-address-item">
-                        <span>Комментарий</span>
-                        <strong>@(string.IsNullOrWhiteSpace(_viewOrder.Comment) ? "Комментарий не указан" : _viewOrder.Comment)</strong>
-                    </div>
-
-                </div>
-
-                <div class="customer-view-footer">
-                    <button class="secondary-button"
-                            type="button"
-                            @onclick="CloseViewModal">
-                        Закрыть
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    }
-
     @if (_isCreateModalOpen)
     {
         <div class="actions-backdrop">
@@ -337,7 +272,7 @@
                         <h3>Создать заказ</h3>
                         <p>Заполните данные заказа</p>
                     </div>
-                    
+
                     <button type="button" @onclick="CloseCreateModal">
                         <i class="bi bi-x-lg"></i>
                     </button>
@@ -404,75 +339,75 @@
 
                         </div>
                     </div>
-                    
-                    @if (_newOrder.Tools.Count > 0)
-{
-    <div class="order-section">
-        <table class="users-table order-tools-period-table">
-            <thead>
-            <tr>
-                <th>Инструмент</th>
-                <th>Начало аренды</th>
-                <th>Окончание аренды</th>
-                <th>Дней</th>
-                <th>Аренда</th>
-                <th>Залог</th>
-                <th></th>
-            </tr>
-            </thead>
 
-            <tbody>
-            @foreach (var tool in PagedOrderTools)
-            {
-                <tr>
-                    <td>
-                        <strong>@tool.ToolName</strong>
-                        <span class="table-subtitle">
+                    @if (_newOrder.Tools.Count > 0)
+                    {
+                        <div class="order-section">
+                            <table class="users-table order-tools-period-table">
+                                <thead>
+                                <tr>
+                                    <th>Инструмент</th>
+                                    <th>Начало аренды</th>
+                                    <th>Окончание аренды</th>
+                                    <th>Дней</th>
+                                    <th>Аренда</th>
+                                    <th>Залог</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                @foreach (var tool in PagedOrderTools)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@tool.ToolName</strong>
+                                            <span class="table-subtitle">
                             @tool.RentalPricePerDay.ToString("N0") ₽ / день
                         </span>
-                    </td>
+                                        </td>
 
-                    <td>
-                        <input type="date"
-                               class="filter-select date-input"
-                               @bind="tool.StartDate"
-                               @bind:after="RecalculateOrder" />
-                    </td>
+                                        <td>
+                                            <input type="date"
+                                                   class="filter-select date-input"
+                                                   @bind="tool.StartDate"
+                                                   @bind:after="RecalculateOrder"/>
+                                        </td>
 
-                    <td>
-                        <input type="date"
-                               class="filter-select date-input"
-                               @bind="tool.EndDate"
-                               @bind:after="RecalculateOrder" />
-                    </td>
+                                        <td>
+                                            <input type="date"
+                                                   class="filter-select date-input"
+                                                   @bind="tool.EndDate"
+                                                   @bind:after="RecalculateOrder"/>
+                                        </td>
 
-                    <td>@tool.RentalDays</td>
-                    <td>@tool.TotalAmount.ToString("N0") ₽</td>
-                    <td>@tool.DepositAmount.ToString("N0") ₽</td>
+                                        <td>@tool.RentalDays</td>
+                                        <td>@tool.TotalAmount.ToString("N0") ₽</td>
+                                        <td>@tool.DepositAmount.ToString("N0") ₽</td>
 
-                    <td class="actions-cell">
-                        <button class="icon-button"
-                                type="button"
-                                @onclick="() => RemoveToolFromOrder(tool.ToolId)">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+                                        <td class="actions-cell">
+                                            <button class="icon-button"
+                                                    type="button"
+                                                    @onclick="() => RemoveToolFromOrder(tool.ToolId)">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
 
-        @if (_newOrder.Tools.Count > OrderToolsPageSize)
-        {
-            <Pagination CurrentPage="_orderToolsCurrentPage"
-                        TotalPages="OrderToolsTotalPages"
-                        TotalItems="_newOrder.Tools.Count"
-                        StartItem="OrderToolsPageStart"
-                        EndItem="OrderToolsPageEnd"
-                        PageChanged="GoToOrderToolsPage" />
-        }
-    </div>
-}
+                            @if (_newOrder.Tools.Count > OrderToolsPageSize)
+                            {
+                                <Pagination CurrentPage="_orderToolsCurrentPage"
+                                            TotalPages="OrderToolsTotalPages"
+                                            TotalItems="_newOrder.Tools.Count"
+                                            StartItem="OrderToolsPageStart"
+                                            EndItem="OrderToolsPageEnd"
+                                            PageChanged="GoToOrderToolsPage"/>
+                            }
+                        </div>
+                    }
                     @if (_newOrder.Tools.Count > 0)
                     {
                         <div class="order-summary-card compact">
@@ -558,6 +493,13 @@
                             type="button"
                             @onclick="CloseCreateModal">
                         Отмена
+                    </button>
+
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="FillTestOrderAsync">
+                        <i class="bi bi-magic"></i>
+                        Заполнить тестовыми данными
                     </button>
 
                     <button class="primary-button"
@@ -994,7 +936,7 @@
 
                     <button class="primary-button"
                             type="button"
-                            @onclick="DeleteOrder">
+                            @onclick="DeleteOrderAsync">
                         Удалить
                     </button>
                 </div>
@@ -1004,11 +946,13 @@
     }
     <CreateCustomerModal IsOpen="_isCreateCustomerModalOpen"
                          IsOpenChanged="CloseCreateCustomerModal"
-                         CustomerCreated="OnCustomerCreated" />
+                         CustomerCreated="OnCustomerCreated"/>
 </div>
 
 @code
 {
+    private Guid? _currentUserId;
+
     private const int PageSize = 5;
     private const int CustomerPageSize = 3;
     private const int ToolPageSize = 3;
@@ -1031,9 +975,9 @@
     private bool _isCustomerSelectModalOpen;
     private bool _isToolSelectModalOpen;
 
-    private OrderRow? _selectedOrder;
-    private OrderRow? _viewOrder;
-    private OrderRow? _deletingOrder;
+    private OrderDto? _selectedOrder;
+    private OrderDto? _viewOrder;
+    private OrderDto? _deletingOrder;
 
     private CancellationTokenSource? _customerSearchCts;
     private List<CustomerDto> _customers = [];
@@ -1065,7 +1009,7 @@
 
     private string RentalPeriodText =>
         $"{_newOrder.StartDate:dd.MM.yyyy} — {_newOrder.EndDate:dd.MM.yyyy}";
-    
+
     private const int OrderToolsPageSize = 3;
 
     private int _orderToolsCurrentPage = 1;
@@ -1100,125 +1044,20 @@
         }
     }
 
-    private readonly List<OrderRow> _orders =
-    [
-        new()
-        {
-            Number = "ORD-2026-001",
-            CustomerName = "Петров Александр Сергеевич",
-            ToolName = "Перфоратор Bosch GBH 2-26",
-            StartDate = new DateOnly(2026, 6, 1),
-            EndDate = new DateOnly(2026, 6, 3),
-            TotalAmount = 2100,
-            DepositAmount = 5000,
-            Status = "Активен",
-            CreatedAt = new DateTime(2026, 6, 1, 9, 30, 0),
-            Comment = "Клиент забирает инструмент самостоятельно"
-        },
-        new()
-        {
-            Number = "ORD-2026-002",
-            CustomerName = "Сидоров Иван Петрович",
-            ToolName = "Шуруповерт Makita DF331D",
-            StartDate = new DateOnly(2026, 5, 20),
-            EndDate = new DateOnly(2026, 5, 25),
-            TotalAmount = 3500,
-            DepositAmount = 3000,
-            Status = "Завершён",
-            CreatedAt = new DateTime(2026, 5, 20, 11, 15, 0),
-            Comment = null
-        },
-        new()
-        {
-            Number = "ORD-2026-003",
-            CustomerName = "Кузнецова Мария Викторовна",
-            ToolName = "Болгарка DeWalt DWE4217",
-            StartDate = new DateOnly(2026, 5, 15),
-            EndDate = new DateOnly(2026, 5, 18),
-            TotalAmount = 1950,
-            DepositAmount = 4000,
-            Status = "Просрочен",
-            CreatedAt = new DateTime(2026, 5, 15, 14, 0, 0),
-            Comment = "Не вернула инструмент в срок"
-        }
-    ];
-
-    private List<OrderRow> FilteredOrders
-    {
-        get
-        {
-            IEnumerable<OrderRow> query = _orders;
-
-            if (!string.IsNullOrWhiteSpace(_search))
-            {
-                query = query.Where(x =>
-                    x.Number.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
-                    x.CustomerName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
-                    x.ToolName.Contains(_search, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrWhiteSpace(_status))
-            {
-                query = query.Where(x => x.Status == _status);
-            }
-
-            if (_startFrom is not null)
-            {
-                query = query.Where(x => x.StartDate >= _startFrom.Value);
-            }
-
-            if (_startTo is not null)
-            {
-                query = query.Where(x => x.StartDate <= _startTo.Value);
-            }
-
-            query = (_sortBy, _descending) switch
-            {
-                ("number", false) => query.OrderBy(x => x.Number),
-                ("number", true) => query.OrderByDescending(x => x.Number),
-
-                ("customer", false) => query.OrderBy(x => x.CustomerName),
-                ("customer", true) => query.OrderByDescending(x => x.CustomerName),
-
-                ("tool", false) => query.OrderBy(x => x.ToolName),
-                ("tool", true) => query.OrderByDescending(x => x.ToolName),
-
-                ("start", false) => query.OrderBy(x => x.StartDate),
-                ("start", true) => query.OrderByDescending(x => x.StartDate),
-
-                ("end", false) => query.OrderBy(x => x.EndDate),
-                ("end", true) => query.OrderByDescending(x => x.EndDate),
-
-                ("amount", false) => query.OrderBy(x => x.TotalAmount),
-                ("amount", true) => query.OrderByDescending(x => x.TotalAmount),
-
-                ("status", false) => query.OrderBy(x => x.Status),
-                ("status", true) => query.OrderByDescending(x => x.Status),
-
-                _ => query.OrderByDescending(x => x.CreatedAt)
-            };
-
-            return query.ToList();
-        }
-    }
-
-    private IEnumerable<OrderRow> PagedOrders =>
-        FilteredOrders
-            .Skip((_currentPage - 1) * PageSize)
-            .Take(PageSize);
-
-    private int FilteredTotalCount => FilteredOrders.Count;
+    private int FilteredTotalCount => _filteredTotalCount;
 
     private int TotalPages =>
-        FilteredTotalCount <= 0
+        _filteredTotalCount <= 0
             ? 1
-            : (int)Math.Ceiling(FilteredTotalCount / (double)PageSize);
+            : (int)Math.Ceiling(_filteredTotalCount / (double)PageSize);
 
     private int PageStart =>
-        FilteredTotalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+        _filteredTotalCount == 0
+            ? 0
+            : ((_currentPage - 1) * PageSize) + 1;
 
     private int PageEnd =>
-        Math.Min(_currentPage * PageSize, FilteredTotalCount);
+        Math.Min(_currentPage * PageSize, _filteredTotalCount);
 
     private int CustomersTotalPages =>
         _customersTotalCount <= 0
@@ -1246,6 +1085,56 @@
     private int ToolsPageEnd =>
         Math.Min(_toolsCurrentPage * ToolPageSize, _toolsTotalCount);
 
+    private bool _isLoading;
+
+    private List<OrderDto> _orders = [];
+
+    private List<OrderStatusDto> _orderStatuses = [];
+    private Guid? _selectedStatusId;
+
+    private int _filteredTotalCount;
+
+    private async Task LoadOrdersAsync()
+    {
+        _isLoading = true;
+
+        var request = new GetOrdersRequest(
+            Search: _search,
+            StatusId: _selectedStatusId,
+            StartFrom: _startFrom,
+            StartTo: _startTo,
+            EndFrom: null,
+            EndTo: null,
+            SortBy: _sortBy,
+            Descending: _descending,
+            Page: _currentPage,
+            PageSize: PageSize);
+
+        var result = await OrdersService.GetOrdersAsync(request);
+
+        if (result.IsFailure)
+        {
+            _orders = [];
+            _filteredTotalCount = 0;
+            _isLoading = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _orders = result.Value.Items.ToList();
+        _filteredTotalCount = result.Value.TotalCount;
+
+        if (_currentPage > TotalPages)
+        {
+            _currentPage = TotalPages;
+            await LoadOrdersAsync();
+            return;
+        }
+
+        _isLoading = false;
+    }
+
     private void GoToOrderToolsPage(int page)
     {
         if (page < 1 || page > OrderToolsTotalPages)
@@ -1253,7 +1142,7 @@
 
         _orderToolsCurrentPage = page;
     }
-    
+
     private void ApplyStatsFilter(string filter)
     {
         _activeStatsFilter = filter;
@@ -1277,22 +1166,6 @@
         _currentPage = 1;
     }
 
-    private void ApplyFilters()
-    {
-        _activeStatsFilter = "custom";
-        _currentPage = 1;
-    }
-
-    private void ResetFilters()
-    {
-        _search = string.Empty;
-        _status = null;
-        _startFrom = null;
-        _startTo = null;
-        _activeStatsFilter = "all";
-        _currentPage = 1;
-    }
-
     private void OnSearchChanged(ChangeEventArgs e)
     {
         _search = e.Value?.ToString();
@@ -1313,14 +1186,6 @@
         _currentPage = 1;
     }
 
-    private void GoToPage(int page)
-    {
-        if (page < 1 || page > TotalPages)
-            return;
-
-        _currentPage = page;
-    }
-
     private string GetStatsCardClass(string filter)
     {
         return _activeStatsFilter == filter
@@ -1328,7 +1193,7 @@
             : string.Empty;
     }
 
-    private void OpenActionsMenu(OrderRow order)
+    private void OpenActionsMenu(OrderDto order)
     {
         _selectedOrder = order;
         _isActionsMenuOpen = true;
@@ -1555,7 +1420,7 @@
 
         await LoadToolsForSelectAsync();
     }
-    
+
     private void CloseToolSelectModal()
     {
         _toolSearch = string.Empty;
@@ -1665,8 +1530,16 @@
         return days <= 0 ? 0 : days;
     }
 
-    private void CreateOrder()
+    private async Task CreateOrder()
     {
+        if (_currentUserId is null)
+        {
+            NotificationService.Error(
+                "Не удалось определить пользователя");
+
+            return;
+        }
+
         if (_newOrder.CustomerId is null ||
             _newOrder.Tools.Count == 0)
         {
@@ -1674,28 +1547,46 @@
             return;
         }
 
-        var order = new OrderRow
-        {
-            CustomerId = _newOrder.CustomerId.Value,
-            Number = $"ORD-2026-{_orders.Count + 1:000}",
-            CustomerName = _newOrder.CustomerName,
-            ToolName = _newOrder.ToolName,
-            StartDate = _newOrder.StartDate,
-            EndDate = _newOrder.EndDate,
-            TotalAmount = _newOrder.TotalAmount,
-            DepositAmount = _newOrder.DepositAmount,
-            Status = "Активен",
-            CreatedAt = DateTime.Now,
-            Comment = _newOrder.Comment
-        };
+        var statusId = _selectedStatusId
+                       ?? _orderStatuses.FirstOrDefault(x => x.Name == "Новый")?.Id;
 
-        _orders.Insert(0, order);
+        if (statusId is null)
+        {
+            NotificationService.Error("Статус заказа «Новый» не найден");
+            return;
+        }
+
+        var request = new CreateOrderRequest(
+            UserId: _currentUserId.Value,
+            CustomerId: _newOrder.CustomerId.Value,
+            StatusId: statusId.Value,
+            OrderDate: _newOrder.OrderDate.ToDateTime(TimeOnly.MinValue),
+            DepositTotal: _newOrder.DepositAmount,
+            Comment: _newOrder.Comment,
+            Items: _newOrder.Tools
+                .Select(x => new CreateOrderItemDto(
+                    ToolId: x.ToolId,
+                    RentalPricePerDay: x.RentalPricePerDay,
+                    DepositAmount: x.DepositAmount,
+                    StartDate: x.StartDate,
+                    PlannedReturnDate: x.EndDate))
+                .ToList());
+
+        var result = await OrdersService.CreateOrderAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
 
         CloseCreateModal();
 
         _currentPage = 1;
 
-        NotificationService.Success($"Заказ «{order.Number}» создан");
+        NotificationService.Success("Заказ успешно создан");
+
+        await LoadOrdersAsync();
     }
 
     private void OpenDeleteModal()
@@ -1716,18 +1607,29 @@
         _isDeleteModalOpen = false;
     }
 
-    private void DeleteOrder()
+    private async Task DeleteOrderAsync()
     {
         if (_deletingOrder is null)
             return;
 
         var number = _deletingOrder.Number;
 
-        _orders.Remove(_deletingOrder);
+        var result = await OrdersService.DeleteOrderAsync(_deletingOrder.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(
+                result.Error.Message);
+
+            return;
+        }
 
         CloseDeleteModal();
 
-        NotificationService.Success($"Заказ «{number}» удалён");
+        await LoadOrdersAsync();
+
+        NotificationService.Success(
+            $"Заказ «{number}» удалён");
     }
 
     private void ExecuteOrderAction(string action)
@@ -1852,7 +1754,7 @@
 
         await LoadCustomersForSelectAsync();
     }
-    
+
     private void RecalculateOrder()
     {
         _newOrder.TotalAmount = _newOrder.Tools.Sum(x => x.TotalAmount);
@@ -1867,7 +1769,7 @@
             _newOrder.EndDate = _newOrder.Tools.Max(x => x.EndDate);
         }
     }
-    
+
     private void RemoveToolFromOrder(Guid toolId)
     {
         var tool = _newOrder.Tools
@@ -1881,7 +1783,7 @@
         RecalculateOrder();
         FixOrderToolsPage();
     }
-    
+
     private void FixOrderToolsPage()
     {
         if (_orderToolsCurrentPage > OrderToolsTotalPages)
@@ -1889,75 +1791,113 @@
             _orderToolsCurrentPage = OrderToolsTotalPages;
         }
     }
-    
-    private sealed class OrderRow
+
+    private async Task FillTestOrderAsync()
     {
-        public string Number { get; set; } = string.Empty;
+        if (_customers.Count == 0)
+        {
+            await LoadCustomersForSelectAsync();
+        }
 
-        public Guid CustomerId { get; set; }
+        if (_tools.Count == 0)
+        {
+            _availableToolStatusId ??= await GetAvailableToolStatusIdAsync();
 
-        public string CustomerName { get; set; } = string.Empty;
+            await LoadToolsForSelectAsync();
+        }
 
-        public string ToolName { get; set; } = string.Empty;
+        FakeOrderGenerator.Fill(
+            _newOrder,
+            _customers,
+            _tools);
 
-        public DateOnly StartDate { get; set; }
+        RecalculateOrder();
 
-        public DateOnly EndDate { get; set; }
-
-        public decimal TotalAmount { get; set; }
-
-        public decimal DepositAmount { get; set; }
-
-        public string Status { get; set; } = string.Empty;
-
-        public DateTime CreatedAt { get; set; }
-
-        public string? Comment { get; set; }
+        NotificationService.Success("Тестовые данные заказа заполнены");
     }
 
-    private sealed class OrderFormModel
+    private void FillTestOrder()
     {
-        public Guid? CustomerId { get; set; }
+        FakeOrderGenerator.Fill(
+            _newOrder,
+            _customers,
+            _tools);
 
-        public List<OrderToolFormModel> Tools { get; set; } = [];
+        RecalculateOrder();
 
-        public string CustomerName { get; set; } = string.Empty;
-
-        public string ToolName { get; set; } = string.Empty;
-
-        public DateOnly StartDate { get; set; }
-
-        public DateOnly EndDate { get; set; }
-
-        public DateOnly OrderDate { get; set; }
-
-        public decimal TotalAmount { get; set; }
-
-        public decimal DepositAmount { get; set; }
-
-        public string? Comment { get; set; }
+        NotificationService.Success(
+            "Тестовые данные заказа заполнены");
     }
-    
-    private sealed class OrderToolFormModel
+
+    private async Task LoadOrderStatusesAsync()
     {
-        public Guid ToolId { get; set; }
+        var result = await OrderStatusesService.GetOrderStatusesAsync();
 
-        public string ToolName { get; set; } = string.Empty;
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
 
-        public decimal RentalPricePerDay { get; set; }
-
-        public decimal DepositAmount { get; set; }
-
-        public DateOnly StartDate { get; set; }
-
-        public DateOnly EndDate { get; set; }
-
-        public int RentalDays =>
-            Math.Max(0, EndDate.DayNumber - StartDate.DayNumber);
-
-        public decimal TotalAmount =>
-            RentalPricePerDay * RentalDays;
+        _orderStatuses = result.Value;
     }
-    
-    
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurrentUserAsync();
+
+        await LoadOrderStatusesAsync();
+
+        await LoadOrdersAsync();
+    }
+
+    private async Task ApplyFilters()
+    {
+        _activeStatsFilter = "custom";
+        _currentPage = 1;
+
+        await LoadOrdersAsync();
+    }
+
+    private async Task ResetFilters()
+    {
+        _search = string.Empty;
+        _selectedStatusId = null;
+        _startFrom = null;
+        _startTo = null;
+
+        _activeStatsFilter = "all";
+        _currentPage = 1;
+
+        await LoadOrdersAsync();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1 || page > TotalPages)
+            return;
+
+        _currentPage = page;
+
+        await LoadOrdersAsync();
+    }
+
+    private async Task LoadCurrentUserAsync()
+    {
+        var authState =
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var userId = authState.User
+            .FindFirst(ClaimTypes.NameIdentifier)?
+            .Value;
+
+        if (string.IsNullOrWhiteSpace(userId) ||
+            !Guid.TryParse(userId, out var id))
+        {
+            NotificationService.Error("Не удалось определить текущего пользователя");
+            return;
+        }
+
+        _currentUserId = id;
+    }
 }

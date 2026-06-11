@@ -1,8 +1,13 @@
 ﻿@page "/login"
 @using RentalPro.Presentation.Client.Services
+@using Blazored.LocalStorage;
+@using RentalPro.Presentation.Client.Providers
+
 @layout LoginLayout
 @inject NavigationManager NavigationManager
 @inject AuthService AuthService
+@inject ILocalStorageService LocalStorage
+@inject JwtAuthenticationStateProvider AuthStateProvider
 
 <EditForm Model="_model" OnValidSubmit="HandleLogin" autocomplete="off">
     <div class="login-page">
@@ -162,8 +167,17 @@
             _errorMessage = result.Error.Message;
             return;
         }
+        
+        await LocalStorage.SetItemAsync(
+            "authToken",
+            result.Value.Token);
 
-        NavigationManager.NavigateTo("/dashboard");
+        AuthStateProvider.NotifyUserAuthentication(
+            result.Value.Token);
+
+        NavigationManager.NavigateTo(
+            "/dashboard",
+            true);
     }
 
     private void TogglePassword()

@@ -2,13 +2,16 @@ using CSharpFunctionalExtensions;
 using RentalPro.Application.Database;
 using RentalPro.Application.Repositories;
 using RentalPro.Domain.Orders;
+using RentalPro.Domain.Tools;
 using RentalPro.Shared;
 using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Application.Orders.CreateOrderCommand;
 
 public sealed class CreateOrderCommandHandler(
-    IOrdersRepository repository,
+    IOrdersRepository ordersRepository,
+    IToolsRepository toolsRepository,
+    IToolStatusesRepository toolStatusesRepository,
     ITransactionManager transactionManager)
     : ICommandHandler<Guid, CreateOrderCommand>
 {
@@ -23,6 +26,26 @@ public sealed class CreateOrderCommandHandler(
             return transactionResult.Error.ToErrors();
 
         using var transaction = transactionResult.Value;
+
+        var rentedStatusNameResult = ToolStatusName.Create("В аренде");
+
+        if (rentedStatusNameResult.IsFailure)
+        {
+            transaction.Rollback();
+            return rentedStatusNameResult.Error.ToErrors();
+        }
+
+        var rentedStatusResult = await toolStatusesRepository.GetByAsync(
+            x => x.Name == rentedStatusNameResult.Value,
+            cancellationToken);
+
+        if (rentedStatusResult.IsFailure)
+        {
+            transaction.Rollback();
+            return rentedStatusResult.Error.ToErrors();
+        }
+
+        var rentedStatus = rentedStatusResult.Value;
 
         var orderResult = Order.Create(
             command.UserId,
@@ -39,7 +62,7 @@ public sealed class CreateOrderCommandHandler(
 
         var order = orderResult.Value;
 
-        var addOrderResult = await repository.AddAsync(
+        var addOrderResult = await ordersRepository.AddAsync(
             order,
             cancellationToken);
 
@@ -51,6 +74,34 @@ public sealed class CreateOrderCommandHandler(
 
         foreach (var item in command.Items)
         {
+            var toolIdResult = ToolId.Create(item.ToolId);
+
+            if (toolIdResult.IsFailure)
+            {
+                transaction.Rollback();
+                return toolIdResult.Error.ToErrors();
+            }
+
+            var toolResult = await toolsRepository.GetByAsync(
+                x => x.Id == toolIdResult.Value,
+                cancellationToken);
+
+            if (toolResult.IsFailure)
+            {
+                transaction.Rollback();
+                return toolResult.Error.ToErrors();
+            }
+
+            var tool = toolResult.Value;
+
+            var changeStatusResult = tool.ChangeStatus(rentedStatus.Id.Value);
+
+            if (changeStatusResult.IsFailure)
+            {
+                transaction.Rollback();
+                return changeStatusResult.Error.ToErrors();
+            }
+
             var orderItemResult = OrderItem.Create(
                 order.Id.Value,
                 item.ToolId,
@@ -65,7 +116,7 @@ public sealed class CreateOrderCommandHandler(
                 return orderItemResult.Error.ToErrors();
             }
 
-            var addItemResult = await repository.AddItemAsync(
+            var addItemResult = await ordersRepository.AddItemAsync(
                 orderItemResult.Value,
                 cancellationToken);
 
