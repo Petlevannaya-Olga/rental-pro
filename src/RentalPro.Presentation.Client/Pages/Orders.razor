@@ -11,7 +11,7 @@
 @inject CustomersService CustomersService
 @inject DictionaryCrudService DictionaryCrudService
 
-<div class="users-page">
+<div class="users-page orders-page">
 
     <div class="users-stats">
 
@@ -337,7 +337,7 @@
                         <h3>Создать заказ</h3>
                         <p>Заполните данные заказа</p>
                     </div>
-
+                    
                     <button type="button" @onclick="CloseCreateModal">
                         <i class="bi bi-x-lg"></i>
                     </button>
@@ -354,12 +354,9 @@
                                 </div>
 
                                 <div class="order-selected-content">
-                                    <span>Клиент</span>
                                     <strong>@(string.IsNullOrWhiteSpace(_newOrder.CustomerName)
                                             ? "Клиент не выбран"
                                             : _newOrder.CustomerName)</strong>
-
-                                    <p>Выберите клиента для оформления заказа</p>
                                 </div>
 
                                 <button class="secondary-button"
@@ -376,9 +373,7 @@
                                 </div>
 
                                 <div class="order-selected-content">
-                                    <span>Инструменты</span>
                                     <strong>Выбрано инструментов: @SelectedToolsCount</strong>
-                                    <p>Общая стоимость: @_newOrder.TotalAmount.ToString("N0") ₽</p>
                                 </div>
 
                                 <button class="secondary-button"
@@ -413,10 +408,6 @@
                     @if (_newOrder.Tools.Count > 0)
 {
     <div class="order-section">
-        <div class="order-section-title">
-            <h4>Периоды аренды инструментов</h4>
-        </div>
-
         <table class="users-table order-tools-period-table">
             <thead>
             <tr>
@@ -471,29 +462,24 @@
             </tbody>
         </table>
 
-        <Pagination CurrentPage="_orderToolsCurrentPage"
-                    TotalPages="OrderToolsTotalPages"
-                    TotalItems="_newOrder.Tools.Count"
-                    StartItem="OrderToolsPageStart"
-                    EndItem="OrderToolsPageEnd"
-                    PageChanged="GoToOrderToolsPage" />
+        @if (_newOrder.Tools.Count > OrderToolsPageSize)
+        {
+            <Pagination CurrentPage="_orderToolsCurrentPage"
+                        TotalPages="OrderToolsTotalPages"
+                        TotalItems="_newOrder.Tools.Count"
+                        StartItem="OrderToolsPageStart"
+                        EndItem="OrderToolsPageEnd"
+                        PageChanged="GoToOrderToolsPage" />
+        }
     </div>
 }
 
-                    <div class="order-summary-card">
-
-                        <div class="order-summary-header">
-                            <h4>Итого по заказу</h4>
-
-                            <div class="order-summary-period">
-                                @RentalPeriodText
-                            </div>
-                        </div>
+                    <div class="order-summary-card compact">
 
                         <div class="order-summary-row">
 
                             <div class="order-summary-item">
-                                <div class="summary-icon purple">
+                                <div class="summary-icon purple compact">
                                     <i class="bi bi-tools"></i>
                                 </div>
 
@@ -502,10 +488,30 @@
                                     <strong>@SelectedToolsCount</strong>
                                 </div>
                             </div>
+                            
+                            <div class="order-summary-item">
+                                <div class="summary-icon compact blue">
+                                    <i class="bi bi-calendar-range"></i>
+                                </div>
+
+                                <div>
+                                    <span>Период</span>
+
+                                    <strong>
+                                        @_newOrder.StartDate.ToString("dd.MM")
+                                        —
+                                        @_newOrder.EndDate.ToString("dd.MM")
+                                    </strong>
+
+                                    <small>
+                                        @RentalDaysText
+                                    </small>
+                                </div>
+                            </div>
 
                             <div class="order-summary-item">
-                                <div class="summary-icon yellow">
-                                    <i class="bi bi-cash-stack"></i>
+                                <div class="summary-icon yellow compact">
+                                    <i class="bi bi-wallet2"></i>
                                 </div>
 
                                 <div>
@@ -515,19 +521,8 @@
                             </div>
 
                             <div class="order-summary-item">
-                                <div class="summary-icon green">
-                                    <i class="bi bi-calendar-check"></i>
-                                </div>
-
-                                <div>
-                                    <span>Дней</span>
-                                    <strong>@RentalDaysText</strong>
-                                </div>
-                            </div>
-
-                            <div class="order-summary-item">
-                                <div class="summary-icon blue">
-                                    <i class="bi bi-currency-dollar"></i>
+                                <div class="summary-icon green compact">
+                                    <i class="bi bi-cash-stack"></i>
                                 </div>
 
                                 <div>
@@ -536,7 +531,7 @@
                                 </div>
                             </div>
 
-                            <div class="order-summary-total">
+                            <div class="order-summary-total compact">
                                 <span>К оплате</span>
                                 <strong>@TotalToPay.ToString("N0") ₽</strong>
                             </div>

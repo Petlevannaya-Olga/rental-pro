@@ -35,7 +35,7 @@
     margin-left: auto;
 }
 
-/* Table */
+/* Main orders table */
 
 .orders-table-card {
     padding: 18px;
@@ -134,7 +134,7 @@
     background: #e2e8f0;
 }
 
-/* Selected cards */
+/* Selected customer/tools cards */
 
 .order-selected-grid {
     display: grid;
@@ -146,8 +146,7 @@
     display: flex;
     align-items: center;
     gap: 18px;
-    min-height: 92px;
-    padding: 16px;
+    padding: 8px 16px;
     background: #ffffff;
     border: 1px solid #dbe5f1;
     border-radius: 12px;
@@ -208,96 +207,116 @@
     gap: 20px;
 }
 
-.order-comment-field {
-    position: relative;
+/* Selected tools periods table */
+
+.order-tools-period-table {
+    margin-top: 12px;
 }
 
-.order-comment-field textarea {
-    width: 100%;
-    min-height: 104px;
-    resize: vertical;
-}
-
-.comment-counter {
-    position: absolute;
-    right: 14px;
-    bottom: 12px;
-    color: #64748b;
+.order-tools-period-table th,
+.order-tools-period-table td {
+    padding: 10px;
     font-size: 13px;
+    vertical-align: middle;
+}
+
+.order-tools-period-table .table-subtitle {
+    margin-top: 2px;
+    font-size: 12px;
+}
+
+.order-tools-period-table input[type="date"] {
+    width: 125px !important;
+    min-width: 125px;
+    height: 40px;
+    padding: 0 10px;
+    font-size: 13px;
+}
+
+.order-tools-period-table th:nth-child(1),
+.order-tools-period-table td:nth-child(1) {
+    width: 32%;
+}
+
+.order-tools-period-table th:nth-child(2),
+.order-tools-period-table td:nth-child(2),
+.order-tools-period-table th:nth-child(3),
+.order-tools-period-table td:nth-child(3) {
+    width: 15%;
+}
+
+.order-tools-period-table th:nth-child(4),
+.order-tools-period-table td:nth-child(4) {
+    width: 6%;
+    text-align: center;
+}
+
+.order-tools-period-table th:nth-child(5),
+.order-tools-period-table td:nth-child(5),
+.order-tools-period-table th:nth-child(6),
+.order-tools-period-table td:nth-child(6) {
+    width: 8%;
+    white-space: nowrap;
+}
+
+.order-tools-period-table th:nth-child(7),
+.order-tools-period-table td:nth-child(7) {
+    width: 40px;
+    text-align: center;
+}
+
+.order-tools-period-table .icon-button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.order-tools-period-table .icon-button:hover {
+    color: #dc2626;
+    background: #fef2f2;
 }
 
 /* Summary */
 
 .order-summary-card {
-    margin-top: 18px;
-    padding: 18px 22px;
+    margin-top: 12px;
+    padding: 8px 12px;
     background: #ffffff;
     border: 1px solid #dbe5f1;
     border-radius: 12px;
 }
 
-.order-summary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.order-summary-header h4 {
-    margin: 0;
-    color: #0f172a;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.order-summary-period {
-    color: #0f172a;
-    font-size: 15px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
 .order-summary-row {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 24px;
-    align-items: stretch;
-}
-
-.order-summary-item,
-.order-summary-total {
-    min-width: 0;
-    min-height: 82px;
-    width: 100%;
-    padding: 12px;
-    background: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 28px;
 }
 
 .order-summary-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    min-width: 0;
+    min-height: auto;
+    padding: 0;
+    background: transparent;
 }
 
-.order-summary-total {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-}
-
-.summary-icon {
-    width: 48px;
-    height: 48px;
+.summary-icon.compact {
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    border-radius: 14px;
+    border-radius: 12px;
 }
 
-.summary-icon i {
-    font-size: 20px;
+.summary-icon.compact i {
+    font-size: 16px;
 }
 
 .summary-icon.blue {
@@ -324,26 +343,43 @@
 .order-summary-total span {
     display: block;
     color: #64748b;
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1;
 }
 
 .order-summary-item strong {
     display: block;
-    margin-top: 3px;
+    margin-top: 2px;
     color: #0f172a;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 800;
     white-space: nowrap;
+}
+
+.order-summary-total {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 0;
+    min-height: auto;
+    padding: 0;
+    background: transparent;
+}
+
+.order-summary-total span {
+    text-align: right;
 }
 
 .order-summary-total strong {
     display: block;
-    margin-top: 0;
+    margin-top: 2px;
     color: #0f172a;
-    font-size: 24px;
-    font-weight: 800;
+    font-size: 28px;
+    font-weight: 900;
     white-space: nowrap;
+    text-align: right;
 }
 
 /* Form helpers */
@@ -353,6 +389,10 @@
     margin-top: 8px;
     color: #64748b;
     font-size: 13px;
+}
+
+.orders-page .modal-footer {
+    padding-top: 0;
 }
 
 /* Select modals */
@@ -400,14 +440,6 @@
 
 .selected-customer-banner strong {
     font-weight: 700;
-}
-
-.selected-customer-banner small {
-    display: block;
-    margin-top: 4px;
-    font-size: 13px;
-    font-weight: 400;
-    opacity: 0.85;
 }
 
 /* User select table */
@@ -619,14 +651,20 @@
         grid-template-columns: 1fr;
     }
 
-    .order-summary-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+    .order-summary-row {
+        flex-wrap: wrap;
+        gap: 16px;
     }
 
-    .order-summary-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .order-summary-total {
+        width: 100%;
+        align-items: flex-start;
+        margin-left: 0;
+    }
+
+    .order-summary-total span,
+    .order-summary-total strong {
+        text-align: left;
     }
 }
 
@@ -650,21 +688,17 @@
     .order-modal-body {
         padding: 0 16px 20px;
     }
-
-    .order-summary-row {
-        grid-template-columns: 1fr;
-    }
 }
 
-.order-tools-period-table {
-    margin-top: 12px;
+.orders-page .actions-modal-header
+{
+    padding: 0;
 }
 
-.order-tools-period-table th,
-.order-tools-period-table td {
-    font-size: 13px;
-}
+.order-summary-item small {
+    display: block;
+    margin-top: 2px;
 
-.order-tools-period-table input[type="date"] {
-    width: 145px !important;
+    color: #94a3b8;
+    font-size: 12px;
 }
