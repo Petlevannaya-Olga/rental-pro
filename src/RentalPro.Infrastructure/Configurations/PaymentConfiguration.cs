@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RentalPro.Domain.Fines;
 using RentalPro.Domain.Orders;
 using RentalPro.Domain.Payments;
 using RentalPro.Domain.ValueObjects;
@@ -45,15 +44,6 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
                 id => id.Value,
                 value => PaymentTypeId.Restore(value))
             .IsRequired();
-
-        builder
-            .Property(x => x.FineId)
-            .HasColumnName("fine_id")
-            .HasConversion(
-                id => id.HasValue ? id.Value.Value : (Guid?)null,
-                value => value.HasValue
-                    ? FineId.Restore(value.Value)
-                    : null);
 
         builder
             .Property(x => x.PaymentDate)
@@ -108,11 +98,6 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .HasForeignKey(x => x.PaymentTypeId);
 
         builder
-            .HasOne<Fine>()
-            .WithMany()
-            .HasForeignKey(x => x.FineId);
-
-        builder
             .HasIndex(x => x.OrderId);
 
         builder
@@ -120,9 +105,6 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 
         builder
             .HasIndex(x => x.PaymentTypeId);
-
-        builder
-            .HasIndex(x => x.FineId);
 
         builder
             .HasIndex(x => x.PaymentDate);

@@ -2,155 +2,211 @@
 @layout AdminLayout
 
 @using RentalPro.Presentation.Client.Services
+@using RentalPro.Contracts.Customers
+@using RentalPro.Contracts.Tools
+@using RentalPro.Presentation.Client.Models.Dictionaries
 
+@inject ToolsService ToolsService
 @inject NotificationService NotificationService
+@inject CustomersService CustomersService
+@inject DictionaryCrudService DictionaryCrudService
 
-<div class="orders-page">
+<div class="users-page">
 
-    <div class="page-actions">
-        <button class="primary-button" @onclick="OpenCreateModal">
+    <div class="users-stats">
+
+        <div class="stats-filter-card @GetStatsCardClass("all")"
+             @onclick='() => ApplyStatsFilter("all")'>
+            <StatCard Title="Всего заказов"
+                      Value="@FilteredTotalCount.ToString()"
+                      Icon="bi bi-receipt"
+                      Color="blue"/>
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("active")"
+             @onclick='() => ApplyStatsFilter("active")'>
+            <StatCard Title="Активные"
+                      Value="@_orders.Count(x => x.Status == "Активен").ToString()"
+                      Icon="bi bi-play-circle"
+                      Color="green"/>
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("completed")"
+             @onclick='() => ApplyStatsFilter("completed")'>
+            <StatCard Title="Завершённые"
+                      Value="@_orders.Count(x => x.Status == "Завершён").ToString()"
+                      Icon="bi bi-check-circle"
+                      Color="cyan"/>
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("overdue")"
+             @onclick='() => ApplyStatsFilter("overdue")'>
+            <StatCard Title="Просроченные"
+                      Value="@_orders.Count(x => x.Status == "Просрочен").ToString()"
+                      Icon="bi bi-exclamation-circle"
+                      Color="red"/>
+        </div>
+
+        <button class="users-add-card"
+                @onclick="OpenCreateModal">
             <i class="bi bi-plus-lg"></i>
-            Создать заказ
+            <span>Создать заказ</span>
         </button>
+
     </div>
 
-    <div class="orders-stats">
-        <StatCard Title="Всего заказов"
-                  Value="@_orders.Count.ToString()"
-                  Icon="bi bi-receipt"
-                  Color="blue" />
+    <div class="users-table-card">
 
-        <StatCard Title="Активные"
-                  Value="@_orders.Count(x => x.Status == "Активен").ToString()"
-                  Icon="bi bi-play-circle"
-                  Color="green" />
+        <div class="orders-inline-filters">
 
-        <StatCard Title="Завершенные"
-                  Value="@_orders.Count(x => x.Status == "Завершен").ToString()"
-                  Icon="bi bi-check-circle"
-                  Color="cyan" />
-
-        <StatCard Title="Просроченные"
-                  Value="@_orders.Count(x => x.Status == "Просрочен").ToString()"
-                  Icon="bi bi-exclamation-circle"
-                  Color="red" />
-    </div>
-
-    <div class="orders-table-card">
-
-        <div class="orders-filters">
-
-            <div class="orders-filters-top">
+            <div class="filter-group search-filter">
+                <label>Поиск</label>
 
                 <div class="search-box">
                     <i class="bi bi-search"></i>
-                    <input placeholder="Поиск по номеру заказа, клиенту или инструменту..." />
-                </div>
 
+                    <input placeholder="Номер заказа, клиент или инструмент..."
+                           value="@_search"
+                           @oninput="OnSearchChanged"/>
+                </div>
             </div>
 
-            <div class="orders-filters-bottom">
+            <div class="filter-group">
+                <label>Статус</label>
 
-                <select class="filter-select">
-                    <option>Все статусы</option>
-                    <option>Активен</option>
-                    <option>Завершен</option>
-                    <option>Просрочен</option>
-                    <option>Отменен</option>
+                <select class="filter-select"
+                        @bind="_status"
+                        @bind:after="ApplyFilters">
+                    <option value="">Все статусы</option>
+                    <option value="Активен">Активен</option>
+                    <option value="Завершён">Завершён</option>
+                    <option value="Просрочен">Просрочен</option>
+                    <option value="Отменён">Отменён</option>
                 </select>
-
-                <div class="date-range-block">
-                    <label>Начало аренды</label>
-
-                    <div class="date-range-row">
-                        <span>От</span>
-                        <input type="date" class="filter-select date-input" />
-
-                        <span>До</span>
-                        <input type="date" class="filter-select date-input" />
-                    </div>
-                </div>
-
-                <div class="date-range-block">
-                    <label>Окончание аренды</label>
-
-                    <div class="date-range-row">
-                        <span>От</span>
-                        <input type="date" class="filter-select date-input" />
-
-                        <span>До</span>
-                        <input type="date" class="filter-select date-input" />
-                    </div>
-                </div>
-
-                <div class="orders-export">
-                    <button class="secondary-button">
-                        <i class="bi bi-download"></i>
-                        Экспорт
-                    </button>
-                </div>
-
             </div>
+
+            <div class="filter-group">
+                <label>Начало с</label>
+                <input type="date"
+                       class="filter-select date-input"
+                       @bind="_startFrom"
+                       @bind:after="ApplyFilters"/>
+            </div>
+
+            <div class="filter-group">
+                <label>Начало по</label>
+                <input type="date"
+                       class="filter-select date-input"
+                       @bind="_startTo"
+                       @bind:after="ApplyFilters"/>
+            </div>
+
+            <button class="secondary-button"
+                    @onclick="ResetFilters">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                Сбросить
+            </button>
+
+            <button class="secondary-button"
+                    @onclick="ExportOrders">
+                <i class="bi bi-download"></i>
+                Экспорт
+            </button>
 
         </div>
 
-        <table class="orders-table">
-            <thead>
-            <tr>
-                <th class="sortable-column">Номер <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Клиент <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Инструмент <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Начало аренды <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Окончание аренды <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Сумма <i class="bi bi-arrow-down-up"></i></th>
-                <th class="sortable-column">Статус <i class="bi bi-arrow-down-up"></i></th>
-                <th></th>
-            </tr>
-            </thead>
-
-            <tbody>
-            @foreach (var order in PagedOrders)
-            {
+        @if (FilteredOrders.Count == 0)
+        {
+            <div class="table-empty">Заказы не найдены</div>
+        }
+        else
+        {
+            <table class="users-table">
+                <thead>
                 <tr>
-                    <td><strong>@order.Number</strong></td>
-                    <td>@order.CustomerName</td>
-                    <td>@order.ToolName</td>
-                    <td>@order.StartDate.ToString("dd.MM.yyyy")</td>
-                    <td>@order.EndDate.ToString("dd.MM.yyyy")</td>
-                    <td>@order.TotalAmount.ToString("N0") ₽</td>
+                    <th class="sortable-column" @onclick='() => ChangeSort("number")'>
+                        Номер <i class="bi bi-arrow-down-up"></i>
+                    </th>
 
-                    <td>
-                        <span class="@GetOrderStatusClass(order.Status)">
-                            @order.Status
-                        </span>
-                    </td>
+                    <th class="sortable-column" @onclick='() => ChangeSort("customer")'>
+                        Клиент <i class="bi bi-arrow-down-up"></i>
+                    </th>
 
-                    <td class="actions-cell">
-                        <button class="icon-button" @onclick="() => OpenActionsMenu(order.Number)">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                    </td>
+                    <th class="sortable-column" @onclick='() => ChangeSort("tool")'>
+                        Инструмент <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("start")'>
+                        Начало <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("end")'>
+                        Окончание <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("amount")'>
+                        Сумма <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("status")'>
+                        Статус <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th></th>
                 </tr>
-            }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                @foreach (var order in PagedOrders)
+                {
+                    <tr>
+                        <td>
+                            <strong>@order.Number</strong>
+                            <span class="table-subtitle">@order.CreatedAt.ToString("dd.MM.yyyy")</span>
+                        </td>
+
+                        <td>@order.CustomerName</td>
+                        <td>@order.ToolName</td>
+                        <td>@order.StartDate.ToString("dd.MM.yyyy")</td>
+                        <td>@order.EndDate.ToString("dd.MM.yyyy")</td>
+                        <td>@order.TotalAmount.ToString("N0") ₽</td>
+
+                        <td>
+                            <span class="@GetOrderStatusClass(order.Status)">
+                                @order.Status
+                            </span>
+                        </td>
+
+                        <td class="actions-cell">
+                            <button class="icon-button"
+                                    @onclick="() => OpenActionsMenu(order)">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
 
         <Pagination CurrentPage="_currentPage"
                     TotalPages="TotalPages"
-                    TotalItems="_orders.Count"
+                    TotalItems="FilteredTotalCount"
                     StartItem="PageStart"
                     EndItem="PageEnd"
-                    PageChanged="GoToPage" />
+                    PageChanged="GoToPage"/>
+
     </div>
 
-    @if (_isActionsMenuOpen)
+    @if (_isActionsMenuOpen && _selectedOrder is not null)
     {
         <div class="actions-backdrop" @onclick="CloseActionsMenu">
             <div class="actions-modal" @onclick:stopPropagation="true">
+
                 <div class="actions-modal-header">
                     <div>
                         <h3>Действия с заказом</h3>
-                        <p>@_selectedOrderNumber</p>
+                        <p>@_selectedOrder.Number</p>
                     </div>
 
                     <button type="button" @onclick="CloseActionsMenu">
@@ -158,7 +214,7 @@
                     </button>
                 </div>
 
-                <button class="menu-item" @onclick='() => ExecuteOrderAction("Просмотр")'>
+                <button class="menu-item" @onclick="OpenViewModal">
                     <i class="bi bi-eye"></i>
                     Просмотр
                 </button>
@@ -185,22 +241,101 @@
 
                 <div class="menu-divider"></div>
 
-                <button class="menu-item menu-danger" @onclick='() => ExecuteOrderAction("Удаление")'>
+                <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
                     <i class="bi bi-trash"></i>
                     Удалить
                 </button>
+
+            </div>
+        </div>
+    }
+
+    @if (_isViewModalOpen && _viewOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="customer-view-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Просмотр заказа</h3>
+                        <p>@_viewOrder.Number</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseViewModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="customer-details-grid">
+
+                    <div class="customer-detail-item">
+                        <span>Номер заказа</span>
+                        <strong>@_viewOrder.Number</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Статус</span>
+                        <strong>@_viewOrder.Status</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Клиент</span>
+                        <strong>@_viewOrder.CustomerName</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Инструмент</span>
+                        <strong>@_viewOrder.ToolName</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Начало аренды</span>
+                        <strong>@_viewOrder.StartDate.ToString("dd.MM.yyyy")</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Окончание аренды</span>
+                        <strong>@_viewOrder.EndDate.ToString("dd.MM.yyyy")</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Сумма</span>
+                        <strong>@_viewOrder.TotalAmount.ToString("N0") ₽</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Залог</span>
+                        <strong>@_viewOrder.DepositAmount.ToString("N0") ₽</strong>
+                    </div>
+
+                    <div class="customer-detail-item customer-address-item">
+                        <span>Комментарий</span>
+                        <strong>@(string.IsNullOrWhiteSpace(_viewOrder.Comment) ? "Комментарий не указан" : _viewOrder.Comment)</strong>
+                    </div>
+
+                </div>
+
+                <div class="customer-view-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseViewModal">
+                        Закрыть
+                    </button>
+                </div>
+
             </div>
         </div>
     }
 
     @if (_isCreateModalOpen)
     {
-        <div class="actions-backdrop" @onclick="CloseCreateModal">
-            <div class="order-create-modal" @onclick:stopPropagation="true">
+        <div class="actions-backdrop">
+            <div class="order-create-modal-v2" @onclick:stopPropagation="true">
+
                 <div class="actions-modal-header">
                     <div>
                         <h3>Создать заказ</h3>
-                        <p>Заполните данные аренды</p>
+                        <p>Заполните данные заказа</p>
                     </div>
 
                     <button type="button" @onclick="CloseCreateModal">
@@ -208,165 +343,1309 @@
                     </button>
                 </div>
 
-                <div class="order-form-grid">
-                    <div class="order-form-field">
-                        <label>Клиент <span>*</span></label>
-                        <select>
-                            <option>Петров Александр Сергеевич</option>
-                            <option>Сидоров Иван Петрович</option>
-                            <option>Кузнецова Мария Викторовна</option>
-                        </select>
+                <div class="order-modal-body">
+
+                    <div class="order-section">
+                        <div class="order-selected-grid">
+
+                            <div class="order-selected-card">
+                                <div class="order-selected-icon customer">
+                                    <i class="bi bi-person"></i>
+                                </div>
+
+                                <div class="order-selected-content">
+                                    <span>Клиент</span>
+                                    <strong>@(string.IsNullOrWhiteSpace(_newOrder.CustomerName)
+                                            ? "Клиент не выбран"
+                                            : _newOrder.CustomerName)</strong>
+
+                                    <p>Выберите клиента для оформления заказа</p>
+                                </div>
+
+                                <button class="secondary-button"
+                                        type="button"
+                                        @onclick="OpenCustomerSelectModal">
+                                    <i class="bi bi-pencil"></i>
+                                    Изменить
+                                </button>
+                            </div>
+
+                            <div class="order-selected-card">
+                                <div class="order-selected-icon tools">
+                                    <i class="bi bi-tools"></i>
+                                </div>
+
+                                <div class="order-selected-content">
+                                    <span>Инструменты</span>
+                                    <strong>Выбрано инструментов: @SelectedToolsCount</strong>
+                                    <p>Общая стоимость: @_newOrder.TotalAmount.ToString("N0") ₽</p>
+                                </div>
+
+                                <button class="secondary-button"
+                                        type="button"
+                                        @onclick="OpenToolSelectModal">
+                                    <i class="bi bi-pencil"></i>
+                                    Изменить
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
 
-                    <div class="order-form-field">
-                        <label>Инструмент <span>*</span></label>
-                        <select>
-                            <option>Перфоратор Bosch GBH 2-26</option>
-                            <option>Шуруповерт Makita DF331D</option>
-                            <option>Болгарка DeWalt DWE4217</option>
-                        </select>
+                    <div class="order-section">
+                        <div class="order-date-money-grid">
+
+                            <div class="tool-form-field">
+                                <label>Дата заказа <span>*</span></label>
+                                <input type="date" @bind="_newOrder.OrderDate"/>
+                            </div>
+
+                            <div class="tool-form-field">
+                                <label>Комментарий</label>
+                                <input value="@_newOrder.Comment"
+                                       placeholder="Комментарий к заказу (необязательно)"
+                                       readonly/>
+                            </div>
+
+                        </div>
                     </div>
 
-                    <div class="order-form-field">
-                        <label>Дата начала <span>*</span></label>
-                        <input type="date" />
+                    <div class="order-summary-card">
+
+                        <div class="order-summary-header">
+                            <h4>Итого по заказу</h4>
+
+                            <div class="order-summary-period">
+                                @RentalPeriodText
+                            </div>
+                        </div>
+
+                        <div class="order-summary-row">
+
+                            <div class="order-summary-item">
+                                <div class="summary-icon purple">
+                                    <i class="bi bi-tools"></i>
+                                </div>
+
+                                <div>
+                                    <span>Инструменты</span>
+                                    <strong>@SelectedToolsCount</strong>
+                                </div>
+                            </div>
+
+                            <div class="order-summary-item">
+                                <div class="summary-icon yellow">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+
+                                <div>
+                                    <span>Залог</span>
+                                    <strong>@_newOrder.DepositAmount.ToString("N0") ₽</strong>
+                                </div>
+                            </div>
+
+                            <div class="order-summary-item">
+                                <div class="summary-icon green">
+                                    <i class="bi bi-calendar-check"></i>
+                                </div>
+
+                                <div>
+                                    <span>Дней</span>
+                                    <strong>@RentalDaysText</strong>
+                                </div>
+                            </div>
+
+                            <div class="order-summary-item">
+                                <div class="summary-icon blue">
+                                    <i class="bi bi-currency-dollar"></i>
+                                </div>
+
+                                <div>
+                                    <span>Аренда</span>
+                                    <strong>@_newOrder.TotalAmount.ToString("N0") ₽</strong>
+                                </div>
+                            </div>
+
+                            <div class="order-summary-total">
+                                <span>К оплате</span>
+                                <strong>@TotalToPay.ToString("N0") ₽</strong>
+                            </div>
+
+                        </div>
+
                     </div>
 
-                    <div class="order-form-field">
-                        <label>Дата окончания <span>*</span></label>
-                        <input type="date" />
-                    </div>
-
-                    <div class="order-form-field">
-                        <label>Стоимость аренды</label>
-                        <input value="2 100 ₽" readonly />
-                    </div>
-
-                    <div class="order-form-field">
-                        <label>Залог</label>
-                        <input value="5 000 ₽" readonly />
-                    </div>
-
-                    <div class="order-form-field wide">
-                        <label>Комментарий</label>
-                        <textarea placeholder="Комментарий к заказу"></textarea>
-                    </div>
                 </div>
 
                 <div class="tool-form-actions modal-footer">
-                    <button class="secondary-button" type="button" @onclick="CloseCreateModal">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseCreateModal">
                         Отмена
                     </button>
 
-                    <button class="primary-button" type="button" @onclick="CreateOrder">
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="CreateOrder">
                         <i class="bi bi-check-lg"></i>
                         Создать заказ
                     </button>
                 </div>
+
             </div>
         </div>
     }
 
+    @if (_isCustomerSelectModalOpen)
+    {
+        <div class="actions-backdrop">
+            <div class="customer-view-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Выбор клиента</h3>
+                        <p>Выберите одного клиента для оформления заказа</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCustomerSelectModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="selected-customer-banner @(_selectedCustomer is null ? "empty" : "selected")">
+
+                    @if (_selectedCustomer is null)
+                    {
+                        <i class="bi bi-person-x-fill"></i>
+
+                        <span>
+                            Клиент не выбран
+                        </span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        <span>
+                            Выбран клиент:
+                            <strong>@_selectedCustomer.FullName</strong>
+                        </span>
+                    }
+
+                </div>
+
+                <div class="filter-group search-filter">
+                    <label>Поиск клиента</label>
+
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+
+                        <input placeholder="ФИО, телефон, email, паспорт или адрес..."
+                               value="@_customerSearch"
+                               @oninput="OnCustomerSearchChanged"/>
+                    </div>
+                </div>
+
+                @if (_isCustomersLoading)
+                {
+                    <table class="users-table user-select-table">
+                        <thead>
+                        <tr>
+                            <th class="customer-column">Клиент</th>
+                            <th class="phone-column">Телефон</th>
+                            <th class="passport-column">Паспорт</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        @for (var i = 0; i < CustomerPageSize; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="user-select-customer">
+                                        <div class="skeleton skeleton-avatar"></div>
+
+                                        <div class="skeleton-lines">
+                                            <div class="skeleton skeleton-line wide"></div>
+                                            <div class="skeleton skeleton-line small"></div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+
+                                <td>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else if (_customers.Count == 0)
+                {
+                    <div class="table-empty">Клиенты не найдены</div>
+                }
+                else
+                {
+                    <table class="users-table user-select-table">
+                        <thead>
+                        <tr>
+                            <th class="customer-column sortable-column"
+                                @onclick='() => ChangeCustomerSort("fullname")'>
+                                Клиент <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="phone-column sortable-column"
+                                @onclick='() => ChangeCustomerSort("phone")'>
+                                Телефон <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="passport-column sortable-column"
+                                @onclick='() => ChangeCustomerSort("passport")'>
+                                Паспорт <i class="bi bi-arrow-down-up"></i>
+                            </th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        @foreach (var customer in _customers)
+                        {
+                            <tr class="@(_selectedCustomer?.Id == customer.Id ? "selected" : "")"
+                                @onclick="() => _selectedCustomer = customer">
+
+                                <td>
+                                    <div class="user-select-customer">
+                                        <div class="user-select-avatar">
+                                            @GetInitials(customer)
+                                        </div>
+
+                                        <div class="user-select-info">
+                                            <strong>@customer.FullName</strong>
+                                            <span>@GetAddressOrDash(customer)</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>@customer.PhoneNumber</td>
+                                <td>@customer.Passport</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+
+                    <Pagination CurrentPage="_customersCurrentPage"
+                                TotalPages="CustomersTotalPages"
+                                TotalItems="_customersTotalCount"
+                                StartItem="CustomersPageStart"
+                                EndItem="CustomersPageEnd"
+                                PageChanged="GoToCustomerPage"/>
+                }
+
+                <div class="customer-view-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseCustomerSelectModal">
+                        Отмена
+                    </button>
+
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="OpenCreateCustomerModal">
+                        <i class="bi bi-plus-lg"></i>
+                        Новый клиент
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            disabled="@(_selectedCustomer is null)"
+                            @onclick="SelectCustomer">
+                        <i class="bi bi-check-lg"></i>
+                        Выбрать клиента
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    @if (_isToolSelectModalOpen)
+    {
+        <div class="actions-backdrop">
+            <div class="customer-view-modal tool-select-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Выбор инструментов</h3>
+                        <p>Выберите один или несколько инструментов для заказа</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseToolSelectModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="selected-customer-banner @(_newOrder.SelectedTools.Count == 0 ? "empty" : "selected")">
+
+                    @if (_newOrder.SelectedTools.Count == 0)
+                    {
+                        <i class="bi bi-tools"></i>
+
+                        <span>
+                            Инструменты не выбраны
+                        </span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        <span>
+                            Выбрано инструментов:
+                            <strong>@_newOrder.SelectedTools.Count</strong>
+                        </span>
+                    }
+
+                </div>
+
+                <div class="filter-group search-filter">
+                    <label>Поиск инструмента</label>
+
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+
+                        <input placeholder="Название, инвентарный или серийный номер..."
+                               value="@_toolSearch"
+                               @oninput="OnToolSearchChanged"/>
+                    </div>
+                </div>
+
+                @if (_isToolsLoading)
+                {
+                    <table class="users-table user-select-table tool-select-table">
+                        <thead>
+                        <tr>
+                            <th class="tool-name-column">Инструмент</th>
+                            <th class="tool-category-column">Категория</th>
+                            <th class="tool-manufacturer-column">Производитель</th>
+                            <th class="tool-serial-column">Серийный номер</th>
+                            <th class="tool-price-column">Аренда/день</th>
+                            <th class="tool-deposit-column">Залог</th>
+                            <th class="tool-status-column">Статус</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        @for (var i = 0; i < ToolPageSize; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="user-select-customer">
+                                        <div class="skeleton skeleton-avatar"></div>
+
+                                        <div class="skeleton-lines">
+                                            <div class="skeleton skeleton-line wide"></div>
+                                            <div class="skeleton skeleton-line small"></div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-badge"></div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else if (_tools.Count == 0)
+                {
+                    <div class="table-empty">Инструменты не найдены</div>
+                }
+                else
+                {
+                    <table class="users-table user-select-table tool-select-table">
+                        <thead>
+                        <tr>
+                            <th class="tool-name-column sortable-column"
+                                @onclick='() => ChangeToolSort("name")'>
+                                Инструмент <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="tool-category-column sortable-column"
+                                @onclick='() => ChangeToolSort("category")'>
+                                Категория <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="tool-manufacturer-column sortable-column"
+                                @onclick='() => ChangeToolSort("manufacturer")'>
+                                Производитель <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="tool-serial-column sortable-column"
+                                @onclick='() => ChangeToolSort("serialnumber")'>
+                                Серийный номер <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="tool-price-column sortable-column"
+                                @onclick='() => ChangeToolSort("rentalprice")'>
+                                Аренда/день <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="tool-deposit-column sortable-column"
+                                @onclick='() => ChangeToolSort("deposit")'>
+                                Залог <i class="bi bi-arrow-down-up"></i>
+                            </th>
+
+                            <th class="tool-status-column sortable-column"
+                                @onclick='() => ChangeToolSort("status")'>
+                                Статус <i class="bi bi-arrow-down-up"></i>
+                            </th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        @foreach (var tool in _tools)
+                        {
+                            <tr class="@(IsToolSelected(tool) ? "selected" : "")"
+                                @onclick="() => ToggleToolSelection(tool)">
+
+                                <td>
+                                    <div class="user-select-customer">
+                                        <div class="tool-select-image">
+                                            @if (!string.IsNullOrWhiteSpace(tool.PhotoPath))
+                                            {
+                                                <img src="@GetToolImageUrl(tool.PhotoPath)"
+                                                     alt="@tool.Name"/>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-tools"></i>
+                                            }
+                                        </div>
+
+                                        <div class="user-select-info">
+                                            <strong>@tool.Name</strong>
+                                            <span>Инв. № @tool.InventoryNumber</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>@tool.CategoryName</td>
+                                <td>@tool.ManufacturerName</td>
+                                <td>@tool.SerialNumber</td>
+                                <td>@tool.RentalPricePerDay.ToString("N0") ₽</td>
+                                <td>@tool.DepositAmount.ToString("N0") ₽</td>
+
+                                <td>
+                <span class="@GetToolStatusClass(tool.StatusName)">
+                    @tool.StatusName
+                </span>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+
+                    <Pagination CurrentPage="_toolsCurrentPage"
+                                TotalPages="ToolsTotalPages"
+                                TotalItems="_toolsTotalCount"
+                                StartItem="ToolsPageStart"
+                                EndItem="ToolsPageEnd"
+                                PageChanged="GoToToolPage"/>
+                }
+
+                <div class="customer-view-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseToolSelectModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            disabled="@(_newOrder.SelectedTools.Count == 0)"
+                            @onclick="SelectTools">
+                        <i class="bi bi-check-lg"></i>
+                        Выбрать инструменты
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    @if (_isDeleteModalOpen && _deletingOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Удалить заказ?</h3>
+                        <p>@_deletingOrder.Number</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseDeleteModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <p>Заказ будет удалён из списка. Это действие нельзя отменить.</p>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDeleteModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="DeleteOrder">
+                        Удалить
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+    <CreateCustomerModal IsOpen="_isCreateCustomerModalOpen"
+                         IsOpenChanged="CloseCreateCustomerModal"
+                         CustomerCreated="OnCustomerCreated" />
 </div>
 
 @code
 {
     private const int PageSize = 5;
+    private const int CustomerPageSize = 3;
+    private const int ToolPageSize = 3;
 
     private int _currentPage = 1;
+
+    private string? _search;
+    private string? _status;
+    private DateOnly? _startFrom;
+    private DateOnly? _startTo;
+
+    private string _activeStatsFilter = "all";
+    private string _sortBy = "createdat";
+    private bool _descending = true;
+
     private bool _isActionsMenuOpen;
     private bool _isCreateModalOpen;
-    private string? _selectedOrderNumber;
+    private bool _isViewModalOpen;
+    private bool _isDeleteModalOpen;
+    private bool _isCustomerSelectModalOpen;
+    private bool _isToolSelectModalOpen;
+
+    private OrderRow? _selectedOrder;
+    private OrderRow? _viewOrder;
+    private OrderRow? _deletingOrder;
+
+    private CancellationTokenSource? _customerSearchCts;
+    private List<CustomerDto> _customers = [];
+    private CustomerDto? _selectedCustomer;
+    private bool _isCustomersLoading;
+    private int _customersCurrentPage = 1;
+    private int _customersTotalCount;
+    private string? _customerSearch;
+    private string? _customerSortBy = "fullname";
+    private bool _customerDescending;
+    private bool _isCreateCustomerModalOpen;
+
+    private Guid? _availableToolStatusId;
+    private CancellationTokenSource? _toolSearchCts;
+    private List<ToolDto> _tools = [];
+    private bool _isToolsLoading;
+    private int _toolsCurrentPage = 1;
+    private int _toolsTotalCount;
+    private string? _toolSearch;
+    private string? _toolSortBy = "name";
+    private bool _toolDescending;
+
+    private OrderFormModel _newOrder = new();
+
+    private int SelectedToolsCount => _newOrder.ToolIds.Count;
+
+    private decimal TotalToPay =>
+        _newOrder.TotalAmount + _newOrder.DepositAmount;
+
+    private string RentalPeriodText =>
+        $"{_newOrder.StartDate:dd.MM.yyyy} — {_newOrder.EndDate:dd.MM.yyyy}";
+
+    private string RentalDaysText
+    {
+        get
+        {
+            var days = GetRentalDays();
+
+            return days <= 0
+                ? "0 дней"
+                : $"{days} дня";
+        }
+    }
 
     private readonly List<OrderRow> _orders =
     [
         new()
         {
             Number = "ORD-2026-001",
-            CustomerName = "Петров А.С.",
+            CustomerName = "Петров Александр Сергеевич",
             ToolName = "Перфоратор Bosch GBH 2-26",
             StartDate = new DateOnly(2026, 6, 1),
             EndDate = new DateOnly(2026, 6, 3),
             TotalAmount = 2100,
-            Status = "Активен"
+            DepositAmount = 5000,
+            Status = "Активен",
+            CreatedAt = new DateTime(2026, 6, 1, 9, 30, 0),
+            Comment = "Клиент забирает инструмент самостоятельно"
         },
         new()
         {
             Number = "ORD-2026-002",
-            CustomerName = "Сидоров И.П.",
+            CustomerName = "Сидоров Иван Петрович",
             ToolName = "Шуруповерт Makita DF331D",
             StartDate = new DateOnly(2026, 5, 20),
             EndDate = new DateOnly(2026, 5, 25),
             TotalAmount = 3500,
-            Status = "Завершен"
+            DepositAmount = 3000,
+            Status = "Завершён",
+            CreatedAt = new DateTime(2026, 5, 20, 11, 15, 0),
+            Comment = null
         },
         new()
         {
             Number = "ORD-2026-003",
-            CustomerName = "Кузнецова М.В.",
+            CustomerName = "Кузнецова Мария Викторовна",
             ToolName = "Болгарка DeWalt DWE4217",
             StartDate = new DateOnly(2026, 5, 15),
             EndDate = new DateOnly(2026, 5, 18),
             TotalAmount = 1950,
-            Status = "Просрочен"
+            DepositAmount = 4000,
+            Status = "Просрочен",
+            CreatedAt = new DateTime(2026, 5, 15, 14, 0, 0),
+            Comment = "Не вернула инструмент в срок"
         }
     ];
 
+    private List<OrderRow> FilteredOrders
+    {
+        get
+        {
+            IEnumerable<OrderRow> query = _orders;
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                query = query.Where(x =>
+                    x.Number.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                    x.CustomerName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                    x.ToolName.Contains(_search, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_status))
+            {
+                query = query.Where(x => x.Status == _status);
+            }
+
+            if (_startFrom is not null)
+            {
+                query = query.Where(x => x.StartDate >= _startFrom.Value);
+            }
+
+            if (_startTo is not null)
+            {
+                query = query.Where(x => x.StartDate <= _startTo.Value);
+            }
+
+            query = (_sortBy, _descending) switch
+            {
+                ("number", false) => query.OrderBy(x => x.Number),
+                ("number", true) => query.OrderByDescending(x => x.Number),
+
+                ("customer", false) => query.OrderBy(x => x.CustomerName),
+                ("customer", true) => query.OrderByDescending(x => x.CustomerName),
+
+                ("tool", false) => query.OrderBy(x => x.ToolName),
+                ("tool", true) => query.OrderByDescending(x => x.ToolName),
+
+                ("start", false) => query.OrderBy(x => x.StartDate),
+                ("start", true) => query.OrderByDescending(x => x.StartDate),
+
+                ("end", false) => query.OrderBy(x => x.EndDate),
+                ("end", true) => query.OrderByDescending(x => x.EndDate),
+
+                ("amount", false) => query.OrderBy(x => x.TotalAmount),
+                ("amount", true) => query.OrderByDescending(x => x.TotalAmount),
+
+                ("status", false) => query.OrderBy(x => x.Status),
+                ("status", true) => query.OrderByDescending(x => x.Status),
+
+                _ => query.OrderByDescending(x => x.CreatedAt)
+            };
+
+            return query.ToList();
+        }
+    }
+
     private IEnumerable<OrderRow> PagedOrders =>
-        _orders
+        FilteredOrders
             .Skip((_currentPage - 1) * PageSize)
             .Take(PageSize);
 
+    private int FilteredTotalCount => FilteredOrders.Count;
+
     private int TotalPages =>
-        (int)Math.Ceiling(_orders.Count / (double)PageSize);
+        FilteredTotalCount <= 0
+            ? 1
+            : (int)Math.Ceiling(FilteredTotalCount / (double)PageSize);
 
     private int PageStart =>
-        _orders.Count == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
+        FilteredTotalCount == 0 ? 0 : ((_currentPage - 1) * PageSize) + 1;
 
     private int PageEnd =>
-        Math.Min(_currentPage * PageSize, _orders.Count);
+        Math.Min(_currentPage * PageSize, FilteredTotalCount);
 
-    private void OpenActionsMenu(string orderNumber)
+    private int CustomersTotalPages =>
+        _customersTotalCount <= 0
+            ? 1
+            : (int)Math.Ceiling(_customersTotalCount / (double)CustomerPageSize);
+
+    private int CustomersPageStart =>
+        _customersTotalCount == 0
+            ? 0
+            : ((_customersCurrentPage - 1) * CustomerPageSize) + 1;
+
+    private int CustomersPageEnd =>
+        Math.Min(_customersCurrentPage * CustomerPageSize, _customersTotalCount);
+
+    private int ToolsTotalPages =>
+        _toolsTotalCount <= 0
+            ? 1
+            : (int)Math.Ceiling(_toolsTotalCount / (double)ToolPageSize);
+
+    private int ToolsPageStart =>
+        _toolsTotalCount == 0
+            ? 0
+            : ((_toolsCurrentPage - 1) * ToolPageSize) + 1;
+
+    private int ToolsPageEnd =>
+        Math.Min(_toolsCurrentPage * ToolPageSize, _toolsTotalCount);
+
+    private void ApplyStatsFilter(string filter)
     {
-        _selectedOrderNumber = orderNumber;
+        _activeStatsFilter = filter;
+        _status = null;
+
+        switch (filter)
+        {
+            case "active":
+                _status = "Активен";
+                break;
+
+            case "completed":
+                _status = "Завершён";
+                break;
+
+            case "overdue":
+                _status = "Просрочен";
+                break;
+        }
+
+        _currentPage = 1;
+    }
+
+    private void ApplyFilters()
+    {
+        _activeStatsFilter = "custom";
+        _currentPage = 1;
+    }
+
+    private void ResetFilters()
+    {
+        _search = string.Empty;
+        _status = null;
+        _startFrom = null;
+        _startTo = null;
+        _activeStatsFilter = "all";
+        _currentPage = 1;
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString();
+        _activeStatsFilter = "custom";
+        _currentPage = 1;
+    }
+
+    private void ChangeSort(string sortBy)
+    {
+        if (_sortBy == sortBy)
+            _descending = !_descending;
+        else
+        {
+            _sortBy = sortBy;
+            _descending = false;
+        }
+
+        _currentPage = 1;
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page < 1 || page > TotalPages)
+            return;
+
+        _currentPage = page;
+    }
+
+    private string GetStatsCardClass(string filter)
+    {
+        return _activeStatsFilter == filter
+            ? "active"
+            : string.Empty;
+    }
+
+    private void OpenActionsMenu(OrderRow order)
+    {
+        _selectedOrder = order;
         _isActionsMenuOpen = true;
     }
 
     private void CloseActionsMenu()
     {
+        _selectedOrder = null;
         _isActionsMenuOpen = false;
-        _selectedOrderNumber = null;
     }
 
-    private void ExecuteOrderAction(string action)
+    private void OpenViewModal()
     {
-        if (string.IsNullOrWhiteSpace(_selectedOrderNumber))
+        if (_selectedOrder is null)
             return;
 
-        NotificationService.Info($"{action}: {_selectedOrderNumber}");
+        _viewOrder = _selectedOrder;
 
         CloseActionsMenu();
+
+        _isViewModalOpen = true;
+    }
+
+    private void CloseViewModal()
+    {
+        _viewOrder = null;
+        _isViewModalOpen = false;
     }
 
     private void OpenCreateModal()
     {
+        _newOrder = new OrderFormModel
+        {
+            OrderDate = DateOnly.FromDateTime(DateTime.Today),
+            StartDate = DateOnly.FromDateTime(DateTime.Today),
+            EndDate = DateOnly.FromDateTime(DateTime.Today.AddDays(3))
+        };
+
         _isCreateModalOpen = true;
     }
 
     private void CloseCreateModal()
     {
+        _newOrder = new OrderFormModel();
         _isCreateModalOpen = false;
+    }
+
+    private async Task LoadCustomersForSelectAsync()
+    {
+        _isCustomersLoading = true;
+
+        var request = new GetCustomersRequest(
+            Search: _customerSearch,
+            HasOrders: null,
+            HasDebt: null,
+            SortBy: _customerSortBy,
+            Descending: _customerDescending,
+            Page: _customersCurrentPage,
+            PageSize: CustomerPageSize);
+
+        var result = await CustomersService.GetCustomersAsync(request);
+
+        if (result.IsFailure)
+        {
+            _customers = [];
+            _customersTotalCount = 0;
+            _isCustomersLoading = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _customers = result.Value.Items.ToList();
+        _customersTotalCount = result.Value.TotalCount;
+
+        if (_customersCurrentPage > CustomersTotalPages)
+        {
+            _customersCurrentPage = CustomersTotalPages;
+            await LoadCustomersForSelectAsync();
+            return;
+        }
+
+        _isCustomersLoading = false;
+    }
+
+    private async Task OpenCustomerSelectModal()
+    {
+        _customerSearch = string.Empty;
+        _customerSortBy = "fullname";
+        _customerDescending = false;
+        _customersCurrentPage = 1;
+        _selectedCustomer = null;
+
+        _isCustomerSelectModalOpen = true;
+
+        await LoadCustomersForSelectAsync();
+    }
+
+    private void CloseCustomerSelectModal()
+    {
+        _customerSearch = string.Empty;
+        _selectedCustomer = null;
+        _customers = [];
+        _customersTotalCount = 0;
+
+        _isCustomerSelectModalOpen = false;
+    }
+
+    private async Task OnCustomerSearchChanged(ChangeEventArgs e)
+    {
+        _customerSearch = e.Value?.ToString();
+
+        _customerSearchCts?.Cancel();
+        _customerSearchCts?.Dispose();
+
+        _customerSearchCts = new CancellationTokenSource();
+        var token = _customerSearchCts.Token;
+
+        try
+        {
+            await Task.Delay(500, token);
+
+            _customersCurrentPage = 1;
+            await LoadCustomersForSelectAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task ChangeCustomerSort(string sortBy)
+    {
+        if (_customerSortBy == sortBy)
+            _customerDescending = !_customerDescending;
+        else
+        {
+            _customerSortBy = sortBy;
+            _customerDescending = false;
+        }
+
+        _customersCurrentPage = 1;
+
+        await LoadCustomersForSelectAsync();
+    }
+
+    private async Task GoToCustomerPage(int page)
+    {
+        if (page < 1 || page > CustomersTotalPages)
+            return;
+
+        _customersCurrentPage = page;
+
+        await LoadCustomersForSelectAsync();
+    }
+
+    private void SelectCustomer()
+    {
+        if (_selectedCustomer is null)
+        {
+            NotificationService.Error("Выберите клиента");
+            return;
+        }
+
+        _newOrder.CustomerId = _selectedCustomer.Id;
+        _newOrder.CustomerName = _selectedCustomer.FullName;
+
+        CloseCustomerSelectModal();
+
+        NotificationService.Success($"Выбран клиент: {_newOrder.CustomerName}");
+    }
+
+    private async Task LoadToolsForSelectAsync()
+    {
+        _isToolsLoading = true;
+
+        var request = new GetToolsRequest(
+            Search: _toolSearch,
+            CategoryId: null,
+            ManufacturerId: null,
+            StatusId: _availableToolStatusId,
+            SortBy: _toolSortBy,
+            Descending: _toolDescending,
+            Page: _toolsCurrentPage,
+            PageSize: ToolPageSize);
+
+        var result = await ToolsService.GetToolsAsync(request);
+
+        if (result.IsFailure)
+        {
+            _tools = [];
+            _toolsTotalCount = 0;
+            _isToolsLoading = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _tools = result.Value.Items.ToList();
+        _toolsTotalCount = result.Value.TotalCount;
+
+        if (_toolsCurrentPage > ToolsTotalPages)
+        {
+            _toolsCurrentPage = ToolsTotalPages;
+            await LoadToolsForSelectAsync();
+            return;
+        }
+
+        _isToolsLoading = false;
+    }
+
+    private async Task OpenToolSelectModal()
+    {
+        _toolSearch = string.Empty;
+        _toolSortBy = "name";
+        _toolDescending = false;
+        _toolsCurrentPage = 1;
+
+        _isToolSelectModalOpen = true;
+
+        _availableToolStatusId ??= await GetAvailableToolStatusIdAsync();
+
+        if (_availableToolStatusId is null)
+            return;
+
+        await LoadToolsForSelectAsync();
+    }
+    
+    private void CloseToolSelectModal()
+    {
+        _toolSearch = string.Empty;
+        _tools = [];
+        _toolsTotalCount = 0;
+
+        _isToolSelectModalOpen = false;
+    }
+
+    private bool IsToolSelected(ToolDto tool)
+    {
+        return _newOrder.ToolIds.Contains(tool.Id);
+    }
+
+    private void ToggleToolSelection(ToolDto tool)
+    {
+        if (_newOrder.ToolIds.Contains(tool.Id))
+        {
+            _newOrder.ToolIds.Remove(tool.Id);
+
+            var selectedTool = _newOrder.SelectedTools
+                .FirstOrDefault(x => x.Id == tool.Id);
+
+            if (selectedTool is not null)
+            {
+                _newOrder.SelectedTools.Remove(selectedTool);
+            }
+
+            return;
+        }
+
+        _newOrder.ToolIds.Add(tool.Id);
+
+        if (_newOrder.SelectedTools.All(x => x.Id != tool.Id))
+        {
+            _newOrder.SelectedTools.Add(tool);
+        }
+    }
+
+    private void SelectTools()
+    {
+        if (_newOrder.SelectedTools.Count == 0)
+        {
+            NotificationService.Error("Выберите инструменты");
+            return;
+        }
+
+        var rentalDays = GetRentalDays();
+
+        _newOrder.ToolName = string.Join(", ",
+            _newOrder.SelectedTools.Select(x => x.Name));
+
+        _newOrder.TotalAmount = _newOrder.SelectedTools.Sum(x =>
+            x.RentalPricePerDay * rentalDays);
+
+        _newOrder.DepositAmount = _newOrder.SelectedTools.Sum(x =>
+            x.DepositAmount);
+
+        CloseToolSelectModal();
+
+        NotificationService.Success(
+            $"Выбрано инструментов: {_newOrder.SelectedTools.Count}");
+    }
+
+    private async Task OnToolSearchChanged(ChangeEventArgs e)
+    {
+        _toolSearch = e.Value?.ToString();
+
+        _toolSearchCts?.Cancel();
+        _toolSearchCts?.Dispose();
+
+        _toolSearchCts = new CancellationTokenSource();
+        var token = _toolSearchCts.Token;
+
+        try
+        {
+            await Task.Delay(500, token);
+
+            _toolsCurrentPage = 1;
+            await LoadToolsForSelectAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task ChangeToolSort(string sortBy)
+    {
+        if (_toolSortBy == sortBy)
+            _toolDescending = !_toolDescending;
+        else
+        {
+            _toolSortBy = sortBy;
+            _toolDescending = false;
+        }
+
+        _toolsCurrentPage = 1;
+
+        await LoadToolsForSelectAsync();
+    }
+
+    private async Task GoToToolPage(int page)
+    {
+        if (page < 1 || page > ToolsTotalPages)
+            return;
+
+        _toolsCurrentPage = page;
+
+        await LoadToolsForSelectAsync();
+    }
+
+    private int GetRentalDays()
+    {
+        var days = _newOrder.EndDate.DayNumber - _newOrder.StartDate.DayNumber;
+
+        return days <= 0 ? 0 : days;
     }
 
     private void CreateOrder()
     {
-        NotificationService.Success("Заказ успешно создан");
-        _isCreateModalOpen = false;
+        if (_newOrder.CustomerId is null ||
+            _newOrder.ToolIds.Count == 0)
+        {
+            NotificationService.Error("Выберите клиента и инструменты");
+            return;
+        }
+
+        var order = new OrderRow
+        {
+            CustomerId = _newOrder.CustomerId.Value,
+            Number = $"ORD-2026-{_orders.Count + 1:000}",
+            CustomerName = _newOrder.CustomerName,
+            ToolName = _newOrder.ToolName,
+            StartDate = _newOrder.StartDate,
+            EndDate = _newOrder.EndDate,
+            TotalAmount = _newOrder.TotalAmount,
+            DepositAmount = _newOrder.DepositAmount,
+            Status = "Активен",
+            CreatedAt = DateTime.Now,
+            Comment = _newOrder.Comment
+        };
+
+        _orders.Insert(0, order);
+
+        CloseCreateModal();
+
+        _currentPage = 1;
+
+        NotificationService.Success($"Заказ «{order.Number}» создан");
     }
 
-    private void GoToPage(int page)
+    private void OpenDeleteModal()
     {
-        _currentPage = page;
+        if (_selectedOrder is null)
+            return;
+
+        _deletingOrder = _selectedOrder;
+
+        CloseActionsMenu();
+
+        _isDeleteModalOpen = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        _deletingOrder = null;
+        _isDeleteModalOpen = false;
+    }
+
+    private void DeleteOrder()
+    {
+        if (_deletingOrder is null)
+            return;
+
+        var number = _deletingOrder.Number;
+
+        _orders.Remove(_deletingOrder);
+
+        CloseDeleteModal();
+
+        NotificationService.Success($"Заказ «{number}» удалён");
+    }
+
+    private void ExecuteOrderAction(string action)
+    {
+        if (_selectedOrder is null)
+            return;
+
+        NotificationService.Info($"{action}: {_selectedOrder.Number}");
+
+        CloseActionsMenu();
+    }
+
+    private void ExportOrders()
+    {
+        NotificationService.Success("Заказы экспортированы");
     }
 
     private static string GetOrderStatusClass(string status)
@@ -374,21 +1653,156 @@
         return status switch
         {
             "Активен" => "status-badge available",
-            "Завершен" => "status-badge info",
+            "Завершён" => "status-badge info",
             "Просрочен" => "status-badge danger",
-            "Отменен" => "status-badge neutral",
+            "Отменён" => "status-badge neutral",
             _ => "status-badge"
         };
     }
 
+    private static string GetInitials(CustomerDto customer)
+    {
+        var lastNameInitial = string.IsNullOrWhiteSpace(customer.LastName)
+            ? string.Empty
+            : customer.LastName[0].ToString();
+
+        var firstNameInitial = string.IsNullOrWhiteSpace(customer.FirstName)
+            ? string.Empty
+            : customer.FirstName[0].ToString();
+
+        var initials = $"{lastNameInitial}{firstNameInitial}";
+
+        return string.IsNullOrWhiteSpace(initials)
+            ? "?"
+            : initials;
+    }
+
+    private static string GetAddressOrDash(CustomerDto customer)
+    {
+        return string.IsNullOrWhiteSpace(customer.Address)
+            ? "Адрес не указан"
+            : customer.Address;
+    }
+
+    private static string GetToolImageUrl(string? photoPath)
+    {
+        if (string.IsNullOrWhiteSpace(photoPath))
+            return string.Empty;
+
+        if (photoPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            return photoPath;
+
+        return $"https://localhost:7099{photoPath}";
+    }
+
+    private static string GetToolStatusClass(string status)
+    {
+        return status switch
+        {
+            "Доступен" => "status-badge available",
+            "В аренде" => "status-badge rented",
+            "На ремонте" => "status-badge repair",
+            "Списан" => "status-badge danger",
+            _ => "status-badge"
+        };
+    }
+
+    private async Task<Guid?> GetAvailableToolStatusIdAsync()
+    {
+        var result = await DictionaryCrudService.GetListAsync<DictionaryItem>(
+            "api/tool-statuses",
+            "dictionary.load.failed",
+            "Не удалось загрузить статусы инструментов");
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return null;
+        }
+
+        var availableStatus = result.Value
+            .FirstOrDefault(x => x.Name == "Доступен");
+
+        if (availableStatus is null)
+        {
+            NotificationService.Error("Статус инструмента «Доступен» не найден");
+            return null;
+        }
+
+        return availableStatus.Id;
+    }
+
+    private void OpenCreateCustomerModal()
+    {
+        _isCreateCustomerModalOpen = true;
+    }
+
+    private Task CloseCreateCustomerModal()
+    {
+        _isCreateCustomerModalOpen = false;
+
+        return Task.CompletedTask;
+    }
+
+    private async Task OnCustomerCreated(CreateCustomerResponse customer)
+    {
+        _selectedCustomer = null;
+
+        _newOrder.CustomerId = customer.Id;
+        _newOrder.CustomerName = customer.FullName;
+
+        _customersCurrentPage = 1;
+
+        await LoadCustomersForSelectAsync();
+    }
+    
     private sealed class OrderRow
     {
         public string Number { get; set; } = string.Empty;
+
+        public Guid CustomerId { get; set; }
+
         public string CustomerName { get; set; } = string.Empty;
+
         public string ToolName { get; set; } = string.Empty;
+
         public DateOnly StartDate { get; set; }
+
         public DateOnly EndDate { get; set; }
+
         public decimal TotalAmount { get; set; }
+
+        public decimal DepositAmount { get; set; }
+
         public string Status { get; set; } = string.Empty;
+
+        public DateTime CreatedAt { get; set; }
+
+        public string? Comment { get; set; }
+    }
+
+    private sealed class OrderFormModel
+    {
+        public Guid? CustomerId { get; set; }
+
+        public List<Guid> ToolIds { get; set; } = [];
+
+        public List<ToolDto> SelectedTools { get; set; } = [];
+
+        public string CustomerName { get; set; } = string.Empty;
+
+        public string ToolName { get; set; } = string.Empty;
+
+        public DateOnly StartDate { get; set; }
+
+        public DateOnly EndDate { get; set; }
+
+        public DateOnly OrderDate { get; set; }
+
+        public decimal TotalAmount { get; set; }
+
+        public decimal DepositAmount { get; set; }
+
+        public string? Comment { get; set; }
     }
 }

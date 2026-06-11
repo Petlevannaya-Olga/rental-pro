@@ -248,35 +248,48 @@ public sealed class CustomersReadRepository(
     }
 
     private const string FromClause = """
-                                      FROM customers c
-                                      OUTER APPLY
-                                      (
-                                          SELECT COUNT(*) AS OrdersCount
-                                          FROM orders o
-                                          WHERE o.customer_id = c.id
-                                            AND o.deleted_at IS NULL
-                                      ) oc
-                                      OUTER APPLY
+                                  FROM customers c
+                                  OUTER APPLY
+                                  (
+                                      SELECT COUNT(*) AS OrdersCount
+                                      FROM orders o
+                                      WHERE o.customer_id = c.id
+                                        AND o.deleted_at IS NULL
+                                  ) oc
+                                  OUTER APPLY
+                                  (
+                                      SELECT
+                                          CASE
+                                              WHEN ISNULL(order_totals.TotalAmount, 0)
+                                                   > ISNULL(payment_totals.PaidAmount, 0)
+                                              THEN CAST(1 AS bit)
+                                              ELSE CAST(0 AS bit)
+                                          END AS HasDebt
+                                      FROM
                                       (
                                           SELECT
-                                              CASE
-                                                  WHEN ISNULL(SUM(o.total_cost + o.deposit_total), 0)
-                                                     > ISNULL(SUM(paid.PaidAmount), 0)
-                                                  THEN CAST(1 AS bit)
-                                                  ELSE CAST(0 AS bit)
-                                              END AS HasDebt
+                                              SUM(
+                                                  oi.rental_price_per_day *
+                                                  DATEDIFF(day, oi.start_date, oi.planned_return_date)
+                                                  + oi.deposit_amount
+                                              ) AS TotalAmount
                                           FROM orders o
-                                          OUTER APPLY
-                                          (
-                                              SELECT SUM(p.amount) AS PaidAmount
-                                              FROM payments p
-                                              WHERE p.order_id = o.id
-                                                AND p.deleted_at IS NULL
-                                          ) paid
+                                          INNER JOIN order_items oi ON oi.order_id = o.id
                                           WHERE o.customer_id = c.id
                                             AND o.deleted_at IS NULL
-                                      ) dc
-                                      """;
+                                            AND oi.deleted_at IS NULL
+                                      ) order_totals
+                                      CROSS JOIN
+                                      (
+                                          SELECT SUM(p.amount) AS PaidAmount
+                                          FROM payments p
+                                          INNER JOIN orders o ON o.id = p.order_id
+                                          WHERE o.customer_id = c.id
+                                            AND o.deleted_at IS NULL
+                                            AND p.deleted_at IS NULL
+                                      ) payment_totals
+                                  ) dc
+                                  """;
 
     private const string WhereClause = """
                                        WHERE c.deleted_at IS NULL

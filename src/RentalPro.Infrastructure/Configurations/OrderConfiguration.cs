@@ -52,24 +52,6 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired();
 
         builder
-            .Property(x => x.TotalCost)
-            .HasColumnName("total_cost")
-            .HasConversion(
-                money => money.Value,
-                value => Money.Create(value).Value)
-            .HasPrecision(18, 2)
-            .IsRequired();
-
-        builder
-            .Property(x => x.DepositTotal)
-            .HasColumnName("deposit_total")
-            .HasConversion(
-                money => money.Value,
-                value => Money.Create(value).Value)
-            .HasPrecision(18, 2)
-            .IsRequired();
-
-        builder
             .Property(x => x.Comment)
             .HasColumnName("comment")
             .HasConversion(
@@ -93,31 +75,36 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnName("deleted_at");
 
         builder
-            .HasOne<User>()
+            .HasOne(x => x.User)
             .WithMany()
-            .HasForeignKey(x => x.UserId);
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
-            .HasOne<Customer>()
+            .HasOne(x => x.Customer)
             .WithMany()
-            .HasForeignKey(x => x.CustomerId);
+            .HasForeignKey(x => x.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
-            .HasOne<OrderStatus>()
+            .HasOne(x => x.Status)
             .WithMany()
-            .HasForeignKey(x => x.StatusId);
+            .HasForeignKey(x => x.StatusId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
-            .HasIndex(x => x.UserId);
+            .HasMany(x => x.Items)
+            .WithOne(x => x.Order)
+            .HasForeignKey(x => x.OrderId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        builder
-            .HasIndex(x => x.CustomerId);
+        builder.HasIndex(x => x.UserId);
 
-        builder
-            .HasIndex(x => x.StatusId);
+        builder.HasIndex(x => x.CustomerId);
 
-        builder
-            .HasIndex(x => x.OrderDate);
+        builder.HasIndex(x => x.StatusId);
+
+        builder.HasIndex(x => x.OrderDate);
 
         builder.HasQueryFilter(x => x.DeletedAt == null);
     }

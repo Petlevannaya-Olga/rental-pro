@@ -11,37 +11,38 @@ public sealed class OrderItem : AuditableEntity<OrderItemId>
     private OrderItem()
         : base(OrderItemId.NewId())
     {
-        RentalPricePerDay = null!;
-        RentalPeriod = null!;
-        ItemTotalCost = null!;
     }
 
     private OrderItem(
         OrderId orderId,
         ToolId toolId,
+        Money depositAmount,
         Money rentalPricePerDay,
-        RentalPeriod rentalPeriod,
-        Money itemTotalCost)
+        RentalPeriod rentalPeriod)
         : base(OrderItemId.NewId())
     {
         OrderId = orderId;
         ToolId = toolId;
+        DepositAmount = depositAmount;
         RentalPricePerDay = rentalPricePerDay;
         RentalPeriod = rentalPeriod;
-        ItemTotalCost = itemTotalCost;
     }
 
     public OrderId OrderId { get; private set; }
-
+    
+    public Order Order { get; private set; } = null!;
+    
     public ToolId ToolId { get; private set; }
+    
+    public Tool Tool { get; private set; } = null!;
 
+    public Money DepositAmount { get; private set; }
+    
     public Money RentalPricePerDay { get; private set; }
 
     public RentalPeriod RentalPeriod { get; private set; }
 
     public DateOnly? ActualReturnedDate { get; private set; }
-
-    public Money ItemTotalCost { get; private set; }
 
     public ReturnCondition? ReturnCondition { get; private set; }
 
@@ -50,6 +51,7 @@ public sealed class OrderItem : AuditableEntity<OrderItemId>
     public static Result<OrderItem, Error> Create(
         Guid orderId,
         Guid toolId,
+        decimal depositAmount,
         decimal rentalPricePerDay,
         DateOnly startDate,
         DateOnly plannedReturnDate)
@@ -64,6 +66,11 @@ public sealed class OrderItem : AuditableEntity<OrderItemId>
         if (toolIdResult.IsFailure)
             return toolIdResult.Error;
 
+        var depositAmountResult = Money.Create(depositAmount);
+
+        if (depositAmountResult.IsFailure)
+            return depositAmountResult.Error;
+        
         var rentalPriceResult = Money.Create(rentalPricePerDay);
 
         if (rentalPriceResult.IsFailure)
@@ -86,9 +93,9 @@ public sealed class OrderItem : AuditableEntity<OrderItemId>
         return new OrderItem(
             orderIdResult.Value,
             toolIdResult.Value,
+            depositAmountResult.Value,
             rentalPriceResult.Value,
-            rentalPeriodResult.Value,
-            itemTotalCostResult.Value);
+            rentalPeriodResult.Value);
     }
 
     public UnitResult<Error> UpdateRentalPeriod(
@@ -117,7 +124,6 @@ public sealed class OrderItem : AuditableEntity<OrderItemId>
             return itemTotalCostResult.Error;
 
         RentalPeriod = rentalPeriodResult.Value;
-        ItemTotalCost = itemTotalCostResult.Value;
 
         MarkUpdated();
 

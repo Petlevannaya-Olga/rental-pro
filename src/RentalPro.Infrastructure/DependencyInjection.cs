@@ -8,6 +8,7 @@ using RentalPro.Application.Files;
 using RentalPro.Application.Repositories;
 using RentalPro.Application.Services;
 using RentalPro.Contracts.Customers;
+using RentalPro.Contracts.Orders;
 using RentalPro.Contracts.Users;
 using RentalPro.Infrastructure.Auth;
 using RentalPro.Infrastructure.Database;
@@ -42,12 +43,15 @@ public static class DependencyInjection
         services.AddScoped<IToolsReadRepository, ToolsReadRepository>();
         services.AddScoped<ICustomersReadRepository, CustomersReadRepository>();
         services.AddScoped<ICustomersRepository, CustomersRepository>();
+        services.AddScoped<IOrdersReadRepository, OrdersReadRepository>();
+        services.AddScoped<IOrdersRepository, OrdersRepository>();
         services.AddScoped<IFileStorage, LocalFileStorage>();
         
         services.AddScoped<ITransactionManager, TransactionManager>();
         
         services.AddScoped<IExcelExportService<UserDto>, UsersExportService>();
         services.AddScoped<IExcelExportService<CustomerDto>, CustomersExportService>();
+        services.AddScoped<IExcelExportService<OrderDto>, OrdersExportService>();
         
         return services;
     }

@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Reflection;
+using CSharpFunctionalExtensions;
 using RentalPro.Domain.Common;
 using RentalPro.Domain.Customers;
 using RentalPro.Domain.Users;
@@ -9,13 +10,19 @@ namespace RentalPro.Domain.Orders;
 
 public sealed class Order : AuditableEntity<OrderId>
 {
+    private readonly List<OrderItem> _items = [];
+
+    // EF Core
+    private Order()
+        : base(OrderId.NewId())
+    {
+    }
+
     private Order(
         UserId userId,
         CustomerId customerId,
         DateTime orderDate,
         OrderStatusId statusId,
-        Money totalCost,
-        Money depositTotal,
         Comment? comment)
         : base(OrderId.NewId())
     {
@@ -23,32 +30,32 @@ public sealed class Order : AuditableEntity<OrderId>
         CustomerId = customerId;
         OrderDate = orderDate;
         StatusId = statusId;
-        TotalCost = totalCost;
-        DepositTotal = depositTotal;
         Comment = comment;
     }
 
     public UserId UserId { get; private set; }
 
+    public User User { get; private set; } = null!;
+
     public CustomerId CustomerId { get; private set; }
+
+    public Customer Customer { get; private set; } = null!;
 
     public DateTime OrderDate { get; private set; }
 
     public OrderStatusId StatusId { get; private set; }
 
-    public Money TotalCost { get; private set; }
-
-    public Money DepositTotal { get; private set; }
-
+    public OrderStatus Status { get; private set; } = null!;
+    
     public Comment? Comment { get; private set; }
+
+    public IReadOnlyCollection<OrderItem> Items => _items;
 
     public static Result<Order, Error> Create(
         Guid userId,
         Guid customerId,
         DateTime orderDate,
         Guid statusId,
-        decimal totalCost,
-        decimal depositTotal,
         string? comment)
     {
         var userIdResult = UserId.Create(userId);
@@ -66,16 +73,6 @@ public sealed class Order : AuditableEntity<OrderId>
         if (statusIdResult.IsFailure)
             return statusIdResult.Error;
 
-        var totalCostResult = Money.Create(totalCost);
-
-        if (totalCostResult.IsFailure)
-            return totalCostResult.Error;
-
-        var depositTotalResult = Money.Create(depositTotal);
-
-        if (depositTotalResult.IsFailure)
-            return depositTotalResult.Error;
-
         var commentResult = CreateComment(comment);
 
         if (commentResult.IsFailure)
@@ -86,8 +83,6 @@ public sealed class Order : AuditableEntity<OrderId>
             customerIdResult.Value,
             orderDate,
             statusIdResult.Value,
-            totalCostResult.Value,
-            depositTotalResult.Value,
             commentResult.Value);
     }
 
@@ -99,28 +94,6 @@ public sealed class Order : AuditableEntity<OrderId>
             return statusIdResult.Error;
 
         StatusId = statusIdResult.Value;
-
-        MarkUpdated();
-
-        return UnitResult.Success<Error>();
-    }
-
-    public UnitResult<Error> UpdateTotals(
-        decimal totalCost,
-        decimal depositTotal)
-    {
-        var totalCostResult = Money.Create(totalCost);
-
-        if (totalCostResult.IsFailure)
-            return totalCostResult.Error;
-
-        var depositTotalResult = Money.Create(depositTotal);
-
-        if (depositTotalResult.IsFailure)
-            return depositTotalResult.Error;
-
-        TotalCost = totalCostResult.Value;
-        DepositTotal = depositTotalResult.Value;
 
         MarkUpdated();
 

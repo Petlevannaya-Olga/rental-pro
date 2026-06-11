@@ -1,7 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RentalPro.Domain.Customers;
-using RentalPro.Domain.Fines;
-using RentalPro.Domain.MaintenanceRecords;
 using RentalPro.Domain.Manufacturers;
 using RentalPro.Domain.Orders;
 using RentalPro.Domain.Payments;
@@ -28,8 +26,6 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<ToolStatusHistory> ToolStatusHistories { get; set; }
 
-    public DbSet<ToolPurchase> ToolPurchases { get; set; }
-
     public DbSet<Manufacturer> Manufacturers { get; set; }
 
     public DbSet<Supplier> Suppliers { get; set; }
@@ -47,12 +43,6 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<PaymentType> PaymentTypes { get; set; }
 
     public DbSet<PaymentMethod> PaymentMethods { get; set; }
-
-    public DbSet<Fine> Fines { get; set; }
-
-    public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
-
-    public DbSet<MaintenanceStatus> MaintenanceStatuses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

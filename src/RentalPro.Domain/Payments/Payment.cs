@@ -1,6 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
 using RentalPro.Domain.Common;
-using RentalPro.Domain.Fines;
 using RentalPro.Domain.Orders;
 using RentalPro.Domain.ValueObjects;
 using RentalPro.Shared;
@@ -9,11 +8,16 @@ namespace RentalPro.Domain.Payments;
 
 public sealed class Payment : AuditableEntity<PaymentId>
 {
+    // EF Core
+    private Payment()
+        : base(PaymentId.NewId())
+    {
+    }
+    
     private Payment(
         OrderId orderId,
         PaymentMethodId paymentMethodId,
         PaymentTypeId paymentTypeId,
-        FineId? fineId,
         DateTime paymentDate,
         Money amount,
         Comment? comment)
@@ -22,7 +26,6 @@ public sealed class Payment : AuditableEntity<PaymentId>
         OrderId = orderId;
         PaymentMethodId = paymentMethodId;
         PaymentTypeId = paymentTypeId;
-        FineId = fineId;
         PaymentDate = paymentDate;
         Amount = amount;
         Comment = comment;
@@ -33,8 +36,6 @@ public sealed class Payment : AuditableEntity<PaymentId>
     public PaymentMethodId PaymentMethodId { get; private set; }
 
     public PaymentTypeId PaymentTypeId { get; private set; }
-
-    public FineId? FineId { get; private set; }
 
     public DateTime PaymentDate { get; private set; }
 
@@ -66,11 +67,6 @@ public sealed class Payment : AuditableEntity<PaymentId>
         if (paymentTypeIdResult.IsFailure)
             return paymentTypeIdResult.Error;
 
-        var fineIdResult = CreateFineId(fineId);
-
-        if (fineIdResult.IsFailure)
-            return fineIdResult.Error;
-
         var amountResult = Money.Create(amount);
 
         if (amountResult.IsFailure)
@@ -85,7 +81,6 @@ public sealed class Payment : AuditableEntity<PaymentId>
             orderIdResult.Value,
             paymentMethodIdResult.Value,
             paymentTypeIdResult.Value,
-            fineIdResult.Value,
             paymentDate,
             amountResult.Value,
             commentResult.Value);
@@ -109,11 +104,6 @@ public sealed class Payment : AuditableEntity<PaymentId>
         if (paymentTypeIdResult.IsFailure)
             return paymentTypeIdResult.Error;
 
-        var fineIdResult = CreateFineId(fineId);
-
-        if (fineIdResult.IsFailure)
-            return fineIdResult.Error;
-
         var amountResult = Money.Create(amount);
 
         if (amountResult.IsFailure)
@@ -126,7 +116,6 @@ public sealed class Payment : AuditableEntity<PaymentId>
 
         PaymentMethodId = paymentMethodIdResult.Value;
         PaymentTypeId = paymentTypeIdResult.Value;
-        FineId = fineIdResult.Value;
         PaymentDate = paymentDate;
         Amount = amountResult.Value;
         Comment = commentResult.Value;
@@ -139,19 +128,6 @@ public sealed class Payment : AuditableEntity<PaymentId>
     public UnitResult<Error> Delete()
     {
         return MarkDeleted(nameof(Payment));
-    }
-
-    private static Result<FineId?, Error> CreateFineId(Guid? fineIdValue)
-    {
-        if (fineIdValue is null)
-            return (FineId?)null;
-
-        var result = Fines.FineId.Create(fineIdValue.Value);
-
-        if (result.IsFailure)
-            return result.Error;
-
-        return result.Value;
     }
 
     private static Result<Comment?, Error> CreateComment(string? comment)

@@ -1,0 +1,206 @@
+@using RentalPro.Contracts.Customers
+@using RentalPro.Presentation.Client.Models.Customers
+@using RentalPro.Presentation.Client.Services
+
+@inject CustomersService CustomersService
+@inject NotificationService NotificationService
+@inject FakeCustomerGeneratorService FakeCustomerGenerator
+
+@if (IsOpen)
+{
+    <div class="actions-backdrop">
+        <div class="tool-create-modal large" @onclick:stopPropagation="true">
+
+            <div class="actions-modal-header">
+                <div>
+                    <h3>Добавить клиента</h3>
+                    <p>Заполните данные клиента</p>
+                </div>
+
+                <button type="button" @onclick="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <EditForm Model="_customer" OnValidSubmit="CreateCustomer">
+                <DataAnnotationsValidator />
+
+                <div class="tool-form-panel tool-form-panel-compact">
+                    <div class="tool-form-grid tool-form-grid-compact">
+
+                        <div class="tool-form-field">
+                            <label>Фамилия <span>*</span></label>
+                            <InputText @bind-Value="_customer.LastName" />
+                            <ValidationMessage For="@(() => _customer.LastName)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Имя <span>*</span></label>
+                            <InputText @bind-Value="_customer.FirstName" />
+                            <ValidationMessage For="@(() => _customer.FirstName)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Отчество <span>*</span></label>
+                            <InputText @bind-Value="_customer.MiddleName" />
+                            <ValidationMessage For="@(() => _customer.MiddleName)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Телефон <span>*</span></label>
+                            <InputText @bind-Value="_customer.PhoneNumber" />
+                            <ValidationMessage For="@(() => _customer.PhoneNumber)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Email <span>*</span></label>
+                            <InputText @bind-Value="_customer.Email" />
+                            <ValidationMessage For="@(() => _customer.Email)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Серия паспорта <span>*</span></label>
+                            <InputText @bind-Value="_customer.PassportSeries" />
+                            <ValidationMessage For="@(() => _customer.PassportSeries)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Номер паспорта <span>*</span></label>
+                            <InputText @bind-Value="_customer.PassportNumber" />
+                            <ValidationMessage For="@(() => _customer.PassportNumber)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Индекс <span>*</span></label>
+                            <InputText @bind-Value="_customer.PostalCode" />
+                            <ValidationMessage For="@(() => _customer.PostalCode)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Регион <span>*</span></label>
+                            <InputText @bind-Value="_customer.Region" />
+                            <ValidationMessage For="@(() => _customer.Region)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Город <span>*</span></label>
+                            <InputText @bind-Value="_customer.City" />
+                            <ValidationMessage For="@(() => _customer.City)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Улица <span>*</span></label>
+                            <InputText @bind-Value="_customer.Street" />
+                            <ValidationMessage For="@(() => _customer.Street)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Дом <span>*</span></label>
+                            <InputText @bind-Value="_customer.House" />
+                            <ValidationMessage For="@(() => _customer.House)" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Корпус</label>
+                            <InputText @bind-Value="_customer.Building" />
+                        </div>
+
+                        <div class="tool-form-field">
+                            <label>Квартира/офис</label>
+                            <InputText @bind-Value="_customer.Apartment" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="FillTestData">
+                        <i class="bi bi-magic"></i>
+                        Заполнить тестовыми данными
+                    </button>
+
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="Close">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="submit">
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить клиента
+                    </button>
+
+                </div>
+            </EditForm>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+
+    [Parameter] public EventCallback IsOpenChanged { get; set; }
+
+    [Parameter] public EventCallback<CreateCustomerResponse> CustomerCreated { get; set; }
+
+    private CustomerFormModel _customer = new();
+
+    private async Task CreateCustomer()
+    {
+        var request = new CreateCustomerRequest(
+            _customer.LastName,
+            _customer.FirstName,
+            _customer.MiddleName,
+            _customer.PhoneNumber,
+            _customer.Email,
+            _customer.PassportSeries,
+            _customer.PassportNumber,
+            _customer.PostalCode,
+            _customer.Region,
+            _customer.City,
+            _customer.Street,
+            _customer.House,
+            ToNullable(_customer.Building),
+            ToNullable(_customer.Apartment));
+
+        var result = await CustomersService.CreateCustomerAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success($"Клиент «{result.Value.FullName}» добавлен");
+
+        await CustomerCreated.InvokeAsync(result.Value);
+
+        await Close();
+    }
+
+    private async Task Close()
+    {
+        _customer = new CustomerFormModel();
+
+        IsOpen = false;
+
+        await IsOpenChanged.InvokeAsync();
+    }
+
+    private static string? ToNullable(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
+    }
+    
+    private void FillTestData()
+    {
+        _customer = FakeCustomerGenerator.Generate();
+    }
+}

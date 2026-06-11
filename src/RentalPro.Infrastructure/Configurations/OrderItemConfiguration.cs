@@ -46,6 +46,15 @@ public sealed class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
             .HasPrecision(18, 2)
             .IsRequired();
 
+        builder
+            .Property(x => x.DepositAmount)
+            .HasColumnName("deposit_amount")
+            .HasConversion(
+                money => money.Value,
+                value => Money.Create(value).Value)
+            .HasPrecision(18, 2)
+            .IsRequired();
+
         builder.OwnsOne(
             x => x.RentalPeriod,
             rentalPeriod =>
@@ -64,15 +73,6 @@ public sealed class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder
             .Property(x => x.ActualReturnedDate)
             .HasColumnName("actual_returned_date");
-
-        builder
-            .Property(x => x.ItemTotalCost)
-            .HasColumnName("item_total_cost")
-            .HasConversion(
-                money => money.Value,
-                value => Money.Create(value).Value)
-            .HasPrecision(18, 2)
-            .IsRequired();
 
         builder
             .Property(x => x.ReturnCondition)
@@ -108,23 +108,22 @@ public sealed class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
             .HasColumnName("deleted_at");
 
         builder
-            .HasOne<Order>()
+            .HasOne(x => x.Order)
+            .WithMany(x => x.Items)
+            .HasForeignKey(x => x.OrderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder
+            .HasOne(x => x.Tool)
             .WithMany()
-            .HasForeignKey(x => x.OrderId);
+            .HasForeignKey(x => x.ToolId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        builder
-            .HasOne<Tool>()
-            .WithMany()
-            .HasForeignKey(x => x.ToolId);
+        builder.HasIndex(x => x.OrderId);
 
-        builder
-            .HasIndex(x => x.OrderId);
+        builder.HasIndex(x => x.ToolId);
 
-        builder
-            .HasIndex(x => x.ToolId);
-
-        builder
-            .HasIndex(x => x.ActualReturnedDate);
+        builder.HasIndex(x => x.ActualReturnedDate);
 
         builder.HasQueryFilter(x => x.DeletedAt == null);
     }
