@@ -409,6 +409,76 @@
 
                         </div>
                     </div>
+                    
+                    @if (_newOrder.Tools.Count > 0)
+{
+    <div class="order-section">
+        <div class="order-section-title">
+            <h4>Периоды аренды инструментов</h4>
+        </div>
+
+        <table class="users-table order-tools-period-table">
+            <thead>
+            <tr>
+                <th>Инструмент</th>
+                <th>Начало аренды</th>
+                <th>Окончание аренды</th>
+                <th>Дней</th>
+                <th>Аренда</th>
+                <th>Залог</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var tool in PagedOrderTools)
+            {
+                <tr>
+                    <td>
+                        <strong>@tool.ToolName</strong>
+                        <span class="table-subtitle">
+                            @tool.RentalPricePerDay.ToString("N0") ₽ / день
+                        </span>
+                    </td>
+
+                    <td>
+                        <input type="date"
+                               class="filter-select date-input"
+                               @bind="tool.StartDate"
+                               @bind:after="RecalculateOrder" />
+                    </td>
+
+                    <td>
+                        <input type="date"
+                               class="filter-select date-input"
+                               @bind="tool.EndDate"
+                               @bind:after="RecalculateOrder" />
+                    </td>
+
+                    <td>@tool.RentalDays</td>
+                    <td>@tool.TotalAmount.ToString("N0") ₽</td>
+                    <td>@tool.DepositAmount.ToString("N0") ₽</td>
+
+                    <td class="actions-cell">
+                        <button class="icon-button"
+                                type="button"
+                                @onclick="() => RemoveToolFromOrder(tool.ToolId)">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <Pagination CurrentPage="_orderToolsCurrentPage"
+                    TotalPages="OrderToolsTotalPages"
+                    TotalItems="_newOrder.Tools.Count"
+                    StartItem="OrderToolsPageStart"
+                    EndItem="OrderToolsPageEnd"
+                    PageChanged="GoToOrderToolsPage" />
+    </div>
+}
 
                     <div class="order-summary-card">
 
@@ -687,9 +757,9 @@
                     </button>
                 </div>
 
-                <div class="selected-customer-banner @(_newOrder.SelectedTools.Count == 0 ? "empty" : "selected")">
+                <div class="selected-customer-banner @(_newOrder.Tools.Count == 0 ? "empty" : "selected")">
 
-                    @if (_newOrder.SelectedTools.Count == 0)
+                    @if (_newOrder.Tools.Count == 0)
                     {
                         <i class="bi bi-tools"></i>
 
@@ -703,7 +773,7 @@
 
                         <span>
                             Выбрано инструментов:
-                            <strong>@_newOrder.SelectedTools.Count</strong>
+                            <strong>@_newOrder.Tools.Count</strong>
                         </span>
                     }
 
@@ -880,7 +950,7 @@
 
                     <button class="primary-button"
                             type="button"
-                            disabled="@(_newOrder.SelectedTools.Count == 0)"
+                            disabled="@(_newOrder.Tools.Count == 0)"
                             @onclick="SelectTools">
                         <i class="bi bi-check-lg"></i>
                         Выбрать инструменты
@@ -982,13 +1052,35 @@
 
     private OrderFormModel _newOrder = new();
 
-    private int SelectedToolsCount => _newOrder.ToolIds.Count;
+    private int SelectedToolsCount => _newOrder.Tools.Count;
 
     private decimal TotalToPay =>
         _newOrder.TotalAmount + _newOrder.DepositAmount;
 
     private string RentalPeriodText =>
         $"{_newOrder.StartDate:dd.MM.yyyy} — {_newOrder.EndDate:dd.MM.yyyy}";
+    
+    private const int OrderToolsPageSize = 3;
+
+    private int _orderToolsCurrentPage = 1;
+
+    private IEnumerable<OrderToolFormModel> PagedOrderTools =>
+        _newOrder.Tools
+            .Skip((_orderToolsCurrentPage - 1) * OrderToolsPageSize)
+            .Take(OrderToolsPageSize);
+
+    private int OrderToolsTotalPages =>
+        _newOrder.Tools.Count == 0
+            ? 1
+            : (int)Math.Ceiling(_newOrder.Tools.Count / (double)OrderToolsPageSize);
+
+    private int OrderToolsPageStart =>
+        _newOrder.Tools.Count == 0
+            ? 0
+            : ((_orderToolsCurrentPage - 1) * OrderToolsPageSize) + 1;
+
+    private int OrderToolsPageEnd =>
+        Math.Min(_orderToolsCurrentPage * OrderToolsPageSize, _newOrder.Tools.Count);
 
     private string RentalDaysText
     {
@@ -1148,6 +1240,14 @@
     private int ToolsPageEnd =>
         Math.Min(_toolsCurrentPage * ToolPageSize, _toolsTotalCount);
 
+    private void GoToOrderToolsPage(int page)
+    {
+        if (page < 1 || page > OrderToolsTotalPages)
+            return;
+
+        _orderToolsCurrentPage = page;
+    }
+    
     private void ApplyStatsFilter(string filter)
     {
         _activeStatsFilter = filter;
@@ -1461,57 +1561,48 @@
 
     private bool IsToolSelected(ToolDto tool)
     {
-        return _newOrder.ToolIds.Contains(tool.Id);
+        return _newOrder.Tools.Any(x => x.ToolId == tool.Id);
     }
 
     private void ToggleToolSelection(ToolDto tool)
     {
-        if (_newOrder.ToolIds.Contains(tool.Id))
+        var selectedTool = _newOrder.Tools
+            .FirstOrDefault(x => x.ToolId == tool.Id);
+
+        if (selectedTool is not null)
         {
-            _newOrder.ToolIds.Remove(tool.Id);
-
-            var selectedTool = _newOrder.SelectedTools
-                .FirstOrDefault(x => x.Id == tool.Id);
-
-            if (selectedTool is not null)
-            {
-                _newOrder.SelectedTools.Remove(selectedTool);
-            }
-
+            _newOrder.Tools.Remove(selectedTool);
+            RecalculateOrder();
+            FixOrderToolsPage();
             return;
         }
 
-        _newOrder.ToolIds.Add(tool.Id);
-
-        if (_newOrder.SelectedTools.All(x => x.Id != tool.Id))
+        _newOrder.Tools.Add(new OrderToolFormModel
         {
-            _newOrder.SelectedTools.Add(tool);
-        }
+            ToolId = tool.Id,
+            ToolName = tool.Name,
+            RentalPricePerDay = tool.RentalPricePerDay,
+            DepositAmount = tool.DepositAmount,
+            StartDate = _newOrder.StartDate,
+            EndDate = _newOrder.EndDate
+        });
+
+        RecalculateOrder();
     }
 
     private void SelectTools()
     {
-        if (_newOrder.SelectedTools.Count == 0)
+        if (_newOrder.Tools.Count == 0)
         {
             NotificationService.Error("Выберите инструменты");
             return;
         }
 
-        var rentalDays = GetRentalDays();
-
-        _newOrder.ToolName = string.Join(", ",
-            _newOrder.SelectedTools.Select(x => x.Name));
-
-        _newOrder.TotalAmount = _newOrder.SelectedTools.Sum(x =>
-            x.RentalPricePerDay * rentalDays);
-
-        _newOrder.DepositAmount = _newOrder.SelectedTools.Sum(x =>
-            x.DepositAmount);
+        RecalculateOrder();
 
         CloseToolSelectModal();
 
-        NotificationService.Success(
-            $"Выбрано инструментов: {_newOrder.SelectedTools.Count}");
+        NotificationService.Success($"Выбрано инструментов: {_newOrder.Tools.Count}");
     }
 
     private async Task OnToolSearchChanged(ChangeEventArgs e)
@@ -1571,7 +1662,7 @@
     private void CreateOrder()
     {
         if (_newOrder.CustomerId is null ||
-            _newOrder.ToolIds.Count == 0)
+            _newOrder.Tools.Count == 0)
         {
             NotificationService.Error("Выберите клиента и инструменты");
             return;
@@ -1756,6 +1847,43 @@
         await LoadCustomersForSelectAsync();
     }
     
+    private void RecalculateOrder()
+    {
+        _newOrder.TotalAmount = _newOrder.Tools.Sum(x => x.TotalAmount);
+        _newOrder.DepositAmount = _newOrder.Tools.Sum(x => x.DepositAmount);
+
+        _newOrder.ToolName = string.Join(", ",
+            _newOrder.Tools.Select(x => x.ToolName));
+
+        if (_newOrder.Tools.Count > 0)
+        {
+            _newOrder.StartDate = _newOrder.Tools.Min(x => x.StartDate);
+            _newOrder.EndDate = _newOrder.Tools.Max(x => x.EndDate);
+        }
+    }
+    
+    private void RemoveToolFromOrder(Guid toolId)
+    {
+        var tool = _newOrder.Tools
+            .FirstOrDefault(x => x.ToolId == toolId);
+
+        if (tool is null)
+            return;
+
+        _newOrder.Tools.Remove(tool);
+
+        RecalculateOrder();
+        FixOrderToolsPage();
+    }
+    
+    private void FixOrderToolsPage()
+    {
+        if (_orderToolsCurrentPage > OrderToolsTotalPages)
+        {
+            _orderToolsCurrentPage = OrderToolsTotalPages;
+        }
+    }
+    
     private sealed class OrderRow
     {
         public string Number { get; set; } = string.Empty;
@@ -1785,9 +1913,7 @@
     {
         public Guid? CustomerId { get; set; }
 
-        public List<Guid> ToolIds { get; set; } = [];
-
-        public List<ToolDto> SelectedTools { get; set; } = [];
+        public List<OrderToolFormModel> Tools { get; set; } = [];
 
         public string CustomerName { get; set; } = string.Empty;
 
@@ -1805,4 +1931,27 @@
 
         public string? Comment { get; set; }
     }
+    
+    private sealed class OrderToolFormModel
+    {
+        public Guid ToolId { get; set; }
+
+        public string ToolName { get; set; } = string.Empty;
+
+        public decimal RentalPricePerDay { get; set; }
+
+        public decimal DepositAmount { get; set; }
+
+        public DateOnly StartDate { get; set; }
+
+        public DateOnly EndDate { get; set; }
+
+        public int RentalDays =>
+            Math.Max(0, EndDate.DayNumber - StartDate.DayNumber);
+
+        public decimal TotalAmount =>
+            RentalPricePerDay * RentalDays;
+    }
+    
+    
 }

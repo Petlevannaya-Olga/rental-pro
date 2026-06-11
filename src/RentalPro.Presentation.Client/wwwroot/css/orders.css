@@ -655,3 +655,16 @@
         grid-template-columns: 1fr;
     }
 }
+
+.order-tools-period-table {
+    margin-top: 12px;
+}
+
+.order-tools-period-table th,
+.order-tools-period-table td {
+    font-size: 13px;
+}
+
+.order-tools-period-table input[type="date"] {
+    width: 145px !important;
+}
