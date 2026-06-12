@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RentalPro.Application.Repositories;
 using RentalPro.Contracts.Orders;
+using RentalPro.Contracts.Payments;
 using RentalPro.Domain.Orders;
+using RentalPro.Domain.Payments;
 using RentalPro.Shared;
 
 namespace RentalPro.Infrastructure.Repositories;
@@ -94,6 +96,19 @@ public sealed class OrdersReadRepository(
         DateTime ActualReturnedDate,
         string? ReturnCondition,
         string? DamageComment);
+    
+    private sealed record PaymentFiscalizationSqlDto(
+        Guid PaymentId,
+        string PaymentNumber,
+        Guid OrderId,
+        string OrderNumber,
+        string CustomerFullName,
+        string CustomerEmail,
+        string CustomerPhone,
+        string PaymentTypeName,
+        string PaymentMethodName,
+        decimal Amount,
+        DateTime PaymentDate);
 
     public async Task<Result<PagedResult<OrderDto>, Errors>> GetPagedAsync(
         string? search,
@@ -837,6 +852,92 @@ public sealed class OrdersReadRepository(
                 .ToErrors();
         }
     }
+    
+    public async Task<Result<PaymentFiscalizationDto, Errors>> GetPaymentFiscalizationDataAsync(
+    PaymentId paymentId,
+    CancellationToken cancellationToken = default)
+{
+    try
+    {
+        var sql = """
+                  SELECT
+                      p.id AS PaymentId,
+                      p.number AS PaymentNumber,
+
+                      o.id AS OrderId,
+                      o.number AS OrderNumber,
+
+                      CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+                      c.email AS CustomerEmail,
+                      c.phone AS CustomerPhone,
+
+                      pt.name AS PaymentTypeName,
+                      pm.name AS PaymentMethodName,
+
+                      p.amount AS Amount,
+                      p.payment_date AS PaymentDate
+
+                  FROM payments p
+                  INNER JOIN orders o ON o.id = p.order_id
+                  INNER JOIN customers c ON c.id = o.customer_id
+                  INNER JOIN payment_types pt ON pt.id = p.payment_type_id
+                  INNER JOIN payment_methods pm ON pm.id = p.payment_method_id
+
+                  WHERE p.id = @paymentId
+                    AND p.deleted_at IS NULL
+                    AND o.deleted_at IS NULL
+                    AND c.deleted_at IS NULL
+                    AND pt.deleted_at IS NULL
+                    AND pm.deleted_at IS NULL
+                  """;
+
+        var data = await dbContext.Database
+            .SqlQueryRaw<PaymentFiscalizationSqlDto>(
+                sql,
+                CreateParameter("@paymentId", paymentId.Value))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (data is null)
+        {
+            return CommonErrors.NotFound(
+                    "payment.fiscalization.data.not.found",
+                    "Данные для фискализации платежа не найдены",
+                    paymentId.Value)
+                .ToErrors();
+        }
+
+        return new PaymentFiscalizationDto(
+            PaymentId: data.PaymentId,
+            PaymentNumber: data.PaymentNumber,
+            OrderId: data.OrderId,
+            OrderNumber: data.OrderNumber,
+            CustomerFullName: data.CustomerFullName,
+            CustomerEmail: data.CustomerEmail,
+            CustomerPhone: data.CustomerPhone,
+            PaymentTypeName: data.PaymentTypeName,
+            PaymentMethodName: data.PaymentMethodName,
+            Amount: data.Amount,
+            PaymentDate: data.PaymentDate);
+    }
+    catch (OperationCanceledException)
+    {
+        return CommonErrors
+            .OperationCancelled("get.payment.fiscalization.data.was.cancelled")
+            .ToErrors();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(
+            ex,
+            "Failed to get payment fiscalization data by payment id {PaymentId}",
+            paymentId.Value);
+
+        return CommonErrors.Db(
+                "get.payment.fiscalization.data.from.db.exception",
+                "Failed to get payment fiscalization data")
+            .ToErrors();
+    }
+}
 
     private static SearchData CreateSearchData(string? search)
     {

@@ -10,6 +10,7 @@
 @using RentalPro.Contracts.OrderStatuses
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using RentalPro.Contracts.Payments
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject OrderStatusesService OrderStatusesService
@@ -19,6 +20,7 @@
 @inject CustomersService CustomersService
 @inject DictionaryCrudService DictionaryCrudService
 @inject FakeOrderGeneratorService FakeOrderGenerator
+@inject PaymentsService PaymentsService
 
 <div class="users-page orders-page">
 
@@ -1316,10 +1318,127 @@
                         </button>
                     }
 
+                    @if (_viewOrder.StatusName == "Подтвержден")
+                    {
+                        <button class="primary-button"
+                                type="button"
+                                @onclick="OpenPaymentModal">
+                            <i class="bi bi-credit-card"></i>
+                            Принять оплату
+                        </button>
+                    }
+
                     <button class="secondary-button"
                             type="button"
                             @onclick="CloseViewModal">
                         Закрыть
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+    @if (_isPaymentModalOpen && _viewOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="payment-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Принять оплату</h3>
+                        <p>Заказ № @_viewOrder.Number</p>
+                    </div>
+
+                    <button type="button" @onclick="ClosePaymentModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="payment-summary">
+                    <div class="payment-summary-row">
+                        <span>Клиент</span>
+                        <strong>@_viewOrder.CustomerFullName</strong>
+                    </div>
+
+                    <div class="payment-summary-grid">
+                        <div>
+                            <span>Аренда</span>
+                            <strong>@_viewOrder.TotalCost.ToString("N0") ₽</strong>
+                        </div>
+
+                        <div>
+                            <span>Залог</span>
+                            <strong>@_viewOrder.DepositTotal.ToString("N0") ₽</strong>
+                        </div>
+
+                        <div class="total">
+                            <span>Итого</span>
+                            <strong>@((_viewOrder.TotalCost + _viewOrder.DepositTotal).ToString("N0")) ₽</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-form-grid">
+
+                    <div class="tool-form-field">
+                        <label>Тип оплаты <span>*</span></label>
+                        <select @bind="_paymentForm.PaymentTypeId"
+                                @bind:after="OnPaymentTypeChanged">
+                            <option value="">Выберите тип оплаты</option>
+
+                            @foreach (var type in _paymentTypes)
+                            {
+                                <option value="@type.Id">@type.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Способ оплаты <span>*</span></label>
+                        <select @bind="_paymentForm.PaymentMethodId">
+                            <option value="">Выберите способ оплаты</option>
+
+                            @foreach (var method in _paymentMethods)
+                            {
+                                <option value="@method.Id">@method.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Сумма <span>*</span></label>
+                        <input type="number"
+                               min="1"
+                               step="0.01"
+                               @bind="_paymentForm.Amount"/>
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Дата оплаты <span>*</span></label>
+                        <input type="datetime-local"
+                               @bind="_paymentForm.PaymentDate"/>
+                    </div>
+
+                    <div class="tool-form-field full">
+                        <label>Комментарий</label>
+                        <input placeholder="Комментарий к оплате"
+                               @bind="_paymentForm.Comment"/>
+                    </div>
+
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="ClosePaymentModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="CreatePaymentAsync">
+                        <i class="bi bi-credit-card"></i>
+                        Принять оплату
                     </button>
                 </div>
 
@@ -1333,6 +1452,13 @@
 
 @code
 {
+    private bool _isPaymentModalOpen;
+
+    private PaymentFormModel _paymentForm = new();
+
+    private List<DictionaryItem> _paymentTypes = [];
+    private List<DictionaryItem> _paymentMethods = [];
+
     private Guid? _currentUserId;
     private Guid? _openedActionsOrderId;
 
@@ -2499,5 +2625,121 @@
         }
 
         NotificationService.Success("Акт возврата успешно сформирован");
+    }
+
+    private async Task OpenPaymentModal()
+    {
+        if (_viewOrder is null)
+            return;
+
+        _paymentForm = new PaymentFormModel
+        {
+            Amount = _viewOrder.TotalCost + _viewOrder.DepositTotal,
+            PaymentDate = DateTime.Now
+        };
+
+        await LoadPaymentDictionariesAsync();
+
+        _isPaymentModalOpen = true;
+    }
+
+    private void ClosePaymentModal()
+    {
+        _isPaymentModalOpen = false;
+        _paymentForm = new PaymentFormModel();
+    }
+
+    private async Task CreatePaymentAsync()
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        if (_paymentForm.PaymentTypeId is null)
+        {
+            NotificationService.Error("Выберите тип оплаты");
+            return;
+        }
+
+        if (_paymentForm.PaymentMethodId is null)
+        {
+            NotificationService.Error("Выберите способ оплаты");
+            return;
+        }
+
+        if (_paymentForm.Amount <= 0)
+        {
+            NotificationService.Error("Сумма оплаты должна быть больше 0");
+            return;
+        }
+
+        var request = new CreatePaymentRequest(
+            OrderId: _viewOrder.Id,
+            PaymentTypeId: _paymentForm.PaymentTypeId.Value,
+            PaymentMethodId: _paymentForm.PaymentMethodId.Value,
+            Amount: _paymentForm.Amount,
+            PaymentDate: _paymentForm.PaymentDate,
+            Comment: _paymentForm.Comment);
+
+        var result = await PaymentsService.CreatePaymentAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        ClosePaymentModal();
+
+        NotificationService.Success("Оплата успешно принята");
+    }
+    
+    private async Task LoadPaymentDictionariesAsync()
+    {
+        var typesResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
+            "api/payment-types",
+            "payment.types.load.failed",
+            "Не удалось загрузить типы оплаты");
+
+        if (typesResult.IsSuccess)
+            _paymentTypes = typesResult.Value;
+
+        var methodsResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
+            "api/payment-methods",
+            "payment.methods.load.failed",
+            "Не удалось загрузить способы оплаты");
+
+        if (methodsResult.IsSuccess)
+            _paymentMethods = methodsResult.Value;
+    }
+    
+    private void OnPaymentTypeChanged()
+    {
+        if (_viewOrder is null || _paymentForm.PaymentTypeId is null)
+            return;
+
+        var selectedType = _paymentTypes
+            .FirstOrDefault(x => x.Id == _paymentForm.PaymentTypeId);
+
+        if (selectedType is null)
+            return;
+
+        _paymentForm.Amount = selectedType.Name switch
+        {
+            "Аренда" => _viewOrder.TotalCost,
+            "Залог" => _viewOrder.DepositTotal,
+            _ => _viewOrder.TotalCost + _viewOrder.DepositTotal
+        };
+    }
+    
+    private sealed class PaymentFormModel
+    {
+        public Guid? PaymentTypeId { get; set; }
+        public Guid? PaymentMethodId { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; } = DateTime.Now;
+        public string? Comment { get; set; }
     }
 }

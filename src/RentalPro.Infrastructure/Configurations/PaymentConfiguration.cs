@@ -81,6 +81,25 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder
             .Property(x => x.DeletedAt)
             .HasColumnName("deleted_at");
+        
+        builder
+            .Property(x => x.FiscalReceiptId)
+            .HasColumnName("fiscal_receipt_id")
+            .HasMaxLength(100);
+
+        builder
+            .Property(x => x.FiscalStatus)
+            .HasColumnName("fiscal_status")
+            .HasMaxLength(50);
+
+        builder
+            .Property(x => x.FiscalizedAt)
+            .HasColumnName("fiscalized_at");
+
+        builder
+            .Property(x => x.FiscalErrorMessage)
+            .HasColumnName("fiscal_error_message")
+            .HasMaxLength(500);
 
         builder
             .HasOne<Order>()

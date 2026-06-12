@@ -58,6 +58,10 @@ public static class DependencyInjection
         services.AddScoped<ITransferActDocumentService, TransferActDocumentService>();
         services.AddScoped<IReturnActDocumentService, ReturnActDocumentService>();
         
+        services.AddScoped<IFiscalReceiptService, TestOrangeDataFiscalReceiptService>();
+        
+        services.AddScoped<IFiscalReceiptService, TestOrangeDataFiscalReceiptService>();
+        services.AddScoped<IPaymentsRepository, PaymentsRepository>();
         return services;
     }
 }

@@ -42,12 +42,19 @@ public sealed class Payment : AuditableEntity<PaymentId>
     public Money Amount { get; private set; }
 
     public Comment? Comment { get; private set; }
+    
+    public string? FiscalReceiptId { get; private set; }
+
+    public string? FiscalStatus { get; private set; }
+
+    public DateTime? FiscalizedAt { get; private set; }
+
+    public string? FiscalErrorMessage { get; private set; }
 
     public static Result<Payment, Error> Create(
         Guid orderId,
         Guid paymentMethodId,
         Guid paymentTypeId,
-        Guid? fineId,
         DateTime paymentDate,
         decimal amount,
         string? comment)
@@ -141,5 +148,26 @@ public sealed class Payment : AuditableEntity<PaymentId>
             return result.Error;
 
         return result.Value;
+    }
+    
+    public void MarkFiscalized(
+        string receiptId,
+        string status,
+        DateTime fiscalizedAt)
+    {
+        FiscalReceiptId = receiptId;
+        FiscalStatus = status;
+        FiscalizedAt = fiscalizedAt;
+        FiscalErrorMessage = null;
+
+        MarkUpdated();
+    }
+
+    public void MarkFiscalizationFailed(string errorMessage)
+    {
+        FiscalStatus = "Failed";
+        FiscalErrorMessage = errorMessage;
+
+        MarkUpdated();
     }
 }

@@ -330,6 +330,25 @@ namespace RentalPro.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("deleted_at");
 
+                    b.Property<string>("FiscalErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("fiscal_error_message");
+
+                    b.Property<string>("FiscalReceiptId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("fiscal_receipt_id");
+
+                    b.Property<string>("FiscalStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("fiscal_status");
+
+                    b.Property<DateTime?>("FiscalizedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("fiscalized_at");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("order_id");

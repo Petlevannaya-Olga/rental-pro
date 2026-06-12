@@ -12,10 +12,9 @@ public static class PaymentTypeSeeder
 
         var names = new[]
         {
-            "Предоплата",
-            "Полная оплата",
-            "Постоплата",
-            "Оплата при получении"
+            "Аренда",
+            "Залог",
+            "Возврат залога"
         };
 
         foreach (var name in names)

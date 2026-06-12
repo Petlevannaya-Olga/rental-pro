@@ -48,5 +48,6 @@ builder.Services.AddScoped<CustomersService>();
 builder.Services.AddScoped<FakeCustomerGeneratorService>();
 builder.Services.AddScoped<FakeOrderGeneratorService>();
 builder.Services.AddScoped<OrdersService>();
+builder.Services.AddScoped<PaymentsService>();
 
 await builder.Build().RunAsync();

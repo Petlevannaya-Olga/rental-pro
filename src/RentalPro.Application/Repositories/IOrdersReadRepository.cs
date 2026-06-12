@@ -1,6 +1,8 @@
 using CSharpFunctionalExtensions;
 using RentalPro.Contracts.Orders;
+using RentalPro.Contracts.Payments;
 using RentalPro.Domain.Orders;
+using RentalPro.Domain.Payments;
 using RentalPro.Shared;
 
 namespace RentalPro.Application.Repositories;
@@ -54,5 +56,9 @@ public interface IOrdersReadRepository
     Task<Result<ReturnActDto, Errors>> GetReturnActDataAsync(
         OrderId orderId,
         DateOnly actDate,
+        CancellationToken cancellationToken = default);
+    
+    Task<Result<PaymentFiscalizationDto, Errors>> GetPaymentFiscalizationDataAsync(
+        PaymentId paymentId,
         CancellationToken cancellationToken = default);
 }
