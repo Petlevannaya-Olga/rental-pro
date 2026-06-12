@@ -5,6 +5,7 @@ using RentalPro.Application.Orders.DeleteOrderCommand;
 using RentalPro.Application.Orders.ExportOrdersQuery;
 using RentalPro.Application.Orders.ExportRentalContractPdfQuery;
 using RentalPro.Application.Orders.ExportRentalContractQuery;
+using RentalPro.Application.Orders.ExportReturnActQuery;
 using RentalPro.Application.Orders.ExportTransferActQuery;
 using RentalPro.Application.Orders.GetOrderByIdQuery;
 using RentalPro.Application.Orders.GetOrderDocumentsQuery;
@@ -34,6 +35,7 @@ public sealed class OrdersController(
     IQueryHandler<byte[], ExportRentalContractPdfQuery> exportRentalContractPdfHandler,
     IQueryHandler<byte[], ExportRentalContractQuery> exportRentalContractHandler,
     IQueryHandler<IReadOnlyList<OrderDocumentDto>, GetOrderDocumentsQuery> getOrderDocumentsHandler,
+    IQueryHandler<byte[], ExportReturnActQuery> exportReturnActHandler,
     IQueryHandler<byte[], ExportTransferActQuery> exportTransferActHandler)
     : ControllerBase
 {
@@ -305,5 +307,28 @@ public sealed class OrdersController(
             result.Value,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             $"transfer_act_{date:yyyyMMdd}_{DateTime.Now:yyyyMMdd_HHmmss}.docx");
+    }
+    
+    [HttpGet("{id:guid}/return-act")]
+    public async Task<IActionResult> DownloadReturnAct(
+        Guid id,
+        [FromQuery] DateOnly date,
+        CancellationToken cancellationToken)
+    {
+        var query = new ExportReturnActQuery(
+            OrderId.Restore(id),
+            date);
+
+        var result = await exportReturnActHandler.Handle(
+            query,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return File(
+            result.Value,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            $"return_act_{date:yyyyMMdd}_{DateTime.Now:yyyyMMdd_HHmmss}.docx");
     }
 }

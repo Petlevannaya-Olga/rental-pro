@@ -12,7 +12,6 @@ public static class OrderStatusesSeeder
 
         var names = new[]
         {
-            "Новый",
             "Подтвержден",
             "Выдан",
             "Возвращен",

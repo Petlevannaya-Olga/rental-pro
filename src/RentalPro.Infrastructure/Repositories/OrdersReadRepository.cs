@@ -72,6 +72,29 @@ public sealed class OrdersReadRepository(
         decimal DepositAmount,
         string? Comment);
 
+    private sealed record ReturnActHeaderSqlDto(
+        Guid OrderId,
+        string ContractNumber,
+        DateTime ContractDate,
+        string UserFullName,
+        string CustomerFullName,
+        string CustomerPassport,
+        string CustomerAddress,
+        string CustomerPhone,
+        string CustomerEmail);
+
+    private sealed record ReturnActItemSqlDto(
+        Guid OrderItemId,
+        Guid ToolId,
+        string ToolName,
+        string InventoryNumber,
+        string SerialNumber,
+        DateTime StartDate,
+        DateTime PlannedReturnDate,
+        DateTime ActualReturnedDate,
+        string? ReturnCondition,
+        string? DamageComment);
+
     public async Task<Result<PagedResult<OrderDto>, Errors>> GetPagedAsync(
         string? search,
         OrderStatusId? statusId,
@@ -651,6 +674,170 @@ public sealed class OrdersReadRepository(
         }
     }
 
+    public async Task<Result<ReturnActDto, Errors>> GetReturnActDataAsync(
+        OrderId orderId,
+        DateOnly actDate,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var headerSql = """
+                            SELECT
+                                o.id AS OrderId,
+                                o.number AS ContractNumber,
+                                o.order_date AS ContractDate,
+
+                                CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+
+                                CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+                                CONCAT_WS(' ', c.passport_series, c.passport_number) AS CustomerPassport,
+
+                                CONCAT(
+                                    c.postal_code,
+                                    N', ',
+                                    c.region,
+                                    N', ',
+                                    c.city,
+                                    N', ',
+                                    c.street,
+                                    N', д. ',
+                                    c.house,
+                                    CASE
+                                        WHEN c.building IS NULL OR LTRIM(RTRIM(c.building)) = N''
+                                            THEN N''
+                                        ELSE CONCAT(N', корп. ', c.building)
+                                    END,
+                                    CASE
+                                        WHEN c.apartment IS NULL OR LTRIM(RTRIM(c.apartment)) = N''
+                                            THEN N''
+                                        ELSE CONCAT(N', кв./офис ', c.apartment)
+                                    END
+                                ) AS CustomerAddress,
+
+                                c.phone_number AS CustomerPhone,
+                                c.email AS CustomerEmail
+
+                            FROM orders o
+                            INNER JOIN customers c ON c.id = o.customer_id
+                            INNER JOIN users u ON u.id = o.user_id
+                            WHERE o.id = @orderId
+                              AND o.deleted_at IS NULL
+                              AND c.deleted_at IS NULL
+                              AND u.deleted_at IS NULL
+                            """;
+
+            var header = await dbContext.Database
+                .SqlQueryRaw<ReturnActHeaderSqlDto>(
+                    headerSql,
+                    CreateParameter("@orderId", orderId.Value))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (header is null)
+            {
+                return CommonErrors.NotFound(
+                        "order.not.found",
+                        "Заказ не найден",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            var itemsSql = """
+                           SELECT
+                               oi.id AS OrderItemId,
+                               t.id AS ToolId,
+                               t.name AS ToolName,
+                               t.inventory_number AS InventoryNumber,
+                               t.serial_number AS SerialNumber,
+
+                               oi.start_date AS StartDate,
+                               oi.planned_return_date AS PlannedReturnDate,
+                               oi.actual_returned_date AS ActualReturnedDate,
+
+                               oi.return_condition AS ReturnCondition,
+                               oi.damage_comment AS DamageComment
+
+                           FROM order_items oi
+                           INNER JOIN tools t ON t.id = oi.tool_id
+                           WHERE oi.order_id = @orderId
+                             AND oi.actual_returned_date = @actDate
+                             AND oi.actual_returned_date IS NOT NULL
+                             AND oi.deleted_at IS NULL
+                             AND t.deleted_at IS NULL
+                           ORDER BY t.name
+                           """;
+
+            var items = await dbContext.Database
+                .SqlQueryRaw<ReturnActItemSqlDto>(
+                    itemsSql,
+                    CreateParameter("@orderId", orderId.Value),
+                    CreateParameter("@actDate", actDate.ToDateTime(TimeOnly.MinValue)))
+                .ToListAsync(cancellationToken);
+
+            if (items.Count == 0)
+            {
+                return CommonErrors.NotFound(
+                        "return.act.items.not.found",
+                        "На выбранную дату возврата нет инструментов",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            var actItems = items
+                .Select(item => new ReturnActItemDto(
+                    OrderItemId: item.OrderItemId,
+                    ToolId: item.ToolId,
+                    ToolName: item.ToolName,
+                    InventoryNumber: item.InventoryNumber,
+                    SerialNumber: item.SerialNumber,
+                    StartDate: DateOnly.FromDateTime(item.StartDate),
+                    PlannedReturnDate: DateOnly.FromDateTime(item.PlannedReturnDate),
+                    ActualReturnedDate: DateOnly.FromDateTime(item.ActualReturnedDate),
+                    ReturnCondition: string.IsNullOrWhiteSpace(item.ReturnCondition)
+                        ? "Исправно"
+                        : item.ReturnCondition,
+                    DamageComment: string.IsNullOrWhiteSpace(item.DamageComment)
+                        ? "Отсутствуют"
+                        : item.DamageComment))
+                .ToList();
+
+            var act = new ReturnActDto(
+                OrderId: header.OrderId,
+                ActNumber: $"ACT-RET-{header.ContractNumber}-{actDate:yyyyMMdd}",
+                ActDate: actDate,
+                ContractNumber: header.ContractNumber,
+                ContractDate: DateOnly.FromDateTime(header.ContractDate),
+                UserFullName: header.UserFullName,
+                Customer: new CustomerContractDto(
+                    FullName: header.CustomerFullName,
+                    Passport: header.CustomerPassport,
+                    Address: header.CustomerAddress,
+                    Phone: header.CustomerPhone,
+                    Email: header.CustomerEmail),
+                Items: actItems);
+
+            return act;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.return.act.data.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get return act data for order {OrderId} and date {ActDate}",
+                orderId.Value,
+                actDate);
+
+            return CommonErrors.Db(
+                    "get.return.act.data.from.db.exception",
+                    "Failed to get return act data")
+                .ToErrors();
+        }
+    }
+
     private static SearchData CreateSearchData(string? search)
     {
         var searchText = string.IsNullOrWhiteSpace(search)
@@ -731,13 +918,14 @@ public sealed class OrdersReadRepository(
                       UNION
 
                       SELECT DISTINCT
-                          oi.planned_return_date AS Date,
+                          oi.actual_returned_date AS Date,
                           3 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
                       WHERE oi.order_id = @orderId
                         AND oi.deleted_at IS NULL
                         AND t.deleted_at IS NULL
+                        AND oi.actual_returned_date IS NOT NULL
 
                       ORDER BY Date, Type
                       """;

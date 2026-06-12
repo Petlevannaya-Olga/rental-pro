@@ -440,10 +440,9 @@
                                         </td>
 
                                         <td>
-                                            <input type="date"
-                                                   class="filter-select date-input"
-                                                   @bind="tool.StartDate"
-                                                   @bind:after="RecalculateOrder"/>
+                                            <span>
+                                                @_newOrder.OrderDate.ToString("dd.MM.yyyy")
+                                            </span>
                                         </td>
 
                                         <td>
@@ -1184,7 +1183,8 @@
                                         {
                                             <button class="icon-button"
                                                     type="button"
-                                                    title="Акт возврата будет добавлен позже">
+                                                    title="Скачать DOCX"
+                                                    @onclick="() => DownloadReturnActAsync(document.Date.Value)">
                                                 <i class="bi bi-file-earmark-word"></i>
                                             </button>
                                         }
@@ -1398,7 +1398,7 @@
     private int _orderToolsCurrentPage = 1;
 
     private bool _isLoadingViewOrder;
-    
+
     private IReadOnlyList<OrderDocumentDto> _orderDocuments = [];
 
     private IEnumerable<OrderToolFormModel> PagedOrderTools =>
@@ -1617,7 +1617,7 @@
         }
 
         _viewOrder = result.Value;
-        
+
         await LoadOrderDocumentsAsync(_viewOrder.Id);
     }
 
@@ -1954,11 +1954,11 @@
         }
 
         var statusId = _selectedStatusId
-                       ?? _orderStatuses.FirstOrDefault(x => x.Name == "Новый")?.Id;
+                       ?? _orderStatuses.FirstOrDefault(x => x.Name == "Подтвержден")?.Id;
 
         if (statusId is null)
         {
-            NotificationService.Error("Статус заказа «Новый» не найден");
+            NotificationService.Error("Статус заказа «Подтвержден» не найден");
             return;
         }
 
@@ -1974,7 +1974,7 @@
                     ToolId: x.ToolId,
                     RentalPricePerDay: x.RentalPricePerDay,
                     DepositAmount: x.DepositAmount,
-                    StartDate: x.StartDate,
+                    StartDate: _newOrder.OrderDate,
                     PlannedReturnDate: x.EndDate))
                 .ToList());
 
@@ -2163,6 +2163,11 @@
 
     private void RecalculateOrder()
     {
+        foreach (var tool in _newOrder.Tools)
+        {
+            tool.StartDate = _newOrder.OrderDate;
+        }
+
         _newOrder.TotalAmount = _newOrder.Tools.Sum(x => x.TotalAmount);
         _newOrder.DepositAmount = _newOrder.Tools.Sum(x => x.DepositAmount);
 
@@ -2171,7 +2176,7 @@
 
         if (_newOrder.Tools.Count > 0)
         {
-            _newOrder.StartDate = _newOrder.Tools.Min(x => x.StartDate);
+            _newOrder.StartDate = _newOrder.OrderDate;
             _newOrder.EndDate = _newOrder.Tools.Max(x => x.EndDate);
         }
     }
@@ -2389,7 +2394,7 @@
 
         return $"{start:dd.MM} — {end:dd.MM}";
     }
-    
+
     private async Task OpenSelectedOrderView()
     {
         if (_selectedOrder is null)
@@ -2401,7 +2406,7 @@
 
         await OpenViewModal(order);
     }
-    
+
     private async Task DownloadContractAsync()
     {
         if (_viewOrder is null)
@@ -2420,7 +2425,7 @@
 
         NotificationService.Success("Договор успешно сформирован");
     }
-    
+
     private async Task DownloadContractPdfAsync()
     {
         if (_viewOrder is null)
@@ -2439,7 +2444,7 @@
 
         NotificationService.Success("PDF договора успешно сформирован");
     }
-    
+
     private async Task DownloadTransferActAsync(DateOnly date)
     {
         if (_viewOrder is null)
@@ -2460,7 +2465,7 @@
 
         NotificationService.Success("Акт выдачи успешно сформирован");
     }
-    
+
     private async Task LoadOrderDocumentsAsync(Guid orderId)
     {
         var result = await OrdersService.GetDocumentsAsync(orderId);
@@ -2473,5 +2478,26 @@
         }
 
         _orderDocuments = result.Value;
+    }
+
+    private async Task DownloadReturnActAsync(DateOnly date)
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var result = await OrdersService.ExportReturnActAsync(
+            _viewOrder.Id,
+            date);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Акт возврата успешно сформирован");
     }
 }

@@ -14,10 +14,8 @@ public static class ToolStatusesSeeder
         {
             "Доступен",
             "В аренде",
-            "Забронирован",
-            "На обслуживании",
             "На ремонте",
-            "Списан"
+            "Забронирован"
         };
 
         foreach (var name in names)

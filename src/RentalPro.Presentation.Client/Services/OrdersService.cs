@@ -618,4 +618,50 @@ public sealed class OrdersService(
                 "Не удалось загрузить документы заказа");
         }
     }
+    
+    public async Task<Result<bool, Errors>> ExportReturnActAsync(
+        Guid orderId,
+        DateOnly date,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var url = $"api/orders/{orderId}/return-act?date={date:yyyy-MM-dd}";
+
+            var response = await httpClient.GetAsync(
+                url,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось сформировать акт возврата",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "return.act.export.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var bytes = await response.Content
+                .ReadAsByteArrayAsync(cancellationToken);
+
+            await jsRuntime.InvokeVoidAsync(
+                "downloadFile",
+                cancellationToken,
+                $"return_act_{date:yyyyMMdd}.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                bytes);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "return.act.export.failed",
+                "Не удалось сформировать акт возврата");
+        }
+    }
 }

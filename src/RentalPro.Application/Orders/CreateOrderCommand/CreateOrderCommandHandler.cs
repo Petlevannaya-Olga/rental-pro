@@ -27,7 +27,7 @@ public sealed class CreateOrderCommandHandler(
 
         using var transaction = transactionResult.Value;
 
-        var rentedStatusNameResult = ToolStatusName.Create("В аренде");
+        var rentedStatusNameResult = ToolStatusName.Create("Забронирован");
 
         if (rentedStatusNameResult.IsFailure)
         {

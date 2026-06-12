@@ -50,4 +50,9 @@ public interface IOrdersReadRepository
         OrderId orderId,
         DateOnly actDate,
         CancellationToken cancellationToken = default);
+    
+    Task<Result<ReturnActDto, Errors>> GetReturnActDataAsync(
+        OrderId orderId,
+        DateOnly actDate,
+        CancellationToken cancellationToken = default);
 }
