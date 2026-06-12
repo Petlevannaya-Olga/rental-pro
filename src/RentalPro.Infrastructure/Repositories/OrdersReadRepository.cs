@@ -14,6 +14,22 @@ public sealed class OrdersReadRepository(
     ILogger<OrdersReadRepository> logger)
     : IOrdersReadRepository
 {
+    private sealed record OrderDetailsHeaderDto(
+        Guid Id,
+        string Number,
+        Guid CustomerId,
+        string CustomerFullName,
+        Guid UserId,
+        string UserFullName,
+        Guid StatusId,
+        string StatusName,
+        DateTime OrderDate,
+        string? Comment,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt,
+        decimal TotalCost,
+        decimal DepositTotal);
+
     public async Task<Result<PagedResult<OrderDto>, Errors>> GetPagedAsync(
         string? search,
         OrderStatusId? statusId,
@@ -29,52 +45,26 @@ public sealed class OrdersReadRepository(
     {
         try
         {
-            page = page < 1 ? 1 : page;
-            pageSize = pageSize is < 1 or > 100 ? 10 : pageSize;
+            page = NormalizePage(page);
+            pageSize = NormalizePageSize(pageSize);
 
-            var searchText = string.IsNullOrWhiteSpace(search)
-                ? null
-                : search.Trim();
-
-            var searchPattern = searchText is null
-                ? null
-                : $"%{searchText}%";
-
-            var fullNameSearchPattern = searchText is null
-                ? null
-                : $"%{searchText.Replace(" ", "%")}%";
-
+            var searchData = CreateSearchData(search);
             var orderBy = GetOrderBy(sortBy, descending);
             var offset = (page - 1) * pageSize;
 
-            var countSql = $"""
-                            SELECT COUNT(*) AS Value
-                            {FromClause}
-                            {WhereClause}
-                            """;
-
-            var totalCount = await dbContext.Database
-                .SqlQueryRaw<int>(
-                    countSql,
-                    CreateParameter("@search", searchText),
-                    CreateParameter("@searchPattern", searchPattern),
-                    CreateParameter("@fullNameSearchPattern", fullNameSearchPattern),
-                    CreateParameter("@statusId", statusId?.Value),
-                    CreateParameter("@startFrom", startFrom),
-                    CreateParameter("@startTo", startTo),
-                    CreateParameter("@endFrom", endFrom),
-                    CreateParameter("@endTo", endTo))
-                .SingleAsync(cancellationToken);
+            var totalCount = await GetOrdersCountAsync(
+                searchData,
+                statusId,
+                startFrom,
+                startTo,
+                endFrom,
+                endTo,
+                cancellationToken);
 
             var sql = $"""
                        SELECT
                            o.id AS Id,
-                           CONCAT(
-                               N'ORD-',
-                               FORMAT(o.order_date, 'yyyy'),
-                               N'-',
-                               RIGHT(CONCAT(N'000', ROW_NUMBER() OVER (ORDER BY o.created_at)), 3)
-                           ) AS Number,
+                           o.number AS Number,
 
                            o.customer_id AS CustomerId,
                            CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
@@ -107,16 +97,15 @@ public sealed class OrdersReadRepository(
             var orders = await dbContext.Database
                 .SqlQueryRaw<OrderDto>(
                     sql,
-                    CreateParameter("@search", searchText),
-                    CreateParameter("@searchPattern", searchPattern),
-                    CreateParameter("@fullNameSearchPattern", fullNameSearchPattern),
-                    CreateParameter("@statusId", statusId?.Value),
-                    CreateParameter("@startFrom", startFrom),
-                    CreateParameter("@startTo", startTo),
-                    CreateParameter("@endFrom", endFrom),
-                    CreateParameter("@endTo", endTo),
-                    CreateParameter("@offset", offset),
-                    CreateParameter("@pageSize", pageSize))
+                    CreateFilterParameters(
+                        searchData,
+                        statusId,
+                        startFrom,
+                        startTo,
+                        endFrom,
+                        endTo,
+                        CreateParameter("@offset", offset),
+                        CreateParameter("@pageSize", pageSize)))
                 .ToListAsync(cancellationToken);
 
             return new PagedResult<OrderDto>(
@@ -138,6 +127,66 @@ public sealed class OrdersReadRepository(
             return CommonErrors.Db(
                     "get.orders.page.from.db.exception",
                     "Failed to get orders page")
+                .ToErrors();
+        }
+    }
+
+    public async Task<Result<OrderDetailsDto, Errors>> GetByIdAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var headerResult = await GetOrderDetailsHeaderAsync(
+                orderId,
+                cancellationToken);
+
+            if (headerResult.IsFailure)
+                return headerResult.Error;
+
+            var itemsResult = await GetOrderDetailsItemsAsync(
+                orderId,
+                cancellationToken);
+
+            if (itemsResult.IsFailure)
+                return itemsResult.Error;
+
+            var header = headerResult.Value;
+            var items = itemsResult.Value;
+
+            return new OrderDetailsDto(
+                Id: header.Id,
+                Number: header.Number,
+                CustomerId: header.CustomerId,
+                CustomerFullName: header.CustomerFullName,
+                UserId: header.UserId,
+                UserFullName: header.UserFullName,
+                StatusId: header.StatusId,
+                StatusName: header.StatusName,
+                OrderDate: header.OrderDate,
+                Comment: header.Comment,
+                CreatedAt: header.CreatedAt,
+                UpdatedAt: header.UpdatedAt,
+                TotalCost: header.TotalCost,
+                DepositTotal: header.DepositTotal,
+                Items: items);
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.order.by.id.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get order by id {OrderId}",
+                orderId.Value);
+
+            return CommonErrors.Db(
+                    "get.order.by.id.from.db.exception",
+                    "Failed to get order by id")
                 .ToErrors();
         }
     }
@@ -195,37 +244,33 @@ public sealed class OrdersReadRepository(
     {
         try
         {
-            var searchText = string.IsNullOrWhiteSpace(search)
-                ? null
-                : search.Trim();
-
-            var searchPattern = searchText is null
-                ? null
-                : $"%{searchText}%";
-
-            var fullNameSearchPattern = searchText is null
-                ? null
-                : $"%{searchText.Replace(" ", "%")}%";
-
+            var searchData = CreateSearchData(search);
             var orderBy = GetOrderBy(sortBy, descending);
 
             var sql = $"""
                        SELECT
                            o.id AS Id,
-                           CONCAT(N'ORD-', FORMAT(o.order_date, 'yyyy'), N'-', RIGHT(CONCAT(N'000', ROW_NUMBER() OVER (ORDER BY o.created_at)), 3)) AS Number,
+                           o.number AS Number,
+
                            o.customer_id AS CustomerId,
-                           CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerName,
+                           CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+
                            o.user_id AS UserId,
-                           CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserName,
+                           CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+
                            o.status_id AS StatusId,
                            os.name AS StatusName,
+
+                           ISNULL(oa.ItemsCount, 0) AS ItemsCount,
+                           ISNULL(oa.ToolsNames, N'') AS ToolsNames,
+
                            o.order_date AS OrderDate,
                            oa.StartDate AS StartDate,
-                           oa.PlannedReturnDate AS PlannedReturnDate,
-                           oa.ToolNames AS ToolNames,
-                           oa.ItemsCount AS ItemsCount,
-                           o.total_cost AS TotalCost,
-                           o.deposit_total AS DepositTotal,
+                           oa.NearestReturnDate AS PlannedReturnDate,
+
+                           ISNULL(oa.TotalCost, 0) AS TotalCost,
+                           ISNULL(oa.DepositTotal, 0) AS DepositTotal,
+
                            o.comment AS Comment,
                            o.created_at AS CreatedAt,
                            o.updated_at AS UpdatedAt
@@ -237,14 +282,13 @@ public sealed class OrdersReadRepository(
             var orders = await dbContext.Database
                 .SqlQueryRaw<OrderDto>(
                     sql,
-                    CreateParameter("@search", searchText),
-                    CreateParameter("@searchPattern", searchPattern),
-                    CreateParameter("@fullNameSearchPattern", fullNameSearchPattern),
-                    CreateParameter("@statusId", statusId?.Value),
-                    CreateParameter("@startFrom", startFrom),
-                    CreateParameter("@startTo", startTo),
-                    CreateParameter("@endFrom", endFrom),
-                    CreateParameter("@endTo", endTo))
+                    CreateFilterParameters(
+                        searchData,
+                        statusId,
+                        startFrom,
+                        startTo,
+                        endFrom,
+                        endTo))
                 .ToListAsync(cancellationToken);
 
             return orders;
@@ -266,49 +310,182 @@ public sealed class OrdersReadRepository(
         }
     }
 
-    private const string FromClause = """
-                                  FROM orders o
-                                  INNER JOIN customers c ON c.id = o.customer_id
-                                  INNER JOIN users u ON u.id = o.user_id
-                                  INNER JOIN order_statuses os ON os.id = o.status_id
-                                  OUTER APPLY
-                                  (
-                                      SELECT
-                                          COUNT(oi.id) AS ItemsCount,
-                                          STRING_AGG(t.name, N', ') AS ToolsNames,
-                                          MIN(oi.start_date) AS StartDate,
-                                          MIN(oi.planned_return_date) AS NearestReturnDate,
-                                          SUM(oi.deposit_amount) AS DepositTotal,
-                                          SUM(
-                                              oi.rental_price_per_day *
-                                              DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
-                                          ) AS TotalCost
-                                      FROM order_items oi
-                                      INNER JOIN tools t ON t.id = oi.tool_id
-                                      WHERE oi.order_id = o.id
-                                        AND oi.deleted_at IS NULL
-                                        AND t.deleted_at IS NULL
-                                  ) oa
-                                  """;
+    private async Task<int> GetOrdersCountAsync(
+        SearchData searchData,
+        OrderStatusId? statusId,
+        DateOnly? startFrom,
+        DateOnly? startTo,
+        DateOnly? endFrom,
+        DateOnly? endTo,
+        CancellationToken cancellationToken)
+    {
+        var countSql = $"""
+                        SELECT COUNT(*) AS Value
+                        {FromClause}
+                        {WhereClause}
+                        """;
 
-private const string WhereClause = """
-                                   WHERE o.deleted_at IS NULL
-                                     AND c.deleted_at IS NULL
-                                     AND u.deleted_at IS NULL
-                                     AND os.deleted_at IS NULL
-                                     AND (
-                                         @search IS NULL
-                                         OR CONVERT(nvarchar(36), o.id) LIKE @searchPattern
-                                         OR CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) LIKE @fullNameSearchPattern
-                                         OR CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) LIKE @fullNameSearchPattern
-                                         OR oa.ToolsNames LIKE @searchPattern
-                                     )
-                                     AND (@statusId IS NULL OR o.status_id = @statusId)
-                                     AND (@startFrom IS NULL OR oa.StartDate >= @startFrom)
-                                     AND (@startTo IS NULL OR oa.StartDate <= @startTo)
-                                     AND (@endFrom IS NULL OR oa.NearestReturnDate >= @endFrom)
-                                     AND (@endTo IS NULL OR oa.NearestReturnDate <= @endTo)
-                                   """;
+        return await dbContext.Database
+            .SqlQueryRaw<int>(
+                countSql,
+                CreateFilterParameters(
+                    searchData,
+                    statusId,
+                    startFrom,
+                    startTo,
+                    endFrom,
+                    endTo))
+            .SingleAsync(cancellationToken);
+    }
+
+    private async Task<Result<OrderDetailsHeaderDto, Errors>> GetOrderDetailsHeaderAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken)
+    {
+        var sql = """
+                  SELECT
+                      o.id AS Id,
+                      o.number AS Number,
+
+                      o.customer_id AS CustomerId,
+                      CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+
+                      o.user_id AS UserId,
+                      CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+
+                      o.status_id AS StatusId,
+                      os.name AS StatusName,
+
+                      o.order_date AS OrderDate,
+                      o.comment AS Comment,
+                      o.created_at AS CreatedAt,
+                      o.updated_at AS UpdatedAt,
+
+                      ISNULL(oa.TotalCost, 0) AS TotalCost,
+                      ISNULL(oa.DepositTotal, 0) AS DepositTotal
+
+                  FROM orders o
+                  INNER JOIN customers c ON c.id = o.customer_id
+                  INNER JOIN users u ON u.id = o.user_id
+                  INNER JOIN order_statuses os ON os.id = o.status_id
+                  OUTER APPLY
+                  (
+                      SELECT
+                          SUM(
+                              oi.rental_price_per_day *
+                              DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                          ) AS TotalCost,
+                          SUM(oi.deposit_amount) AS DepositTotal
+                      FROM order_items oi
+                      WHERE oi.order_id = o.id
+                        AND oi.deleted_at IS NULL
+                  ) oa
+                  WHERE o.id = @orderId
+                    AND o.deleted_at IS NULL
+                    AND c.deleted_at IS NULL
+                    AND u.deleted_at IS NULL
+                    AND os.deleted_at IS NULL
+                  """;
+
+        var header = await dbContext.Database
+            .SqlQueryRaw<OrderDetailsHeaderDto>(
+                sql,
+                CreateParameter("@orderId", orderId.Value))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (header is null)
+        {
+            return CommonErrors.NotFound(
+                    "order.not.found",
+                    "Заказ не найден")
+                .ToErrors();
+        }
+
+        return header;
+    }
+
+    private async Task<Result<List<OrderDetailsItemDto>, Errors>> GetOrderDetailsItemsAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken)
+    {
+        var sql = """
+                  SELECT
+                      t.id AS ToolId,
+                      t.name AS ToolName,
+
+                      oi.start_date AS StartDate,
+                      oi.planned_return_date AS PlannedReturnDate,
+
+                      oi.rental_price_per_day AS RentalPricePerDay,
+                      oi.deposit_amount AS DepositAmount,
+
+                      oi.rental_price_per_day *
+                      DATEDIFF(DAY, oi.start_date, oi.planned_return_date) AS TotalAmount
+                  FROM order_items oi
+                  INNER JOIN tools t ON t.id = oi.tool_id
+                  WHERE oi.order_id = @orderId
+                    AND oi.deleted_at IS NULL
+                    AND t.deleted_at IS NULL
+                  ORDER BY t.name
+                  """;
+
+        return await dbContext.Database
+            .SqlQueryRaw<OrderDetailsItemDto>(
+                sql,
+                CreateParameter("@orderId", orderId.Value))
+            .ToListAsync(cancellationToken);
+    }
+
+    private static SearchData CreateSearchData(string? search)
+    {
+        var searchText = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        return new SearchData(
+            SearchText: searchText,
+            SearchPattern: searchText is null
+                ? null
+                : $"%{searchText}%",
+            FullNameSearchPattern: searchText is null
+                ? null
+                : $"%{searchText.Replace(" ", "%")}%");
+    }
+
+    private static SqlParameter[] CreateFilterParameters(
+        SearchData searchData,
+        OrderStatusId? statusId,
+        DateOnly? startFrom,
+        DateOnly? startTo,
+        DateOnly? endFrom,
+        DateOnly? endTo,
+        params SqlParameter[] additionalParameters)
+    {
+        return
+        [
+            CreateParameter("@search", searchData.SearchText),
+            CreateParameter("@searchPattern", searchData.SearchPattern),
+            CreateParameter("@fullNameSearchPattern", searchData.FullNameSearchPattern),
+            CreateParameter("@statusId", statusId?.Value),
+            CreateParameter("@startFrom", startFrom),
+            CreateParameter("@startTo", startTo),
+            CreateParameter("@endFrom", endFrom),
+            CreateParameter("@endTo", endTo),
+            ..additionalParameters
+        ];
+    }
+
+    private static int NormalizePage(int page)
+    {
+        return page < 1 ? 1 : page;
+    }
+
+    private static int NormalizePageSize(int pageSize)
+    {
+        return pageSize is < 1 or > 100
+            ? 10
+            : pageSize;
+    }
 
     private static SqlParameter CreateParameter(
         string name,
@@ -327,7 +504,7 @@ private const string WhereClause = """
 
         return sortBy?.ToLowerInvariant() switch
         {
-            "number" => $"ORDER BY o.created_at {direction}",
+            "number" => $"ORDER BY o.number {direction}",
             "customer" => $"ORDER BY c.last_name {direction}, c.first_name {direction}, c.middle_name {direction}",
             "user" => $"ORDER BY u.last_name {direction}, u.first_name {direction}, u.middle_name {direction}",
             "status" => $"ORDER BY os.name {direction}",
@@ -349,4 +526,53 @@ private const string WhereClause = """
             _ => "ORDER BY o.created_at DESC"
         };
     }
+
+    private sealed record SearchData(
+        string? SearchText,
+        string? SearchPattern,
+        string? FullNameSearchPattern);
+
+    private const string FromClause = """
+                                      FROM orders o
+                                      INNER JOIN customers c ON c.id = o.customer_id
+                                      INNER JOIN users u ON u.id = o.user_id
+                                      INNER JOIN order_statuses os ON os.id = o.status_id
+                                      OUTER APPLY
+                                      (
+                                          SELECT
+                                              COUNT(oi.id) AS ItemsCount,
+                                              STRING_AGG(t.name, N', ') AS ToolsNames,
+                                              MIN(oi.start_date) AS StartDate,
+                                              MIN(oi.planned_return_date) AS NearestReturnDate,
+                                              SUM(oi.deposit_amount) AS DepositTotal,
+                                              SUM(
+                                                  oi.rental_price_per_day *
+                                                  DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                                              ) AS TotalCost
+                                          FROM order_items oi
+                                          INNER JOIN tools t ON t.id = oi.tool_id
+                                          WHERE oi.order_id = o.id
+                                            AND oi.deleted_at IS NULL
+                                            AND t.deleted_at IS NULL
+                                      ) oa
+                                      """;
+
+    private const string WhereClause = """
+                                       WHERE o.deleted_at IS NULL
+                                         AND c.deleted_at IS NULL
+                                         AND u.deleted_at IS NULL
+                                         AND os.deleted_at IS NULL
+                                         AND (
+                                             @search IS NULL
+                                             OR o.number LIKE @searchPattern
+                                             OR CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) LIKE @fullNameSearchPattern
+                                             OR CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) LIKE @fullNameSearchPattern
+                                             OR oa.ToolsNames LIKE @searchPattern
+                                         )
+                                         AND (@statusId IS NULL OR o.status_id = @statusId)
+                                         AND (@startFrom IS NULL OR oa.StartDate >= @startFrom)
+                                         AND (@startTo IS NULL OR oa.StartDate <= @startTo)
+                                         AND (@endFrom IS NULL OR oa.NearestReturnDate >= @endFrom)
+                                         AND (@endTo IS NULL OR oa.NearestReturnDate <= @endTo)
+                                       """;
 }

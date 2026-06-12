@@ -3,6 +3,7 @@ using RentalPro.Application.Orders.CompleteOrderCommand;
 using RentalPro.Application.Orders.CreateOrderCommand;
 using RentalPro.Application.Orders.DeleteOrderCommand;
 using RentalPro.Application.Orders.ExportOrdersQuery;
+using RentalPro.Application.Orders.GetOrderByIdQuery;
 using RentalPro.Application.Orders.GetOrdersQuery;
 using RentalPro.Application.Orders.GetOrderStatsQuery;
 using RentalPro.Application.Orders.UpdateOrderCommand;
@@ -23,7 +24,8 @@ public sealed class OrdersController(
     ICommandHandler<UpdateOrderItemRentalPeriodCommand> updateRentalPeriodHandler,
     ICommandHandler<CompleteOrderCommand> completeOrderHandler,
     ICommandHandler<DeleteOrderCommand> deleteOrderHandler,
-    IQueryHandler<byte[], ExportOrdersQuery> exportOrdersHandler)
+    IQueryHandler<byte[], ExportOrdersQuery> exportOrdersHandler,
+    IQueryHandler<OrderDetailsDto, GetOrderByIdQuery> queryHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -194,5 +196,22 @@ public sealed class OrdersController(
             result.Value,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "orders.xlsx");
+    }
+    
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetOrderByIdQuery(id);
+
+        var result = await queryHandler.Handle(
+            query,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
     }
 }

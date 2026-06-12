@@ -393,4 +393,48 @@ public sealed class OrdersService(
 
         return content.ExtractErrorMessage(defaultMessage);
     }
+    
+    public async Task<Result<OrderDetailsDto, Errors>> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/orders/{id}",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось загрузить заказ",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "get.order.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var order = await response.Content
+                .ReadFromJsonAsync<OrderDetailsDto>(cancellationToken);
+
+            if (order is null)
+            {
+                return CommonErrors.Failure(
+                        "order.details.is.null",
+                        "Не удалось получить заказ")
+                    .ToErrors();
+            }
+
+            return order;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.order.by.id.was.cancelled")
+                .ToErrors();
+        }
+    }
 }

@@ -10,9 +10,6 @@
 @using RentalPro.Contracts.OrderStatuses
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
-@using RentalPro.Contracts.OrderStatuses
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject OrderStatusesService OrderStatusesService
@@ -127,7 +124,66 @@
 
         </div>
 
-        @if (_orders.Count == 0)
+        @if (_isLoading)
+        {
+            <table class="users-table">
+                <thead>
+                <tr>
+                    <th>Заказ</th>
+                    <th>Клиент</th>
+                    <th>Статус</th>
+                    <th>Инструменты</th>
+                    <th>Ближайший возврат</th>
+                    <th>Сумма</th>
+                    <th>Залог</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                @for (var i = 0; i < PageSize; i++)
+                {
+                    <tr>
+                        <td>
+                            <div class="skeleton-lines">
+                                <div class="skeleton skeleton-line wide"></div>
+                                <div class="skeleton skeleton-line small"></div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-badge"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-dot"></div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (_orders.Count == 0)
         {
             <div class="table-empty">Заказы не найдены</div>
         }
@@ -137,31 +193,31 @@
                 <thead>
                 <tr>
                     <th class="sortable-column" @onclick='() => ChangeSort("number")'>
-                        Номер <i class="bi bi-arrow-down-up"></i>
+                        Заказ <i class="bi bi-arrow-down-up"></i>
                     </th>
 
                     <th class="sortable-column" @onclick='() => ChangeSort("customer")'>
                         Клиент <i class="bi bi-arrow-down-up"></i>
                     </th>
 
-                    <th class="sortable-column" @onclick='() => ChangeSort("tool")'>
-                        Инструмент <i class="bi bi-arrow-down-up"></i>
+                    <th class="sortable-column" @onclick='() => ChangeSort("status")'>
+                        Статус <i class="bi bi-arrow-down-up"></i>
                     </th>
 
-                    <th class="sortable-column" @onclick='() => ChangeSort("start")'>
-                        Начало <i class="bi bi-arrow-down-up"></i>
+                    <th class="sortable-column" @onclick='() => ChangeSort("itemscount")'>
+                        Инструменты <i class="bi bi-arrow-down-up"></i>
                     </th>
 
-                    <th class="sortable-column" @onclick='() => ChangeSort("end")'>
-                        Окончание <i class="bi bi-arrow-down-up"></i>
+                    <th class="sortable-column" @onclick='() => ChangeSort("plannedreturndate")'>
+                        Ближайший возврат <i class="bi bi-arrow-down-up"></i>
                     </th>
 
-                    <th class="sortable-column" @onclick='() => ChangeSort("amount")'>
+                    <th class="sortable-column" @onclick='() => ChangeSort("totalcost")'>
                         Сумма <i class="bi bi-arrow-down-up"></i>
                     </th>
 
-                    <th class="sortable-column" @onclick='() => ChangeSort("status")'>
-                        Статус <i class="bi bi-arrow-down-up"></i>
+                    <th class="sortable-column" @onclick='() => ChangeSort("deposittotal")'>
+                        Залог <i class="bi bi-arrow-down-up"></i>
                     </th>
 
                     <th></th>
@@ -174,20 +230,36 @@
                     <tr>
                         <td>
                             <strong>@order.Number</strong>
-                            <span class="table-subtitle">@order.CreatedAt.ToString("dd.MM.yyyy")</span>
+                            <span class="table-subtitle">
+                        @order.OrderDate.ToString("dd.MM.yyyy")
+                    </span>
                         </td>
 
                         <td>@order.CustomerFullName</td>
-                        <td>Информация об инструментах</td>
-                        <td>Дата</td>
-                        <td>Дата</td>
-                        <td>0 ₽</td>
 
                         <td>
-                            <span class="@GetOrderStatusClass(order.StatusName)">
-                                @order.StatusName
-                            </span>
+                    <span class="@GetOrderStatusClass(order.StatusName)">
+                        @order.StatusName
+                    </span>
                         </td>
+
+                        <td>@order.ItemsCount шт.</td>
+
+                        <td>
+                            @if (order.PlannedReturnDate.HasValue)
+                            {
+                                <span class="@GetReturnDateClass(order)">
+                            @order.PlannedReturnDate.Value.ToString("dd.MM.yyyy")
+                        </span>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </td>
+
+                        <td>@order.TotalCost.ToString("N0") ₽</td>
+                        <td>@order.DepositTotal.ToString("N0") ₽</td>
 
                         <td class="actions-cell">
                             <button class="icon-button"
@@ -226,7 +298,7 @@
                     </button>
                 </div>
 
-                <button class="menu-item" @onclick="OpenViewModal">
+                <button class="menu-item" @onclick="OpenSelectedOrderView">
                     <i class="bi bi-eye"></i>
                     Просмотр
                 </button>
@@ -944,6 +1016,307 @@
             </div>
         </div>
     }
+
+    @if (_isViewModalOpen && _viewOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="order-view-modal compact" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Просмотр заказа</h3>
+
+                        <p>
+                            Заказ № @_viewOrder.Number
+                            от @_viewOrder.OrderDate.ToString("dd.MM.yyyy")
+                        </p>
+
+                        @if (_viewOrder.UpdatedAt.HasValue)
+                        {
+                            <span class="order-updated">
+                            Изменён: @_viewOrder.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm")
+                        </span>
+                        }
+                        else
+                        {
+                            <span class="order-updated">
+                            Не изменялся
+                        </span>
+                        }
+                    </div>
+
+                    <div class="modal-header-actions">
+
+                    <span class="@GetOrderStatusClass(_viewOrder.StatusName)">
+                        @_viewOrder.StatusName
+                    </span>
+
+                        <button type="button"
+                                @onclick="CloseViewModal">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+
+                    </div>
+                </div>
+
+                <div class="order-selected-grid">
+
+                    <button class="order-selected-card compact clickable"
+                            type="button"
+                            @onclick="OpenCustomerInfo">
+
+                        <div class="order-selected-icon customer">
+                            <i class="bi bi-person"></i>
+                        </div>
+
+                        <div class="order-selected-content">
+                            <span>Клиент</span>
+
+                            <strong>
+                                @_viewOrder.CustomerFullName
+                            </strong>
+
+                            <p>
+                                Нажмите для просмотра информации
+                            </p>
+                        </div>
+
+                    </button>
+
+                    <button class="order-selected-card compact clickable"
+                            type="button"
+                            @onclick="OpenManagerInfo">
+
+                        <div class="order-selected-icon customer">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+
+                        <div class="order-selected-content">
+                            <span>Менеджер</span>
+
+                            <strong>
+                                @_viewOrder.UserFullName
+                            </strong>
+
+                            <p>
+                                Нажмите для просмотра информации
+                            </p>
+                        </div>
+
+                    </button>
+
+                </div>
+
+                <div class="order-extra-grid">
+
+                    @if (!string.IsNullOrWhiteSpace(_viewOrder.Comment))
+                    {
+                        <div class="order-extra-card">
+
+                            <div class="order-extra-title">
+                                <div class="order-extra-icon blue">
+                                    <i class="bi bi-chat-left-text"></i>
+                                </div>
+
+                                <div>
+                                    <span>Комментарий</span>
+                                </div>
+                            </div>
+
+                            <p class="order-comment-text">
+                                @_viewOrder.Comment
+                            </p>
+
+                        </div>
+                    }
+
+                    <div class="order-extra-card @(string.IsNullOrWhiteSpace(_viewOrder.Comment) ? "wide" : null)">
+
+                        <div class="order-extra-title">
+                            <div class="order-extra-icon blue">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+
+                            <div>
+                                <span>Документы</span>
+                            </div>
+                        </div>
+
+                        <div class="order-documents-list">
+
+                            <div class="order-document-row">
+                                <div>
+                                    <strong>Договор аренды</strong>
+                                </div>
+
+                                <div class="document-actions">
+                                    <button class="icon-button"
+                                            type="button"
+                                            title="Просмотр">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+
+                                    <button class="icon-button"
+                                            type="button"
+                                            title="Скачать">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="order-document-row">
+                                <div>
+                                    <strong>Акт приёма-передачи</strong>
+                                </div>
+
+                                <div class="document-actions">
+                                    <button class="icon-button"
+                                            type="button"
+                                            title="Просмотр">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+
+                                    <button class="icon-button"
+                                            type="button"
+                                            title="Скачать">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="order-section order-tools-section">
+                    <table class="users-table order-tools-period-table">
+                        <thead>
+                        <tr>
+                            <th>Инструмент</th>
+                            <th>Начало аренды</th>
+                            <th>Окончание аренды</th>
+                            <th>Дней</th>
+                            <th>Аренда</th>
+                            <th>Залог</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        @foreach (var item in _viewOrder.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.ToolName</strong>
+                                    <span class="table-subtitle">
+                                            @($"{item.RentalPricePerDay:N0} ₽ / день")
+                                        </span>
+                                </td>
+
+                                <td>@item.StartDate.ToString("dd.MM.yyyy")</td>
+                                <td>@item.PlannedReturnDate.ToString("dd.MM.yyyy")</td>
+                                <td>@GetItemRentalDays(item)</td>
+                                <td>@($"{item.TotalAmount:N0} ₽")</td>
+                                <td>@($"{item.DepositAmount:N0} ₽")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="order-summary-card compact">
+
+                    <div class="order-summary-row">
+
+                        <div class="order-summary-item">
+                            <div class="summary-icon compact blue">
+                                <i class="bi bi-calendar-range"></i>
+                            </div>
+
+                            <div>
+                                <span>Период</span>
+
+                                <strong>
+                                    @GetOrderPeriodText(_viewOrder)
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="order-summary-item">
+                            <div class="summary-icon compact green">
+                                <i class="bi bi-tools"></i>
+                            </div>
+
+                            <div>
+                                <span>Инструментов</span>
+
+                                <strong>
+                                    @_viewOrder.Items.Count шт.
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="order-summary-item">
+                            <div class="summary-icon compact yellow">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+
+                            <div>
+                                <span>Залог</span>
+
+                                <strong>
+                                    @_viewOrder.DepositTotal.ToString("N0") ₽
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="order-summary-item">
+                            <div class="summary-icon compact green">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+
+                            <div>
+                                <span>Аренда</span>
+
+                                <strong>
+                                    @_viewOrder.TotalCost.ToString("N0") ₽
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="order-summary-total">
+                            <span>К оплате</span>
+
+                            <strong>
+                                @((_viewOrder.TotalCost + _viewOrder.DepositTotal).ToString("N0"))₽
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    @if (_viewOrder.StatusName == "Активен")
+                    {
+                        <button class="primary-button"
+                                type="button">
+                            <i class="bi bi-arrow-return-left"></i>
+                            Возврат
+                        </button>
+                    }
+
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseViewModal">
+                        Закрыть
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
     <CreateCustomerModal IsOpen="_isCreateCustomerModalOpen"
                          IsOpenChanged="CloseCreateCustomerModal"
                          CustomerCreated="OnCustomerCreated"/>
@@ -952,6 +1325,7 @@
 @code
 {
     private Guid? _currentUserId;
+    private Guid? _openedActionsOrderId;
 
     private const int PageSize = 5;
     private const int CustomerPageSize = 3;
@@ -976,7 +1350,7 @@
     private bool _isToolSelectModalOpen;
 
     private OrderDto? _selectedOrder;
-    private OrderDto? _viewOrder;
+    private OrderDetailsDto? _viewOrder;
     private OrderDto? _deletingOrder;
 
     private CancellationTokenSource? _customerSearchCts;
@@ -1013,6 +1387,8 @@
     private const int OrderToolsPageSize = 3;
 
     private int _orderToolsCurrentPage = 1;
+
+    private bool _isLoadingViewOrder;
 
     private IEnumerable<OrderToolFormModel> PagedOrderTools =>
         _newOrder.Tools
@@ -1097,6 +1473,7 @@
     private async Task LoadOrdersAsync()
     {
         _isLoading = true;
+        await InvokeAsync(StateHasChanged);
 
         var request = new GetOrdersRequest(
             Search: _search,
@@ -1166,14 +1543,16 @@
         _currentPage = 1;
     }
 
-    private void OnSearchChanged(ChangeEventArgs e)
+    private async Task OnSearchChanged(ChangeEventArgs e)
     {
         _search = e.Value?.ToString();
         _activeStatsFilter = "custom";
         _currentPage = 1;
+
+        await LoadOrdersAsync();
     }
 
-    private void ChangeSort(string sortBy)
+    private async Task ChangeSort(string sortBy)
     {
         if (_sortBy == sortBy)
             _descending = !_descending;
@@ -1184,6 +1563,8 @@
         }
 
         _currentPage = 1;
+
+        await LoadOrdersAsync();
     }
 
     private string GetStatsCardClass(string filter)
@@ -1205,22 +1586,33 @@
         _isActionsMenuOpen = false;
     }
 
-    private void OpenViewModal()
+    private async Task OpenViewModal(OrderDto order)
     {
-        if (_selectedOrder is null)
-            return;
-
-        _viewOrder = _selectedOrder;
-
-        CloseActionsMenu();
-
         _isViewModalOpen = true;
+        _isLoadingViewOrder = true;
+
+        var result = await OrdersService.GetByIdAsync(order.Id);
+
+        _isLoadingViewOrder = false;
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(
+                result.Error.FirstOrDefault()?.Message
+                ?? "Не удалось загрузить заказ");
+
+            _isViewModalOpen = false;
+            return;
+        }
+
+        _viewOrder = result.Value;
     }
 
     private void CloseViewModal()
     {
-        _viewOrder = null;
         _isViewModalOpen = false;
+        _isLoadingViewOrder = false;
+        _viewOrder = null;
     }
 
     private void OpenCreateModal()
@@ -1588,11 +1980,6 @@
 
         await LoadOrdersAsync();
     }
-    
-    private string GenerateOrderNumber()
-    {
-        return $"ORD-{DateTime.Now:yyyy}-{DateTime.Now:HHmmss}";
-    }
 
     private void OpenDeleteModal()
     {
@@ -1904,5 +2291,100 @@
         }
 
         _currentUserId = id;
+    }
+
+    private string GetReturnDateClass(OrderDto order)
+    {
+        if (!order.PlannedReturnDate.HasValue)
+            return "return-date";
+
+        if (order.StatusName != "Активен")
+            return "return-date";
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        if (order.PlannedReturnDate.Value < today)
+            return "return-date overdue";
+
+        if (order.PlannedReturnDate.Value <= today.AddDays(3))
+            return "return-date warning";
+
+        return "return-date";
+    }
+
+    private void ToggleActions(Guid orderId)
+    {
+        _openedActionsOrderId =
+            _openedActionsOrderId == orderId
+                ? null
+                : orderId;
+    }
+
+    private void OpenEditModal(OrderDto order)
+    {
+        NotificationService.Info(
+            "Редактирование заказа будет доступно в следующих версиях");
+    }
+
+    private static string GetOrderRentalDays(OrderDto order)
+    {
+        if (order.StartDate is null ||
+            order.PlannedReturnDate is null)
+        {
+            return "—";
+        }
+
+        var days = order.PlannedReturnDate.Value.DayNumber
+                   - order.StartDate.Value.DayNumber;
+
+        if (days <= 0)
+            days = 1;
+
+        return $"{days} дн.";
+    }
+
+    private void OpenCustomerInfo()
+    {
+        NotificationService.Info(
+            "Просмотр информации о клиенте будет добавлен позже");
+    }
+
+    private void OpenManagerInfo()
+    {
+        NotificationService.Info(
+            "Просмотр информации о сотруднике будет добавлен позже");
+    }
+
+    private static string GetItemRentalDays(OrderDetailsItemDto item)
+    {
+        var days = item.PlannedReturnDate.DayNumber - item.StartDate.DayNumber;
+
+        if (days <= 0)
+            days = 1;
+
+        return $"{days} дн.";
+    }
+
+    private static string GetOrderPeriodText(OrderDetailsDto order)
+    {
+        if (order.Items.Count == 0)
+            return "—";
+
+        var start = order.Items.Min(x => x.StartDate);
+        var end = order.Items.Max(x => x.PlannedReturnDate);
+
+        return $"{start:dd.MM} — {end:dd.MM}";
+    }
+    
+    private async Task OpenSelectedOrderView()
+    {
+        if (_selectedOrder is null)
+            return;
+
+        var order = _selectedOrder;
+
+        CloseActionsMenu();
+
+        await OpenViewModal(order);
     }
 }

@@ -33,4 +33,8 @@ public interface IOrdersReadRepository
         string? sortBy,
         bool descending,
         CancellationToken cancellationToken);
+    
+    Task<Result<OrderDetailsDto, Errors>> GetByIdAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken);
 }
