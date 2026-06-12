@@ -437,4 +437,96 @@ public sealed class OrdersService(
                 .ToErrors();
         }
     }
+    
+    public async Task<Result<bool, Errors>> ExportContractAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/orders/{orderId}/contract",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось сформировать договор",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "contract.export.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var bytes = await response.Content
+                .ReadAsByteArrayAsync(cancellationToken);
+
+            await jsRuntime.InvokeVoidAsync(
+                "downloadFile",
+                cancellationToken,
+                $"contract_{DateTime.Now:yyyyMMdd_HHmmss}.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                bytes);
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("contract.export.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "contract.export.failed",
+                "Не удалось сформировать договор");
+        }
+    }
+    
+    public async Task<Result<bool, Errors>> ExportContractPdfAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/orders/{orderId}/contract/pdf",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось сформировать PDF договора",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "contract.pdf.export.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var bytes = await response.Content
+                .ReadAsByteArrayAsync(cancellationToken);
+
+            await jsRuntime.InvokeVoidAsync(
+                "downloadFile",
+                cancellationToken,
+                $"contract_{DateTime.Now:yyyyMMdd_HHmmss}.pdf",
+                "application/pdf",
+                bytes);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "contract.pdf.export.failed",
+                "Не удалось сформировать PDF договора");
+        }
+    }
 }

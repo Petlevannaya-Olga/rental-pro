@@ -1152,13 +1152,15 @@
                                 <div class="document-actions">
                                     <button class="icon-button"
                                             type="button"
-                                            title="Просмотр">
+                                            title="Просмотр"
+                                            @onclick="DownloadContractPdfAsync">
                                         <i class="bi bi-eye"></i>
                                     </button>
 
                                     <button class="icon-button"
                                             type="button"
-                                            title="Скачать">
+                                            title="Скачать"
+                                            @onclick="DownloadContractAsync">
                                         <i class="bi bi-download"></i>
                                     </button>
                                 </div>
@@ -2386,5 +2388,43 @@
         CloseActionsMenu();
 
         await OpenViewModal(order);
+    }
+    
+    private async Task DownloadContractAsync()
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var result = await OrdersService.ExportContractAsync(_viewOrder.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Договор успешно сформирован");
+    }
+    
+    private async Task DownloadContractPdfAsync()
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var result = await OrdersService.ExportContractPdfAsync(_viewOrder.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("PDF договора успешно сформирован");
     }
 }

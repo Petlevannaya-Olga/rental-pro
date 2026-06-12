@@ -30,6 +30,20 @@ public sealed class OrdersReadRepository(
         decimal TotalCost,
         decimal DepositTotal);
 
+    private sealed record RentalContractSqlDto(
+        Guid OrderId,
+        string ContractNumber,
+        DateTime ContractDate,
+        string UserFullName,
+        string CustomerFullName,
+        string CustomerPassport,
+        string CustomerAddress,
+        string CustomerPhone,
+        string CustomerEmail,
+        decimal TotalRentalPrice,
+        decimal TotalDeposit,
+        decimal TotalAmount);
+
     public async Task<Result<PagedResult<OrderDto>, Errors>> GetPagedAsync(
         string? search,
         OrderStatusId? statusId,
@@ -575,4 +589,121 @@ public sealed class OrdersReadRepository(
                                          AND (@endFrom IS NULL OR oa.NearestReturnDate >= @endFrom)
                                          AND (@endTo IS NULL OR oa.NearestReturnDate <= @endTo)
                                        """;
+
+    public async Task<Result<RentalContractDto, Errors>> GetContractDataAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var sql = """
+                      SELECT
+                          o.id AS OrderId,
+                          o.number AS ContractNumber,
+                          o.order_date AS ContractDate,
+
+                          CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+
+                          CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+                          CONCAT_WS(' ', c.passport_series, c.passport_number) AS CustomerPassport,
+                          CONCAT(
+                          c.postal_code,
+                          N', ',
+                          c.region,
+                          N', ',
+                          c.city,
+                          N', ',
+                          c.street,
+                          N', д. ',
+                          c.house,
+                          CASE
+                              WHEN c.building IS NULL OR LTRIM(RTRIM(c.building)) = N''
+                                  THEN N''
+                              ELSE CONCAT(N', корп. ', c.building)
+                          END,
+                          CASE
+                              WHEN c.apartment IS NULL OR LTRIM(RTRIM(c.apartment)) = N''
+                                  THEN N''
+                              ELSE CONCAT(N', кв./офис ', c.apartment)
+                          END
+                      ) AS CustomerAddress,
+                          c.phone_number AS CustomerPhone,
+                          c.email AS CustomerEmail,
+
+                          ISNULL(oa.TotalRentalPrice, 0) AS TotalRentalPrice,
+                          ISNULL(oa.TotalDeposit, 0) AS TotalDeposit,
+                          ISNULL(oa.TotalRentalPrice, 0) + ISNULL(oa.TotalDeposit, 0) AS TotalAmount
+
+                      FROM orders o
+                      INNER JOIN customers c ON c.id = o.customer_id
+                      INNER JOIN users u ON u.id = o.user_id
+                      OUTER APPLY
+                      (
+                          SELECT
+                              SUM(
+                                  oi.rental_price_per_day *
+                                  DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                              ) AS TotalRentalPrice,
+                              SUM(oi.deposit_amount) AS TotalDeposit
+                          FROM order_items oi
+                          WHERE oi.order_id = o.id
+                            AND oi.deleted_at IS NULL
+                      ) oa
+                      WHERE o.id = @orderId
+                        AND o.deleted_at IS NULL
+                        AND c.deleted_at IS NULL
+                        AND u.deleted_at IS NULL
+                      """;
+
+            var data = await dbContext.Database
+                .SqlQueryRaw<RentalContractSqlDto>(
+                    sql,
+                    CreateParameter("@orderId", orderId.Value))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (data is null)
+            {
+                return CommonErrors.NotFound(
+                        "contract.was.not.found",
+                        "Договор не найден",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            var contract = new RentalContractDto(
+                OrderId: data.OrderId,
+                ContractNumber: data.ContractNumber,
+                ContractDate: DateOnly.FromDateTime(data.ContractDate),
+                UserFullName: data.UserFullName,
+                Customer: new CustomerContractDto(
+                    FullName: data.CustomerFullName,
+                    Passport: data.CustomerPassport,
+                    Address: data.CustomerAddress,
+                    Phone: data.CustomerPhone,
+                    Email: data.CustomerEmail),
+                TotalRentalPrice: data.TotalRentalPrice,
+                TotalDeposit: data.TotalDeposit,
+                TotalAmount: data.TotalAmount);
+
+            return contract;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.contract.data.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get rental contract data by order id {OrderId}",
+                orderId.Value);
+
+            return CommonErrors.Db(
+                    "get.contract.data.from.db.exception",
+                    "Failed to get rental contract data")
+                .ToErrors();
+        }
+    }
 }

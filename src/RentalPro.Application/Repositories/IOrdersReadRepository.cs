@@ -37,4 +37,8 @@ public interface IOrdersReadRepository
     Task<Result<OrderDetailsDto, Errors>> GetByIdAsync(
         OrderId orderId,
         CancellationToken cancellationToken);
+    
+    Task<Result<RentalContractDto, Errors>> GetContractDataAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken = default);
 }

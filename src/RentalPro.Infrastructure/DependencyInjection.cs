@@ -53,6 +53,9 @@ public static class DependencyInjection
         services.AddScoped<IExcelExportService<CustomerDto>, CustomersExportService>();
         services.AddScoped<IExcelExportService<OrderDto>, OrdersExportService>();
         
+        services.AddScoped<IContractDocumentService, ContractDocumentService>();
+        services.AddScoped<IContractPdfService, ContractPdfService>();
+        
         return services;
     }
 }

@@ -3,12 +3,15 @@ using RentalPro.Application.Orders.CompleteOrderCommand;
 using RentalPro.Application.Orders.CreateOrderCommand;
 using RentalPro.Application.Orders.DeleteOrderCommand;
 using RentalPro.Application.Orders.ExportOrdersQuery;
+using RentalPro.Application.Orders.ExportRentalContractPdfQuery;
+using RentalPro.Application.Orders.ExportRentalContractQuery;
 using RentalPro.Application.Orders.GetOrderByIdQuery;
 using RentalPro.Application.Orders.GetOrdersQuery;
 using RentalPro.Application.Orders.GetOrderStatsQuery;
 using RentalPro.Application.Orders.UpdateOrderCommand;
 using RentalPro.Application.Orders.UpdateOrderItemRentalPeriodCommand;
 using RentalPro.Contracts.Orders;
+using RentalPro.Domain.Orders;
 using RentalPro.Shared;
 using RentalPro.Shared.Abstractions;
 
@@ -25,7 +28,9 @@ public sealed class OrdersController(
     ICommandHandler<CompleteOrderCommand> completeOrderHandler,
     ICommandHandler<DeleteOrderCommand> deleteOrderHandler,
     IQueryHandler<byte[], ExportOrdersQuery> exportOrdersHandler,
-    IQueryHandler<OrderDetailsDto, GetOrderByIdQuery> queryHandler)
+    IQueryHandler<OrderDetailsDto, GetOrderByIdQuery> queryHandler,
+    IQueryHandler<byte[], ExportRentalContractPdfQuery> exportRentalContractPdfHandler,
+    IQueryHandler<byte[], ExportRentalContractQuery> exportRentalContractHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -213,5 +218,47 @@ public sealed class OrdersController(
             return BadRequest(result.Error);
 
         return Ok(result.Value);
+    }
+    
+    [HttpGet("{id:guid}/contract")]
+    public async Task<IActionResult> DownloadContract(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var query = new ExportRentalContractQuery(
+            OrderId.Restore(id));
+
+        var result = await exportRentalContractHandler.Handle(
+            query,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return File(
+            result.Value,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            $"contract_{DateTime.Now:yyyyMMdd_HHmmss}.docx");
+    }
+    
+    [HttpGet("{id:guid}/contract/pdf")]
+    public async Task<IActionResult> DownloadContractPdf(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var query = new ExportRentalContractPdfQuery(
+            OrderId.Restore(id));
+
+        var result = await exportRentalContractPdfHandler.Handle(
+            query,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return File(
+            result.Value,
+            "application/pdf",
+            $"contract_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
     }
 }

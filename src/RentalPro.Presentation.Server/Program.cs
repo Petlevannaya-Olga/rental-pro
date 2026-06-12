@@ -2,10 +2,12 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using PdfSharp.Fonts;
 using RentalPro.Application;
 using RentalPro.Infrastructure;
 using RentalPro.Infrastructure.Auth;
 using RentalPro.Infrastructure.Seeders;
+using RentalPro.Infrastructure.Services.Fonts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +59,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(); 
+
+GlobalFontSettings.FontResolver = new CustomFontResolver();
 
 var app = builder.Build();
 
