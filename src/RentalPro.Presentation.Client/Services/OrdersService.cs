@@ -529,4 +529,93 @@ public sealed class OrdersService(
                 "Не удалось сформировать PDF договора");
         }
     }
+    
+    public async Task<Result<bool, Errors>> ExportTransferActAsync(
+        Guid orderId,
+        DateOnly date,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var url = $"api/orders/{orderId}/transfer-act?date={date:yyyy-MM-dd}";
+
+            var response = await httpClient.GetAsync(
+                url,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось сформировать акт выдачи",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "transfer.act.export.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var bytes = await response.Content
+                .ReadAsByteArrayAsync(cancellationToken);
+
+            await jsRuntime.InvokeVoidAsync(
+                "downloadFile",
+                cancellationToken,
+                $"transfer_act_{date:yyyyMMdd}.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                bytes);
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("transfer.act.export.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "transfer.act.export.failed",
+                "Не удалось сформировать акт выдачи");
+        }
+    }
+    
+    public async Task<Result<IReadOnlyList<OrderDocumentDto>, Errors>> GetDocumentsAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/orders/{orderId}/documents",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось загрузить документы заказа",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "order.documents.load.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var documents = await response.Content
+                .ReadFromJsonAsync<IReadOnlyList<OrderDocumentDto>>(cancellationToken);
+
+            return Result.Success<IReadOnlyList<OrderDocumentDto>, Errors>(
+                documents ?? []);
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "order.documents.load.failed",
+                "Не удалось загрузить документы заказа");
+        }
+    }
 }

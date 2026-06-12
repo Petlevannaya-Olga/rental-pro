@@ -1144,47 +1144,54 @@
 
                         <div class="order-documents-list">
 
-                            <div class="order-document-row">
-                                <div>
-                                    <strong>Договор аренды</strong>
+                            @foreach (var document in _orderDocuments)
+                            {
+                                <div class="order-document-row">
+                                    <div>
+                                        <strong>@document.Title</strong>
+                                    </div>
+
+                                    <div class="document-actions">
+
+                                        @if (document.Type == OrderDocumentType.Contract)
+                                        {
+                                            <button class="icon-button"
+                                                    type="button"
+                                                    title="Скачать PDF"
+                                                    @onclick="DownloadContractPdfAsync">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                            </button>
+
+                                            <button class="icon-button"
+                                                    type="button"
+                                                    title="Скачать DOCX"
+                                                    @onclick="DownloadContractAsync">
+                                                <i class="bi bi-file-earmark-word"></i>
+                                            </button>
+                                        }
+
+                                        @if (document is { Type: OrderDocumentType.TransferAct, Date: not null })
+                                        {
+                                            <button class="icon-button"
+                                                    type="button"
+                                                    title="Скачать DOCX"
+                                                    @onclick="() => DownloadTransferActAsync(document.Date.Value)">
+                                                <i class="bi bi-file-earmark-word"></i>
+                                            </button>
+                                        }
+
+                                        @if (document is { Type: OrderDocumentType.ReturnAct, Date: not null })
+                                        {
+                                            <button class="icon-button"
+                                                    type="button"
+                                                    title="Акт возврата будет добавлен позже">
+                                                <i class="bi bi-file-earmark-word"></i>
+                                            </button>
+                                        }
+
+                                    </div>
                                 </div>
-
-                                <div class="document-actions">
-                                    <button class="icon-button"
-                                            type="button"
-                                            title="Просмотр"
-                                            @onclick="DownloadContractPdfAsync">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                    <button class="icon-button"
-                                            type="button"
-                                            title="Скачать"
-                                            @onclick="DownloadContractAsync">
-                                        <i class="bi bi-download"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="order-document-row">
-                                <div>
-                                    <strong>Акт приёма-передачи</strong>
-                                </div>
-
-                                <div class="document-actions">
-                                    <button class="icon-button"
-                                            type="button"
-                                            title="Просмотр">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                    <button class="icon-button"
-                                            type="button"
-                                            title="Скачать">
-                                        <i class="bi bi-download"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            }
 
                         </div>
 
@@ -1391,6 +1398,8 @@
     private int _orderToolsCurrentPage = 1;
 
     private bool _isLoadingViewOrder;
+    
+    private IReadOnlyList<OrderDocumentDto> _orderDocuments = [];
 
     private IEnumerable<OrderToolFormModel> PagedOrderTools =>
         _newOrder.Tools
@@ -1608,6 +1617,8 @@
         }
 
         _viewOrder = result.Value;
+        
+        await LoadOrderDocumentsAsync(_viewOrder.Id);
     }
 
     private void CloseViewModal()
@@ -1615,6 +1626,7 @@
         _isViewModalOpen = false;
         _isLoadingViewOrder = false;
         _viewOrder = null;
+        _orderDocuments = [];
     }
 
     private void OpenCreateModal()
@@ -2426,5 +2438,40 @@
         }
 
         NotificationService.Success("PDF договора успешно сформирован");
+    }
+    
+    private async Task DownloadTransferActAsync(DateOnly date)
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var result = await OrdersService.ExportTransferActAsync(
+            _viewOrder.Id,
+            date);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        NotificationService.Success("Акт выдачи успешно сформирован");
+    }
+    
+    private async Task LoadOrderDocumentsAsync(Guid orderId)
+    {
+        var result = await OrdersService.GetDocumentsAsync(orderId);
+
+        if (result.IsFailure)
+        {
+            _orderDocuments = [];
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _orderDocuments = result.Value;
     }
 }

@@ -44,6 +44,34 @@ public sealed class OrdersReadRepository(
         decimal TotalDeposit,
         decimal TotalAmount);
 
+    private sealed record OrderDocumentDateDto(
+        DateTime Date,
+        int Type);
+
+    private sealed record TransferActHeaderSqlDto(
+        Guid OrderId,
+        string ContractNumber,
+        DateTime ContractDate,
+        string UserFullName,
+        string CustomerFullName,
+        string CustomerPassport,
+        string CustomerAddress,
+        string CustomerPhone,
+        string CustomerEmail);
+
+    private sealed record TransferActItemSqlDto(
+        Guid OrderItemId,
+        Guid ToolId,
+        string ToolName,
+        string InventoryNumber,
+        string SerialNumber,
+        DateTime StartDate,
+        DateTime PlannedReturnDate,
+        int RentalDays,
+        decimal RentalPrice,
+        decimal DepositAmount,
+        string? Comment);
+
     public async Task<Result<PagedResult<OrderDto>, Errors>> GetPagedAsync(
         string? search,
         OrderStatusId? statusId,
@@ -450,6 +478,179 @@ public sealed class OrdersReadRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Result<TransferActDto, Errors>> GetTransferActDataAsync(
+        OrderId orderId,
+        DateOnly actDate,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var headerSql = """
+                            SELECT
+                                o.id AS OrderId,
+                                o.number AS ContractNumber,
+                                o.order_date AS ContractDate,
+
+                                CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+
+                                CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+                                CONCAT_WS(' ', c.passport_series, c.passport_number) AS CustomerPassport,
+
+                                CONCAT(
+                                    c.postal_code,
+                                    N', ',
+                                    c.region,
+                                    N', ',
+                                    c.city,
+                                    N', ',
+                                    c.street,
+                                    N', д. ',
+                                    c.house,
+                                    CASE
+                                        WHEN c.building IS NULL OR LTRIM(RTRIM(c.building)) = N''
+                                            THEN N''
+                                        ELSE CONCAT(N', корп. ', c.building)
+                                    END,
+                                    CASE
+                                        WHEN c.apartment IS NULL OR LTRIM(RTRIM(c.apartment)) = N''
+                                            THEN N''
+                                        ELSE CONCAT(N', кв./офис ', c.apartment)
+                                    END
+                                ) AS CustomerAddress,
+
+                                c.phone_number AS CustomerPhone,
+                                c.email AS CustomerEmail
+
+                            FROM orders o
+                            INNER JOIN customers c ON c.id = o.customer_id
+                            INNER JOIN users u ON u.id = o.user_id
+                            WHERE o.id = @orderId
+                              AND o.deleted_at IS NULL
+                              AND c.deleted_at IS NULL
+                              AND u.deleted_at IS NULL
+                            """;
+
+            var header = await dbContext.Database
+                .SqlQueryRaw<TransferActHeaderSqlDto>(
+                    headerSql,
+                    CreateParameter("@orderId", orderId.Value))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (header is null)
+            {
+                return CommonErrors.NotFound(
+                        "order.not.found",
+                        "Заказ не найден",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            var itemsSql = """
+                           SELECT
+                               oi.id AS OrderItemId,
+                               t.id AS ToolId,
+                               t.name AS ToolName,
+                               t.inventory_number AS InventoryNumber,
+                               t.serial_number AS SerialNumber,
+
+                               oi.start_date AS StartDate,
+                               oi.planned_return_date AS PlannedReturnDate,
+
+                               DATEDIFF(DAY, oi.start_date, oi.planned_return_date) AS RentalDays,
+
+                               oi.rental_price_per_day *
+                               DATEDIFF(DAY, oi.start_date, oi.planned_return_date) AS RentalPrice,
+
+                               oi.deposit_amount AS DepositAmount,
+
+                               o.comment AS Comment
+
+                           FROM order_items oi
+                           INNER JOIN orders o ON o.id = oi.order_id
+                           INNER JOIN tools t ON t.id = oi.tool_id
+                           WHERE oi.order_id = @orderId
+                             AND oi.start_date = @actDate
+                             AND oi.deleted_at IS NULL
+                             AND o.deleted_at IS NULL
+                             AND t.deleted_at IS NULL
+                           ORDER BY t.name
+                           """;
+
+            var items = await dbContext.Database
+                .SqlQueryRaw<TransferActItemSqlDto>(
+                    itemsSql,
+                    CreateParameter("@orderId", orderId.Value),
+                    CreateParameter("@actDate", actDate.ToDateTime(TimeOnly.MinValue)))
+                .ToListAsync(cancellationToken);
+
+            if (items.Count == 0)
+            {
+                return CommonErrors.NotFound(
+                        "transfer.act.items.not.found",
+                        "На выбранную дату выдачи нет инструментов",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            var actItems = items
+                .Select(item => new TransferActItemDto(
+                    OrderItemId: item.OrderItemId,
+                    ToolId: item.ToolId,
+                    ToolName: item.ToolName,
+                    InventoryNumber: item.InventoryNumber,
+                    SerialNumber: item.SerialNumber,
+                    StartDate: DateOnly.FromDateTime(item.StartDate),
+                    PlannedReturnDate: DateOnly.FromDateTime(item.PlannedReturnDate),
+                    RentalDays: item.RentalDays <= 0 ? 1 : item.RentalDays,
+                    RentalPrice: item.RentalPrice,
+                    DepositAmount: item.DepositAmount,
+                    Condition: "Исправно, без видимых повреждений",
+                    Comment: item.Comment))
+                .ToList();
+
+            var totalRentalPrice = actItems.Sum(x => x.RentalPrice);
+            var totalDeposit = actItems.Sum(x => x.DepositAmount);
+
+            var act = new TransferActDto(
+                OrderId: header.OrderId,
+                ActNumber: $"ACT-TR-{header.ContractNumber}-{actDate:yyyyMMdd}",
+                ActDate: actDate,
+                ContractNumber: header.ContractNumber,
+                ContractDate: DateOnly.FromDateTime(header.ContractDate),
+                UserFullName: header.UserFullName,
+                Customer: new CustomerContractDto(
+                    FullName: header.CustomerFullName,
+                    Passport: header.CustomerPassport,
+                    Address: header.CustomerAddress,
+                    Phone: header.CustomerPhone,
+                    Email: header.CustomerEmail),
+                TotalRentalPrice: totalRentalPrice,
+                TotalDeposit: totalDeposit,
+                Items: actItems);
+
+            return act;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.transfer.act.data.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get transfer act data for order {OrderId} and date {ActDate}",
+                orderId.Value,
+                actDate);
+
+            return CommonErrors.Db(
+                    "get.transfer.act.data.from.db.exception",
+                    "Failed to get transfer act data")
+                .ToErrors();
+        }
+    }
+
     private static SearchData CreateSearchData(string? search)
     {
         var searchText = string.IsNullOrWhiteSpace(search)
@@ -487,6 +688,117 @@ public sealed class OrdersReadRepository(
             CreateParameter("@endTo", endTo),
             ..additionalParameters
         ];
+    }
+
+    public async Task<Result<IReadOnlyList<OrderDocumentDto>, Errors>> GetDocumentsAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var orderExistsSql = """
+                                 SELECT COUNT(*) AS Value
+                                 FROM orders o
+                                 WHERE o.id = @orderId
+                                   AND o.deleted_at IS NULL
+                                 """;
+
+            var orderExists = await dbContext.Database
+                .SqlQueryRaw<int>(
+                    orderExistsSql,
+                    CreateParameter("@orderId", orderId.Value))
+                .SingleAsync(cancellationToken);
+
+            if (orderExists == 0)
+            {
+                return CommonErrors.NotFound(
+                        "order.not.found",
+                        "Заказ не найден",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            var sql = """
+                      SELECT DISTINCT
+                          oi.start_date AS Date,
+                          2 AS Type
+                      FROM order_items oi
+                      INNER JOIN tools t ON t.id = oi.tool_id
+                      WHERE oi.order_id = @orderId
+                        AND oi.deleted_at IS NULL
+                        AND t.deleted_at IS NULL
+
+                      UNION
+
+                      SELECT DISTINCT
+                          oi.planned_return_date AS Date,
+                          3 AS Type
+                      FROM order_items oi
+                      INNER JOIN tools t ON t.id = oi.tool_id
+                      WHERE oi.order_id = @orderId
+                        AND oi.deleted_at IS NULL
+                        AND t.deleted_at IS NULL
+
+                      ORDER BY Date, Type
+                      """;
+
+            var dates = await dbContext.Database
+                .SqlQueryRaw<OrderDocumentDateDto>(
+                    sql,
+                    CreateParameter("@orderId", orderId.Value))
+                .ToListAsync(cancellationToken);
+
+            var documents = new List<OrderDocumentDto>
+            {
+                new(
+                    OrderDocumentType.Contract,
+                    null,
+                    "Договор аренды")
+            };
+
+            foreach (var item in dates)
+            {
+                var date = DateOnly.FromDateTime(item.Date);
+
+                var type = (OrderDocumentType)item.Type;
+
+                var title = type switch
+                {
+                    OrderDocumentType.TransferAct =>
+                        $"Акт выдачи от {date:dd.MM.yyyy}",
+
+                    OrderDocumentType.ReturnAct =>
+                        $"Акт возврата от {date:dd.MM.yyyy}",
+
+                    _ => "Документ"
+                };
+
+                documents.Add(new OrderDocumentDto(
+                    type,
+                    date,
+                    title));
+            }
+
+            return documents;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.order.documents.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get documents for order {OrderId}",
+                orderId.Value);
+
+            return CommonErrors.Db(
+                    "get.order.documents.from.db.exception",
+                    "Failed to get order documents")
+                .ToErrors();
+        }
     }
 
     private static int NormalizePage(int page)

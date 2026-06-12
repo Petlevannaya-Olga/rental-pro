@@ -55,6 +55,7 @@ public static class DependencyInjection
         
         services.AddScoped<IContractDocumentService, ContractDocumentService>();
         services.AddScoped<IContractPdfService, ContractPdfService>();
+        services.AddScoped<ITransferActDocumentService, TransferActDocumentService>();
         
         return services;
     }

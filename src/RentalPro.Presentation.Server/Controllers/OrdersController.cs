@@ -5,7 +5,9 @@ using RentalPro.Application.Orders.DeleteOrderCommand;
 using RentalPro.Application.Orders.ExportOrdersQuery;
 using RentalPro.Application.Orders.ExportRentalContractPdfQuery;
 using RentalPro.Application.Orders.ExportRentalContractQuery;
+using RentalPro.Application.Orders.ExportTransferActQuery;
 using RentalPro.Application.Orders.GetOrderByIdQuery;
+using RentalPro.Application.Orders.GetOrderDocumentsQuery;
 using RentalPro.Application.Orders.GetOrdersQuery;
 using RentalPro.Application.Orders.GetOrderStatsQuery;
 using RentalPro.Application.Orders.UpdateOrderCommand;
@@ -30,7 +32,9 @@ public sealed class OrdersController(
     IQueryHandler<byte[], ExportOrdersQuery> exportOrdersHandler,
     IQueryHandler<OrderDetailsDto, GetOrderByIdQuery> queryHandler,
     IQueryHandler<byte[], ExportRentalContractPdfQuery> exportRentalContractPdfHandler,
-    IQueryHandler<byte[], ExportRentalContractQuery> exportRentalContractHandler)
+    IQueryHandler<byte[], ExportRentalContractQuery> exportRentalContractHandler,
+    IQueryHandler<IReadOnlyList<OrderDocumentDto>, GetOrderDocumentsQuery> getOrderDocumentsHandler,
+    IQueryHandler<byte[], ExportTransferActQuery> exportTransferActHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -202,7 +206,7 @@ public sealed class OrdersController(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "orders.xlsx");
     }
-    
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(
         Guid id,
@@ -219,7 +223,7 @@ public sealed class OrdersController(
 
         return Ok(result.Value);
     }
-    
+
     [HttpGet("{id:guid}/contract")]
     public async Task<IActionResult> DownloadContract(
         Guid id,
@@ -240,7 +244,7 @@ public sealed class OrdersController(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             $"contract_{DateTime.Now:yyyyMMdd_HHmmss}.docx");
     }
-    
+
     [HttpGet("{id:guid}/contract/pdf")]
     public async Task<IActionResult> DownloadContractPdf(
         Guid id,
@@ -260,5 +264,46 @@ public sealed class OrdersController(
             result.Value,
             "application/pdf",
             $"contract_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+    }
+
+    [HttpGet("{id:guid}/documents")]
+    public async Task<ActionResult<IReadOnlyList<OrderDocumentDto>>> GetDocuments(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetOrderDocumentsQuery(
+            OrderId.Restore(id));
+
+        var result = await getOrderDocumentsHandler.Handle(
+            query,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id:guid}/transfer-act")]
+    public async Task<IActionResult> DownloadTransferAct(
+        Guid id,
+        [FromQuery] DateOnly date,
+        CancellationToken cancellationToken)
+    {
+        var query = new ExportTransferActQuery(
+            OrderId.Restore(id),
+            date);
+
+        var result = await exportTransferActHandler.Handle(
+            query,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return File(
+            result.Value,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            $"transfer_act_{date:yyyyMMdd}_{DateTime.Now:yyyyMMdd_HHmmss}.docx");
     }
 }

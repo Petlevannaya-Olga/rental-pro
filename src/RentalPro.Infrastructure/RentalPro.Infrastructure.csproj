@@ -30,6 +30,9 @@
 
     <ItemGroup>
       <None Remove="Templates\RentalPRO_Contract.docx" />
+      <None Update="Templates\TransferAct.docx">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
