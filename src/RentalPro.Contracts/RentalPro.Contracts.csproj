@@ -10,4 +10,8 @@
       <ProjectReference Include="..\..\shared\RentalPro.Shared\RentalPro.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Orders\OrdersExportDto.cs" />
+    </ItemGroup>
+
 </Project>
