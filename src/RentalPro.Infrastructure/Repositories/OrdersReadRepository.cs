@@ -856,16 +856,23 @@ public sealed class OrdersReadRepository(
 
                                oi.start_date AS StartDate,
                                oi.planned_return_date AS PlannedReturnDate,
-                               oi.actual_returned_date AS ActualReturnedDate,
 
-                               oi.return_condition AS ReturnCondition,
-                               oi.damage_comment AS DamageComment
+                               COALESCE(
+                                   oi.actual_returned_date,
+                                   oi.planned_return_date) AS ActualReturnedDate,
+
+                               COALESCE(
+                                   oi.return_condition,
+                                   N'Осмотр при возврате') AS ReturnCondition,
+
+                               COALESCE(
+                                   oi.damage_comment,
+                                   N'Заполняется при возврате') AS DamageComment
 
                            FROM order_items oi
                            INNER JOIN tools t ON t.id = oi.tool_id
                            WHERE oi.order_id = @orderId
-                             AND oi.actual_returned_date = @actDate
-                             AND oi.actual_returned_date IS NOT NULL
+                             AND oi.planned_return_date = @actDate
                              AND oi.deleted_at IS NULL
                              AND t.deleted_at IS NULL
                            ORDER BY t.name
@@ -1098,8 +1105,8 @@ public sealed class OrdersReadRepository(
 
             var sql = """
                       SELECT DISTINCT
-                          oi.start_date AS Date,
-                          2 AS Type
+                          oi.planned_return_date AS Date,
+                          3 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
                       WHERE oi.order_id = @orderId
@@ -1109,14 +1116,13 @@ public sealed class OrdersReadRepository(
                       UNION
 
                       SELECT DISTINCT
-                          oi.actual_returned_date AS Date,
+                          COALESCE(oi.actual_returned_date, oi.planned_return_date) AS Date,
                           3 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
                       WHERE oi.order_id = @orderId
                         AND oi.deleted_at IS NULL
                         AND t.deleted_at IS NULL
-                        AND oi.actual_returned_date IS NOT NULL
 
                       ORDER BY Date, Type
                       """;
