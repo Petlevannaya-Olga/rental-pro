@@ -10,6 +10,7 @@ using RentalPro.Application.Services;
 using RentalPro.Contracts.Customers;
 using RentalPro.Contracts.Orders;
 using RentalPro.Contracts.Payments;
+using RentalPro.Contracts.Reports;
 using RentalPro.Contracts.Users;
 using RentalPro.Infrastructure.Auth;
 using RentalPro.Infrastructure.Database;
@@ -54,6 +55,12 @@ public static class DependencyInjection
         services.AddScoped<IExcelExportService<CustomerDto>, CustomersExportService>();
         services.AddScoped<IExcelExportService<OrderDto>, OrdersExportService>();
         services.AddScoped<IExcelExportService<PaymentDto>, PaymentsExportService>();
+        services.AddScoped<IExcelExportService<RevenueReportDto>, RevenueReportExportService>();
+        services.AddScoped<IExcelExportService<PopularToolReportDto>, PopularToolReportExportService>();
+        services.AddScoped<IExcelExportService<OverdueReturnReportDto>, OverdueReturnReportExportService>();
+        services.AddScoped<IExcelExportService<CustomerReportDto>, CustomerReportExportService>();
+        services.AddScoped<IExcelExportService<PaymentReportDto>, PaymentReportExportService>();
+        services.AddScoped<IExcelExportService<ToolReportDto>, ToolReportExportService>();
         
         services.AddScoped<IContractDocumentService, ContractDocumentService>();
         services.AddScoped<IContractPdfService, ContractPdfService>();
@@ -67,6 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentsReadRepository, PaymentsReadRepository>();
         
         services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
+        services.AddScoped<IReportsReadRepository, ReportsReadRepository>();
         return services;
     }
 }

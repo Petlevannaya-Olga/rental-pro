@@ -1,0 +1,38 @@
+<div class="report-card" @onclick="HandleClickAsync">
+
+    <div class="report-arrow">
+        <i class="bi bi-arrow-up-right"></i>
+    </div>
+
+    <div class="report-icon @Color">
+        <i class="@Icon"></i>
+    </div>
+
+    <div class="report-content">
+        <h3>@Title</h3>
+        <p>@Description</p>
+    </div>
+
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Icon { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Color { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public EventCallback OnOpen { get; set; }
+
+    private async Task HandleClickAsync()
+    {
+        await OnOpen.InvokeAsync();
+    }
+}

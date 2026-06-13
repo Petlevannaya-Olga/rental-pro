@@ -1,234 +1,677 @@
 ﻿@page "/reports"
 @layout AdminLayout
 
+@using CSharpFunctionalExtensions
+@using RentalPro.Contracts.Reports
+@using RentalPro.Contracts.Dashboard
 @using RentalPro.Presentation.Client.Services
+@using RentalPro.Shared
 
+@inject ReportsService ReportsService
+@inject DashboardService DashboardService
 @inject NotificationService NotificationService
 
 <div class="reports-page">
 
     <div class="reports-stats">
-        <StatCard Title="Общая выручка"
-                  Value="1 245 000 ₽"
+        <StatCard Title="Выручка за месяц"
+                  Value="@FormatMoney(_dashboard?.Stats.MonthlyRevenue ?? 0)"
                   Icon="bi bi-cash-stack"
                   Color="green" />
 
-        <StatCard Title="Активных аренд"
-                  Value="32"
+        <StatCard Title="Активных заказов"
+                  Value="@((_dashboard?.Stats.ActiveOrders ?? 0).ToString())"
                   Icon="bi bi-receipt"
                   Color="blue" />
 
-        <StatCard Title="Просрочено"
-                  Value="7"
+        <StatCard Title="Просрочено возвратов"
+                  Value="@((_dashboard?.Stats.OverdueReturnsCount ?? 0).ToString())"
                   Icon="bi bi-exclamation-triangle"
                   Color="red" />
 
-        <StatCard Title="В ремонте"
-                  Value="12"
+        <StatCard Title="Инструментов на ремонте"
+                  Value="@((_dashboard?.Stats.ToolsInRepair ?? 0).ToString())"
                   Icon="bi bi-wrench-adjustable"
                   Color="orange" />
     </div>
 
-    <div class="reports-charts">
-        <div class="report-chart-card">
-            <div class="report-chart-header">
-                <div>
-                    <h3>Выручка по месяцам</h3>
-                    <p>Динамика доходов за последние 6 месяцев</p>
-                </div>
-
-                <button class="secondary-button">
-                    <i class="bi bi-download"></i>
-                    Экспорт
-                </button>
-            </div>
-
-            <div class="bar-chart">
-                <div class="bar-item">
-                    <div class="bar" style="height: 38%;"></div>
-                    <span>Янв</span>
-                </div>
-
-                <div class="bar-item">
-                    <div class="bar" style="height: 52%;"></div>
-                    <span>Фев</span>
-                </div>
-
-                <div class="bar-item">
-                    <div class="bar" style="height: 46%;"></div>
-                    <span>Мар</span>
-                </div>
-
-                <div class="bar-item">
-                    <div class="bar" style="height: 68%;"></div>
-                    <span>Апр</span>
-                </div>
-
-                <div class="bar-item">
-                    <div class="bar" style="height: 76%;"></div>
-                    <span>Май</span>
-                </div>
-
-                <div class="bar-item">
-                    <div class="bar" style="height: 88%;"></div>
-                    <span>Июн</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="report-chart-card">
-            <div class="report-chart-header">
-                <div>
-                    <h3>Структура доходов</h3>
-                    <p>Распределение поступлений по типам</p>
-                </div>
-            </div>
-
-            <div class="donut-chart-layout">
-                <div class="donut-chart">
-                    <div class="donut-center">
-                        <strong>100%</strong>
-                        <span>доходы</span>
-                    </div>
-                </div>
-
-                <div class="donut-legend">
-                    <div>
-                        <span class="legend-dot rent"></span>
-                        Аренда — 68%
-                    </div>
-
-                    <div>
-                        <span class="legend-dot deposits"></span>
-                        Залоги — 18%
-                    </div>
-
-                    <div>
-                        <span class="legend-dot fines"></span>
-                        Штрафы — 9%
-                    </div>
-
-                    <div>
-                        <span class="legend-dot returns"></span>
-                        Прочее — 5%
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="reports-grid">
 
-        <div class="report-card" @onclick='() => OpenReport("Выручка по периодам")'>
-            <div class="report-icon green">
-                <i class="bi bi-graph-up-arrow"></i>
-            </div>
+        <ReportCard Title="Выручка по периодам"
+                    Description="Анализ поступлений от аренды за выбранный период"
+                    Icon="bi bi-graph-up-arrow"
+                    Color="green"
+                    OnOpen="@(() => OpenReportAsync(ReportType.Revenue))" />
 
-            <div class="report-content">
-                <h3>Выручка по периодам</h3>
-                <p>Анализ доходов по дням, месяцам и годам</p>
-            </div>
+        <ReportCard Title="Популярность инструментов"
+                    Description="Какие инструменты чаще всего берут в аренду"
+                    Icon="bi bi-bar-chart"
+                    Color="blue"
+                    OnOpen="@(() => OpenReportAsync(ReportType.PopularTools))" />
 
-            <div class="report-actions">
-                <button class="secondary-button">Сформировать</button>
-                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
-                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
-            </div>
-        </div>
+        <ReportCard Title="Просроченные возвраты"
+                    Description="Заказы, которые не были возвращены в срок"
+                    Icon="bi bi-clock-history"
+                    Color="red"
+                    OnOpen="@(() => OpenReportAsync(ReportType.OverdueReturns))" />
 
-        <div class="report-card" @onclick='() => OpenReport("Популярность инструментов")'>
-            <div class="report-icon blue">
-                <i class="bi bi-bar-chart"></i>
-            </div>
+        <ReportCard Title="Отчет по инструментам"
+                    Description="Инструменты, категории, производители и текущие статусы"
+                    Icon="bi bi-box-seam"
+                    Color="orange"
+                    OnOpen="@(() => OpenReportAsync(ReportType.Tools))" />
 
-            <div class="report-content">
-                <h3>Популярность инструментов</h3>
-                <p>Какие инструменты чаще всего берут в аренду</p>
-            </div>
+        <ReportCard Title="Отчет по клиентам"
+                    Description="Активность клиентов, количество заказов и суммы аренд"
+                    Icon="bi bi-people"
+                    Color="purple"
+                    OnOpen="@(() => OpenReportAsync(ReportType.Customers))" />
 
-            <div class="report-actions">
-                <button class="secondary-button">Сформировать</button>
-                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
-                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
-            </div>
-        </div>
-
-        <div class="report-card" @onclick='() => OpenReport("Просроченные возвраты")'>
-            <div class="report-icon red">
-                <i class="bi bi-clock-history"></i>
-            </div>
-
-            <div class="report-content">
-                <h3>Просроченные возвраты</h3>
-                <p>Клиенты, инструменты и сроки просрочки</p>
-            </div>
-
-            <div class="report-actions">
-                <button class="secondary-button">Сформировать</button>
-                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
-                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
-            </div>
-        </div>
-
-        <div class="report-card" @onclick='() => OpenReport("Ремонты и затраты")'>
-            <div class="report-icon orange">
-                <i class="bi bi-tools"></i>
-            </div>
-
-            <div class="report-content">
-                <h3>Ремонты и затраты</h3>
-                <p>Количество ремонтов и стоимость обслуживания</p>
-            </div>
-
-            <div class="report-actions">
-                <button class="secondary-button">Сформировать</button>
-                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
-                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
-            </div>
-        </div>
-
-        <div class="report-card" @onclick='() => OpenReport("Финансовый отчет")'>
-            <div class="report-icon cyan">
-                <i class="bi bi-wallet2"></i>
-            </div>
-
-            <div class="report-content">
-                <h3>Финансовый отчет</h3>
-                <p>Аренда, штрафы, ремонты, закупки и прибыль</p>
-            </div>
-
-            <div class="report-actions">
-                <button class="secondary-button">Сформировать</button>
-                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
-                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
-            </div>
-        </div>
-
-        <div class="report-card" @onclick='() => OpenReport("Отчет по клиентам")'>
-            <div class="report-icon purple">
-                <i class="bi bi-people"></i>
-            </div>
-
-            <div class="report-content">
-                <h3>Отчет по клиентам</h3>
-                <p>Заказы, суммы аренд и штрафы по клиентам</p>
-            </div>
-
-            <div class="report-actions">
-                <button class="secondary-button">Сформировать</button>
-                <button class="icon-button"><i class="bi bi-file-earmark-excel"></i></button>
-                <button class="icon-button"><i class="bi bi-file-earmark-pdf"></i></button>
-            </div>
-        </div>
+        <ReportCard Title="Платежи по периодам"
+                    Description="Аренда, полученные залоги и возвраты залогов"
+                    Icon="bi bi-wallet2"
+                    Color="cyan"
+                    OnOpen="@(() => OpenReportAsync(ReportType.Payments))" />
 
     </div>
 
+    
+    
+    @if (_isPeriodModalOpen)
+    {
+        <div class="actions-backdrop">
+            <div class="period-select-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Выберите период</h3>
+                        <p>@_selectedReportTitle</p>
+                    </div>
+
+                    <button type="button" @onclick="ClosePeriodModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="period-select-body">
+                    <div class="tool-form-field">
+                        <label>Дата начала</label>
+                        <input type="date" @bind="_dateFrom" />
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Дата окончания</label>
+                        <input type="date" @bind="_dateTo" />
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="ClosePeriodModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="ApplyPeriodAsync">
+                        Сформировать
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    @if (_isReportModalOpen)
+    {
+        <div class="actions-backdrop">
+            <div class="report-view-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>@_selectedReportTitle</h3>
+                        <p>Результат формирования отчёта</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseReportModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="report-view-body">
+                    @RenderReport()
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            @onclick="ExportAsync">
+                        Экспорт
+                    </button>
+
+                    <button class="primary-button"
+                            @onclick="CloseReportModal">
+                        Закрыть
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
 </div>
 
-@code
-{
-    private void OpenReport(string reportName)
+@code {
+    private bool _isReportModalOpen;
+    private bool _isPeriodModalOpen;
+    private ReportType? _pendingReport;
+    private DashboardDto? _dashboard;
+
+    private DateTime _dateFrom = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateTime _dateTo = DateTime.Today;
+
+    private bool _isLoading;
+    private ReportType? _selectedReport;
+    private string _selectedReportTitle = string.Empty;
+
+    private List<RevenueReportDto> _revenue = [];
+    private List<PopularToolReportDto> _popularTools = [];
+    private List<OverdueReturnReportDto> _overdueReturns = [];
+    private List<ToolReportDto> _tools = [];
+    private List<CustomerReportDto> _customers = [];
+    private List<PaymentReportDto> _payments = [];
+
+    protected override async Task OnInitializedAsync()
     {
-        NotificationService.Info($"Формирование отчета: {reportName}");
+        var dashboardResult = await DashboardService.GetDashboardAsync();
+
+        if (dashboardResult.IsSuccess)
+            _dashboard = dashboardResult.Value;
+    }
+
+    private async Task OpenReportAsync(ReportType reportType)
+    {
+        _selectedReportTitle = GetReportTitle(reportType);
+
+        if (ReportNeedsPeriod(reportType))
+        {
+            _pendingReport = reportType;
+            _isPeriodModalOpen = true;
+            return;
+        }
+
+        await LoadReportAsync(reportType);
+    }
+
+    private async Task LoadRevenueAsync()
+    {
+        var result = await ReportsService.GetRevenueAsync(_dateFrom, _dateTo);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось загрузить отчет по выручке");
+            return;
+        }
+
+        _revenue = result.Value;
+    }
+
+    private async Task LoadPopularToolsAsync()
+    {
+        var result = await ReportsService.GetPopularToolsAsync(_dateFrom, _dateTo);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось загрузить отчет по популярности инструментов");
+            return;
+        }
+
+        _popularTools = result.Value;
+    }
+
+    private async Task LoadOverdueReturnsAsync()
+    {
+        var result = await ReportsService.GetOverdueReturnsAsync();
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось загрузить отчет по просроченным возвратам");
+            return;
+        }
+
+        _overdueReturns = result.Value;
+    }
+
+    private async Task LoadToolsAsync()
+    {
+        var result = await ReportsService.GetToolsAsync();
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось загрузить отчет по инструментам");
+            return;
+        }
+
+        _tools = result.Value;
+    }
+
+    private async Task LoadCustomersAsync()
+    {
+        var result = await ReportsService.GetCustomersAsync(_dateFrom, _dateTo);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось загрузить отчет по клиентам");
+            return;
+        }
+
+        _customers = result.Value;
+    }
+
+    private async Task LoadPaymentsAsync()
+    {
+        var result = await ReportsService.GetPaymentsAsync(_dateFrom, _dateTo);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось загрузить отчет по платежам");
+            return;
+        }
+
+        _payments = result.Value;
+    }
+
+    private RenderFragment RenderReport() => builder =>
+    {
+        switch (_selectedReport)
+        {
+            case ReportType.Revenue:
+                builder.AddMarkupContent(0, BuildRevenueTable());
+                break;
+
+            case ReportType.PopularTools:
+                builder.AddMarkupContent(1, BuildPopularToolsTable());
+                break;
+
+            case ReportType.OverdueReturns:
+                builder.AddMarkupContent(2, BuildOverdueReturnsTable());
+                break;
+
+            case ReportType.Tools:
+                builder.AddMarkupContent(3, BuildToolsTable());
+                break;
+
+            case ReportType.Customers:
+                builder.AddMarkupContent(4, BuildCustomersTable());
+                break;
+
+            case ReportType.Payments:
+                builder.AddMarkupContent(5, BuildPaymentsTable());
+                break;
+        }
+    };
+
+    private string BuildRevenueTable()
+    {
+        if (_revenue.Count == 0)
+            return EmptyReport();
+
+        var rows = string.Join("", _revenue.Select(x => $"""
+            <tr>
+                <td>{x.Date:dd.MM.yyyy}</td>
+                <td>{x.PaymentsCount}</td>
+                <td>{FormatMoney(x.Amount)}</td>
+            </tr>
+            """));
+
+        return $"""
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Платежей</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            """;
+    }
+
+    private string BuildPopularToolsTable()
+    {
+        if (_popularTools.Count == 0)
+            return EmptyReport();
+
+        var rows = string.Join("", _popularTools.Select(x => $"""
+            <tr>
+                <td>{x.ToolName}</td>
+                <td>{x.RentalsCount}</td>
+                <td>{FormatMoney(x.TotalAmount)}</td>
+            </tr>
+            """));
+
+        return $"""
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Инструмент</th>
+                        <th>Количество аренд</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            """;
+    }
+
+    private string BuildOverdueReturnsTable()
+    {
+        if (_overdueReturns.Count == 0)
+            return EmptyReport();
+
+        var rows = string.Join("", _overdueReturns.Select(x => $"""
+            <tr>
+                <td>{x.OrderNumber}</td>
+                <td>{x.CustomerFullName}</td>
+                <td>{x.ToolsNames}</td>
+                <td>{x.PlannedReturnDate:dd.MM.yyyy}</td>
+                <td>{FormatDays(x.OverdueDays)}</td>
+            </tr>
+            """));
+
+        return $"""
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>№ заказа</th>
+                        <th>Клиент</th>
+                        <th>Инструменты</th>
+                        <th>Плановый возврат</th>
+                        <th>Просрочка</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            """;
+    }
+
+    private string BuildToolsTable()
+    {
+        if (_tools.Count == 0)
+            return EmptyReport();
+
+        var rows = string.Join("", _tools.Select(x => $"""
+            <tr>
+                <td>{x.ArticleNumber}</td>
+                <td>{x.ToolName}</td>
+                <td>{x.CategoryName}</td>
+                <td>{x.ManufacturerName}</td>
+                <td>{x.StatusName}</td>
+                <td>{FormatMoney(x.RentalPricePerDay)}</td>
+                <td>{FormatMoney(x.DepositAmount)}</td>
+            </tr>
+            """));
+
+        return $"""
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Артикул</th>
+                        <th>Инструмент</th>
+                        <th>Категория</th>
+                        <th>Производитель</th>
+                        <th>Статус</th>
+                        <th>Цена/день</th>
+                        <th>Залог</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            """;
+    }
+
+    private string BuildCustomersTable()
+    {
+        if (_customers.Count == 0)
+            return EmptyReport();
+
+        var rows = string.Join("", _customers.Select(x => $"""
+            <tr>
+                <td>{x.CustomerFullName}</td>
+                <td>{x.OrdersCount}</td>
+                <td>{FormatMoney(x.RentAmount)}</td>
+                <td>{FormatNullableDate(x.LastOrderDate)}</td>
+            </tr>
+            """));
+
+        return $"""
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Клиент</th>
+                        <th>Заказов</th>
+                        <th>Сумма аренд</th>
+                        <th>Последняя аренда</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            """;
+    }
+
+    private string BuildPaymentsTable()
+    {
+        if (_payments.Count == 0)
+            return EmptyReport();
+
+        var rows = string.Join("", _payments.Select(x => $"""
+            <tr>
+                <td>{x.PaymentType}</td>
+                <td>{x.PaymentsCount}</td>
+                <td>{FormatMoney(x.Amount)}</td>
+            </tr>
+            """));
+
+        return $"""
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Тип платежа</th>
+                        <th>Количество</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            """;
+    }
+
+    private void Export()
+    {
+        NotificationService.Info("Экспорт отчета в Excel будет добавлен следующим шагом");
+    }
+    
+    private async Task ApplyPeriodAsync()
+    {
+        if (_pendingReport is null)
+            return;
+
+        if (_dateFrom > _dateTo)
+        {
+            NotificationService.Error("Дата начала не может быть позже даты окончания");
+            return;
+        }
+
+        _isPeriodModalOpen = false;
+
+        await LoadReportAsync(_pendingReport.Value);
+
+        _pendingReport = null;
+    }
+
+    private void ClosePeriodModal()
+    {
+        _isPeriodModalOpen = false;
+        _pendingReport = null;
+    }
+
+    private static bool ReportNeedsPeriod(ReportType reportType)
+    {
+        return reportType is
+            ReportType.Revenue or
+            ReportType.PopularTools or
+            ReportType.Customers or
+            ReportType.Payments;
+    }
+    
+    private async Task LoadReportAsync(ReportType reportType)
+    {
+        ClearReportData();
+
+        _selectedReport = reportType;
+        _selectedReportTitle = GetReportTitle(reportType);
+        _isReportModalOpen = true;
+        _isLoading = true;
+
+        switch (reportType)
+        {
+            case ReportType.Revenue:
+                await LoadRevenueAsync();
+                break;
+
+            case ReportType.PopularTools:
+                await LoadPopularToolsAsync();
+                break;
+
+            case ReportType.OverdueReturns:
+                await LoadOverdueReturnsAsync();
+                break;
+
+            case ReportType.Tools:
+                await LoadToolsAsync();
+                break;
+
+            case ReportType.Customers:
+                await LoadCustomersAsync();
+                break;
+
+            case ReportType.Payments:
+                await LoadPaymentsAsync();
+                break;
+        }
+
+        _isLoading = false;
+    }
+    
+    private void ClearReportData()
+    {
+        _revenue.Clear();
+        _popularTools.Clear();
+        _overdueReturns.Clear();
+        _tools.Clear();
+        _customers.Clear();
+        _payments.Clear();
+    }
+
+    private static string GetReportTitle(ReportType reportType)
+    {
+        return reportType switch
+        {
+            ReportType.Revenue => "Выручка по периодам",
+            ReportType.PopularTools => "Популярность инструментов",
+            ReportType.OverdueReturns => "Просроченные возвраты",
+            ReportType.Tools => "Отчет по инструментам",
+            ReportType.Customers => "Отчет по клиентам",
+            ReportType.Payments => "Платежи по периодам",
+            _ => "Отчет"
+        };
+    }
+
+    private static string FormatMoney(decimal value)
+    {
+        return $"{value:N0} ₽";
+    }
+
+    private static string FormatNullableDate(DateTime? date)
+    {
+        return date?.ToString("dd.MM.yyyy") ?? "—";
+    }
+
+    private static string FormatDays(int days)
+    {
+        var abs = Math.Abs(days);
+
+        string word;
+
+        if (abs % 10 == 1 && abs % 100 != 11)
+            word = "день";
+        else if (abs % 10 >= 2 && abs % 10 <= 4 && (abs % 100 < 10 || abs % 100 >= 20))
+            word = "дня";
+        else
+            word = "дней";
+
+        return $"{abs} {word}";
+    }
+
+    private static string EmptyReport()
+    {
+        return """
+            <div class="empty-list">
+                Нет данных для отображения
+            </div>
+            """;
+    }
+    
+    private async Task ExportAsync()
+    {
+        if (_selectedReport is null)
+            return;
+
+        var result = _selectedReport.Value switch
+        {
+            ReportType.Revenue => await ReportsService.ExportRevenueAsync(_dateFrom, _dateTo),
+            ReportType.PopularTools => await ReportsService.ExportPopularToolsAsync(_dateFrom, _dateTo),
+            ReportType.OverdueReturns => await ReportsService.ExportOverdueReturnsAsync(),
+            ReportType.Tools => await ReportsService.ExportToolsAsync(),
+            ReportType.Customers => await ReportsService.ExportCustomersAsync(_dateFrom, _dateTo),
+            ReportType.Payments => await ReportsService.ExportPaymentsAsync(_dateFrom, _dateTo),
+            _ => UnitResult.Success<Errors>()
+        };
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось экспортировать отчет");
+            return;
+        }
+
+        NotificationService.Success("Отчет экспортирован");
+    }
+    
+    private void CloseReportModal()
+    {
+        if (_isLoading)
+            return;
+        
+        _isReportModalOpen = false;
+
+        _selectedReport = null;
+        _selectedReportTitle = string.Empty;
+
+        _revenue.Clear();
+        _popularTools.Clear();
+        _overdueReturns.Clear();
+        _tools.Clear();
+        _customers.Clear();
+        _payments.Clear();
+    }
+
+    private enum ReportType
+    {
+        Revenue,
+        PopularTools,
+        OverdueReturns,
+        Tools,
+        Customers,
+        Payments
     }
 }

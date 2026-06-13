@@ -50,5 +50,6 @@ builder.Services.AddScoped<FakeOrderGeneratorService>();
 builder.Services.AddScoped<OrdersService>();
 builder.Services.AddScoped<PaymentsService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ReportsService>();
 
 await builder.Build().RunAsync();
