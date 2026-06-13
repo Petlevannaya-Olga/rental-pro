@@ -1105,8 +1105,8 @@ public sealed class OrdersReadRepository(
 
             var sql = """
                       SELECT DISTINCT
-                          oi.planned_return_date AS Date,
-                          3 AS Type
+                          oi.start_date AS Date,
+                          2 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
                       WHERE oi.order_id = @orderId
@@ -1116,7 +1116,7 @@ public sealed class OrdersReadRepository(
                       UNION
 
                       SELECT DISTINCT
-                          COALESCE(oi.actual_returned_date, oi.planned_return_date) AS Date,
+                          oi.planned_return_date AS Date,
                           3 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
