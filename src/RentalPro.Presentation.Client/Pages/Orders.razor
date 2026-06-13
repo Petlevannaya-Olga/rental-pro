@@ -1309,15 +1309,6 @@
                 </div>
 
                 <div class="tool-form-actions modal-footer">
-                    @if (_viewOrder.StatusName == "Активен")
-                    {
-                        <button class="primary-button"
-                                type="button">
-                            <i class="bi bi-arrow-return-left"></i>
-                            Возврат
-                        </button>
-                    }
-
                     @if (_viewOrder.StatusName == "Выполняется")
                     {
                         <button class="primary-button"
@@ -1328,7 +1319,7 @@
                         </button>
                     }
 
-                    @if (_viewOrder.AllItemsReturned &&
+                    @if (_viewOrder.StatusName == "Ожидает возврата залога" &&
                          _viewOrder.RemainingDepositRefundAmount > 0)
                     {
                         <button class="primary-button"
@@ -1349,7 +1340,8 @@
                         </button>
                     }
 
-                    @if (_viewOrder.TotalRemainingAmount > 0)
+                    @if (_viewOrder.TotalRemainingAmount > 0 &&
+                         _viewOrder.StatusName == "Подтвержден")
                     {
                         <button class="primary-button"
                                 type="button"
