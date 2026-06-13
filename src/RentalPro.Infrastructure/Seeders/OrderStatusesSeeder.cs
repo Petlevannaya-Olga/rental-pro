@@ -18,7 +18,9 @@ public static class OrderStatusesSeeder
             "Возвращен",
             "Просрочен",
             "Отменен",
-            "Выполняется"
+            "Выполняется",
+            "Ожидает возврата залога",
+            "Завершен"
         };
 
         foreach (var name in names)

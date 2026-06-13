@@ -580,6 +580,7 @@ public sealed class OrdersReadRepository(
     {
         var sql = """
                   SELECT
+                      oi.id AS Id,
                       t.id AS ToolId,
                       t.name AS ToolName,
 
@@ -588,7 +589,7 @@ public sealed class OrdersReadRepository(
 
                       oi.rental_price_per_day AS RentalPricePerDay,
                       oi.deposit_amount AS DepositAmount,
-
+                      oi.actual_returned_date AS ActualReturnedDate,
                       oi.rental_price_per_day *
                       DATEDIFF(DAY, oi.start_date, oi.planned_return_date) AS TotalAmount
                   FROM order_items oi
@@ -872,7 +873,9 @@ public sealed class OrdersReadRepository(
                            FROM order_items oi
                            INNER JOIN tools t ON t.id = oi.tool_id
                            WHERE oi.order_id = @orderId
-                             AND oi.planned_return_date = @actDate
+                             AND COALESCE(
+                           oi.actual_returned_date,
+                           oi.planned_return_date) = @actDate
                              AND oi.deleted_at IS NULL
                              AND t.deleted_at IS NULL
                            ORDER BY t.name
@@ -1105,8 +1108,8 @@ public sealed class OrdersReadRepository(
 
             var sql = """
                       SELECT DISTINCT
-                          oi.start_date AS Date,
-                          2 AS Type
+                          COALESCE(oi.actual_returned_date, oi.planned_return_date) AS Date,
+                          3 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
                       WHERE oi.order_id = @orderId

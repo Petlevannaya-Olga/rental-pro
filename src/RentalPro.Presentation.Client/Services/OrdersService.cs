@@ -698,4 +698,39 @@ public sealed class OrdersService(
                 "Не удалось выдать инструменты");
         }
     }
+    
+    public async Task<UnitResult<Errors>> ReturnItemsAsync(
+        Guid orderId,
+        ReturnOrderItemsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                $"api/orders/{orderId}/return-items",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось оформить возврат",
+                    cancellationToken);
+
+                return CommonErrors.Failure(
+                        "order.items.return.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "order.items.return.failed",
+                "Не удалось оформить возврат");
+        }
+    }
 }

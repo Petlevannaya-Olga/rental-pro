@@ -1318,6 +1318,16 @@
                         </button>
                     }
 
+                    @if (_viewOrder.StatusName == "Выполняется")
+                    {
+                        <button class="primary-button"
+                                type="button"
+                                @onclick="OpenReturnModal">
+                            <i class="bi bi-arrow-return-left"></i>
+                            Оформить возврат
+                        </button>
+                    }
+
                     @if (_viewOrder.StatusName == "Готов к выдаче")
                     {
                         <button class="primary-button"
@@ -1327,7 +1337,7 @@
                             Выдать инструменты
                         </button>
                     }
-                    
+
                     @if (_viewOrder.TotalRemainingAmount > 0)
                     {
                         <button class="primary-button"
@@ -1342,6 +1352,91 @@
                             type="button"
                             @onclick="CloseViewModal">
                         Закрыть
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+    @if (_isReturnModalOpen && _viewOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="payment-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Оформить возврат</h3>
+                        <p>Заказ № @_viewOrder.Number</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseReturnModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="payment-summary">
+                    <div class="payment-summary-row">
+                        <span>Клиент</span>
+                        <strong>@_viewOrder.CustomerFullName</strong>
+                    </div>
+                </div>
+
+                <div class="return-items-list">
+                    @foreach (var item in _viewOrder.Items.Where(x => x.ActualReturnedDate is null))
+                    {
+                        <label class="return-item-row">
+                            <input type="checkbox"
+                                   checked="@_returnForm.SelectedOrderItemIds.Contains(item.Id)"
+                                   @onchange="e => ToggleReturnItem(item.Id, e)" />
+
+                            <div class="return-item-content">
+                                <div class="return-item-name">
+                                    @item.ToolName
+                                </div>
+
+                                <div class="return-item-date">
+                                    Плановый возврат:
+                                    @item.PlannedReturnDate.ToString("dd.MM.yyyy")
+                                </div>
+                            </div>
+                        </label>
+                    }
+                </div>
+
+                <div class="payment-form-grid">
+                    <div class="tool-form-field">
+                        <label>Дата возврата <span>*</span></label>
+                        <input type="date"
+                               @bind="_returnForm.ActualReturnedDate"/>
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Состояние</label>
+                        <select @bind="_returnForm.ReturnCondition">
+                            <option value="Исправно">Исправно</option>
+                            <option value="Требует обслуживания">Требует обслуживания</option>
+                        </select>
+                    </div>
+
+                    <div class="tool-form-field full">
+                        <label>Комментарий о повреждениях</label>
+                        <input placeholder="Например: повреждён корпус, отсутствует насадка"
+                               @bind="_returnForm.DamageComment"/>
+                    </div>
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseReturnModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="ReturnItemsAsync">
+                        <i class="bi bi-check2-circle"></i>
+                        Оформить возврат
                     </button>
                 </div>
 
@@ -1427,7 +1522,7 @@
                                min="1"
                                step="0.01"
                                @bind="_paymentForm.Amount"
-                               disabled="@(_paymentForm.PaymentTypeId == FullPaymentId)" />
+                               disabled="@(_paymentForm.PaymentTypeId == FullPaymentId)"/>
                     </div>
 
                     <div class="tool-form-field">
@@ -1469,9 +1564,13 @@
 
 @code
 {
+    private bool _isReturnModalOpen;
+
+    private ReturnFormModel _returnForm = new();
+
     private static readonly Guid FullPaymentId =
         Guid.Parse("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF");
-    
+
     private bool _isPaymentModalOpen;
 
     private PaymentFormModel _paymentForm = new();
@@ -1759,7 +1858,7 @@
 
         _isViewModalOpen = true;
     }
-    
+
     private async Task OpenViewModal(OrderDto order)
     {
         _isViewModalOpen = true;
@@ -2698,7 +2797,7 @@
 
         await CreateSinglePaymentAsync();
     }
-    
+
     private async Task CreateFullPaymentAsync()
     {
         if (_viewOrder is null)
@@ -2779,7 +2878,7 @@
         NotificationService.Success(
             "Полная оплата успешно принята");
     }
-    
+
     private async Task CreateSinglePaymentAsync()
     {
         if (_viewOrder is null)
@@ -2828,7 +2927,7 @@
 
         NotificationService.Success("Оплата успешно принята");
     }
-    
+
     private async Task LoadPaymentDictionariesAsync()
     {
         var typesResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
@@ -2857,7 +2956,7 @@
         if (methodsResult.IsSuccess)
             _paymentMethods = methodsResult.Value;
     }
-    
+
     private void OnPaymentTypeChanged()
     {
         if (_viewOrder is null || _paymentForm.PaymentTypeId is null)
@@ -2905,7 +3004,7 @@
 
         await LoadOrderDocumentsAsync(orderId);
     }
-    
+
     private async Task IssueToolsAsync()
     {
         if (_viewOrder is null)
@@ -2928,6 +3027,80 @@
         NotificationService.Success("Инструменты успешно выданы");
     }
 
+    private void OpenReturnModal()
+    {
+        if (_viewOrder is null)
+            return;
+
+        _returnForm = new ReturnFormModel
+        {
+            ActualReturnedDate = DateOnly.FromDateTime(DateTime.Today),
+            ReturnCondition = "Исправно",
+            SelectedOrderItemIds = []
+        };
+
+        _isReturnModalOpen = true;
+    }
+
+    private void CloseReturnModal()
+    {
+        _isReturnModalOpen = false;
+        _returnForm = new ReturnFormModel();
+    }
+
+    private async Task ReturnItemsAsync()
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        if (_returnForm.SelectedOrderItemIds.Count == 0)
+        {
+            NotificationService.Error("Выберите инструменты для возврата");
+            return;
+        }
+
+        var request = new ReturnOrderItemsRequest(
+            _returnForm.ActualReturnedDate,
+            _returnForm.ReturnCondition,
+            _returnForm.DamageComment,
+            _returnForm.SelectedOrderItemIds);
+
+        var result = await OrdersService.ReturnItemsAsync(
+            _viewOrder.Id,
+            request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        CloseReturnModal();
+
+        await ReloadViewOrderAsync();
+        await LoadOrdersAsync();
+
+        NotificationService.Success("Возврат успешно оформлен");
+    }
+    
+    private void ToggleReturnItem(Guid orderItemId, ChangeEventArgs e)
+    {
+        var isChecked = e.Value is bool value && value;
+
+        if (isChecked)
+        {
+            if (!_returnForm.SelectedOrderItemIds.Contains(orderItemId))
+                _returnForm.SelectedOrderItemIds.Add(orderItemId);
+
+            return;
+        }
+
+        _returnForm.SelectedOrderItemIds.Remove(orderItemId);
+    }
+
     private sealed class PaymentFormModel
     {
         public Guid? PaymentTypeId { get; set; }
@@ -2935,5 +3108,13 @@
         public decimal Amount { get; set; }
         public DateTime PaymentDate { get; set; } = DateTime.Now;
         public string? Comment { get; set; }
+    }
+
+    private sealed class ReturnFormModel
+    {
+        public DateOnly ActualReturnedDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public string? ReturnCondition { get; set; } = "Исправно";
+        public string? DamageComment { get; set; }
+        public List<Guid> SelectedOrderItemIds { get; set; } = [];
     }
 }

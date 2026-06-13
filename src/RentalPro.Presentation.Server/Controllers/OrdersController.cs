@@ -12,6 +12,7 @@ using RentalPro.Application.Orders.GetOrderDocumentsQuery;
 using RentalPro.Application.Orders.GetOrdersQuery;
 using RentalPro.Application.Orders.GetOrderStatsQuery;
 using RentalPro.Application.Orders.IssueOrderCommand;
+using RentalPro.Application.Orders.ReturnOrderItemsCommand;
 using RentalPro.Application.Orders.UpdateOrderCommand;
 using RentalPro.Application.Orders.UpdateOrderItemRentalPeriodCommand;
 using RentalPro.Contracts.Orders;
@@ -38,6 +39,7 @@ public sealed class OrdersController(
     IQueryHandler<IReadOnlyList<OrderDocumentDto>, GetOrderDocumentsQuery> getOrderDocumentsHandler,
     IQueryHandler<byte[], ExportReturnActQuery> exportReturnActHandler,
     IQueryHandler<byte[], ExportTransferActQuery> exportTransferActHandler,
+    ICommandHandler<ReturnOrderItemsCommand> returnOrderItemsHandler,
     ICommandHandler<IssueOrderCommand> issueOrderHandler)
     : ControllerBase
 {
@@ -342,6 +344,29 @@ public sealed class OrdersController(
         var command = new IssueOrderCommand(id);
 
         var result = await issueOrderHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+    
+    [HttpPost("{id:guid}/return-items")]
+    public async Task<IActionResult> ReturnItems(
+        Guid id,
+        [FromBody] ReturnOrderItemsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ReturnOrderItemsCommand(
+            id,
+            request.ActualReturnedDate,
+            request.ReturnCondition,
+            request.DamageComment,
+            request.OrderItemIds);
+
+        var result = await returnOrderItemsHandler.Handle(
             command,
             cancellationToken);
 
