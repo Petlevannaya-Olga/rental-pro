@@ -9,7 +9,7 @@ public sealed class OrderNumber : ValueObject
     public const int MAX_LENGTH = 20;
 
     private static readonly Regex Regex =
-        new(@"^ORD-\d{4}-\d{6}$", RegexOptions.Compiled);
+        new(@"^ORD-\d{4}-[A-F0-9]{6}$", RegexOptions.Compiled);
 
     public string Value { get; }
 

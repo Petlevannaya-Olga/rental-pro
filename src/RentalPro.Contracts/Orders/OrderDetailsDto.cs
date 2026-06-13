@@ -21,5 +21,12 @@ public sealed record OrderDetailsDto(
     
     decimal TotalCost,
     decimal DepositTotal,
+    
+    decimal PaidRentalAmount,
+    decimal PaidDepositAmount,
+    decimal TotalPaidAmount,
+    decimal RemainingRentalAmount,
+    decimal RemainingDepositAmount,
+    decimal TotalRemainingAmount,
 
     List<OrderDetailsItemDto> Items);

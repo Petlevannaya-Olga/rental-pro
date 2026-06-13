@@ -30,7 +30,13 @@ public sealed class OrdersReadRepository(
         DateTime CreatedAt,
         DateTime? UpdatedAt,
         decimal TotalCost,
-        decimal DepositTotal);
+        decimal DepositTotal,
+        decimal PaidRentalAmount,
+        decimal PaidDepositAmount,
+        decimal TotalPaidAmount,
+        decimal RemainingRentalAmount,
+        decimal RemainingDepositAmount,
+        decimal TotalRemainingAmount);
 
     private sealed record RentalContractSqlDto(
         Guid OrderId,
@@ -96,7 +102,7 @@ public sealed class OrdersReadRepository(
         DateTime ActualReturnedDate,
         string? ReturnCondition,
         string? DamageComment);
-    
+
     private sealed record PaymentFiscalizationSqlDto(
         Guid PaymentId,
         string PaymentNumber,
@@ -249,6 +255,12 @@ public sealed class OrdersReadRepository(
                 UpdatedAt: header.UpdatedAt,
                 TotalCost: header.TotalCost,
                 DepositTotal: header.DepositTotal,
+                PaidRentalAmount: header.PaidRentalAmount,
+                PaidDepositAmount: header.PaidDepositAmount,
+                TotalPaidAmount: header.TotalPaidAmount,
+                RemainingRentalAmount: header.RemainingRentalAmount,
+                RemainingDepositAmount: header.RemainingDepositAmount,
+                TotalRemainingAmount: header.TotalRemainingAmount,
                 Items: items);
         }
         catch (OperationCanceledException)
@@ -422,66 +434,144 @@ public sealed class OrdersReadRepository(
         OrderId orderId,
         CancellationToken cancellationToken)
     {
-        var sql = """
-                  SELECT
-                      o.id AS Id,
-                      o.number AS Number,
-
-                      o.customer_id AS CustomerId,
-                      CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
-
-                      o.user_id AS UserId,
-                      CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
-
-                      o.status_id AS StatusId,
-                      os.name AS StatusName,
-
-                      o.order_date AS OrderDate,
-                      o.comment AS Comment,
-                      o.created_at AS CreatedAt,
-                      o.updated_at AS UpdatedAt,
-
-                      ISNULL(oa.TotalCost, 0) AS TotalCost,
-                      ISNULL(oa.DepositTotal, 0) AS DepositTotal
-
-                  FROM orders o
-                  INNER JOIN customers c ON c.id = o.customer_id
-                  INNER JOIN users u ON u.id = o.user_id
-                  INNER JOIN order_statuses os ON os.id = o.status_id
-                  OUTER APPLY
-                  (
-                      SELECT
-                          SUM(
-                              oi.rental_price_per_day *
-                              DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
-                          ) AS TotalCost,
-                          SUM(oi.deposit_amount) AS DepositTotal
-                      FROM order_items oi
-                      WHERE oi.order_id = o.id
-                        AND oi.deleted_at IS NULL
-                  ) oa
-                  WHERE o.id = @orderId
-                    AND o.deleted_at IS NULL
-                    AND c.deleted_at IS NULL
-                    AND u.deleted_at IS NULL
-                    AND os.deleted_at IS NULL
-                  """;
-
-        var header = await dbContext.Database
-            .SqlQueryRaw<OrderDetailsHeaderDto>(
-                sql,
-                CreateParameter("@orderId", orderId.Value))
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (header is null)
+        try
         {
-            return CommonErrors.NotFound(
-                    "order.not.found",
-                    "Заказ не найден")
+            var sql = """
+                      SELECT
+                          o.id AS Id,
+                          o.number AS Number,
+
+                          o.customer_id AS CustomerId,
+                          CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+
+                          o.user_id AS UserId,
+                          CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+
+                          o.status_id AS StatusId,
+                          os.name AS StatusName,
+
+                          o.order_date AS OrderDate,
+                          o.comment AS Comment,
+                          o.created_at AS CreatedAt,
+                          o.updated_at AS UpdatedAt,
+
+                          ISNULL(totals.TotalCost, 0) AS TotalCost,
+                          ISNULL(totals.DepositTotal, 0) AS DepositTotal,
+
+                          ISNULL(payments.PaidRentalAmount, 0) AS PaidRentalAmount,
+                          ISNULL(payments.PaidDepositAmount, 0) AS PaidDepositAmount,
+                          ISNULL(payments.TotalPaidAmount, 0) AS TotalPaidAmount,
+
+                          CASE
+                              WHEN ISNULL(totals.TotalCost, 0) - ISNULL(payments.PaidRentalAmount, 0) < 0
+                                  THEN 0
+                              ELSE ISNULL(totals.TotalCost, 0) - ISNULL(payments.PaidRentalAmount, 0)
+                          END AS RemainingRentalAmount,
+
+                          CASE
+                              WHEN ISNULL(totals.DepositTotal, 0) - ISNULL(payments.PaidDepositAmount, 0) < 0
+                                  THEN 0
+                              ELSE ISNULL(totals.DepositTotal, 0) - ISNULL(payments.PaidDepositAmount, 0)
+                          END AS RemainingDepositAmount,
+
+                          CASE
+                              WHEN ISNULL(totals.TotalCost, 0)
+                                   + ISNULL(totals.DepositTotal, 0)
+                                   - ISNULL(payments.TotalPaidAmount, 0) < 0
+                                  THEN 0
+                              ELSE ISNULL(totals.TotalCost, 0)
+                                   + ISNULL(totals.DepositTotal, 0)
+                                   - ISNULL(payments.TotalPaidAmount, 0)
+                          END AS TotalRemainingAmount
+
+                      FROM orders o
+                      INNER JOIN customers c ON c.id = o.customer_id
+                      INNER JOIN users u ON u.id = o.user_id
+                      INNER JOIN order_statuses os ON os.id = o.status_id
+
+                      OUTER APPLY
+                      (
+                          SELECT
+                              SUM(
+                                  oi.rental_price_per_day *
+                                  DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                              ) AS TotalCost,
+                              SUM(oi.deposit_amount) AS DepositTotal
+                          FROM order_items oi
+                          WHERE oi.order_id = o.id
+                            AND oi.deleted_at IS NULL
+                      ) totals
+
+                      OUTER APPLY
+                      (
+                          SELECT
+                              SUM(CASE
+                                  WHEN pt.name = N'Аренда'
+                                      THEN p.amount
+                                  ELSE 0
+                              END) AS PaidRentalAmount,
+
+                              SUM(CASE
+                                  WHEN pt.name = N'Залог'
+                                      THEN p.amount
+                                  ELSE 0
+                              END) AS PaidDepositAmount,
+
+                              SUM(CASE
+                                  WHEN pt.name IN (N'Аренда', N'Залог')
+                                      THEN p.amount
+                                  ELSE 0
+                              END) AS TotalPaidAmount
+
+                          FROM payments p
+                          INNER JOIN payment_types pt ON pt.id = p.payment_type_id
+                          WHERE p.order_id = o.id
+                            AND p.deleted_at IS NULL
+                            AND pt.deleted_at IS NULL
+                      ) payments
+
+                      WHERE o.id = @orderId
+                        AND o.deleted_at IS NULL
+                        AND c.deleted_at IS NULL
+                        AND u.deleted_at IS NULL
+                        AND os.deleted_at IS NULL
+                      """;
+
+            var header = await dbContext.Database
+                .SqlQueryRaw<OrderDetailsHeaderDto>(
+                    sql,
+                    CreateParameter("@orderId", orderId.Value))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (header is null)
+            {
+                return CommonErrors.NotFound(
+                        "order.was.not.found",
+                        "Заказ не найден",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            return header;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.order.details.header.was.cancelled")
                 .ToErrors();
         }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get order details header by id {OrderId}",
+                orderId.Value);
 
-        return header;
+            return CommonErrors.Db(
+                    "get.order.details.header.from.db.exception",
+                    "Failed to get order details header")
+                .ToErrors();
+        }
     }
 
     private async Task<Result<List<OrderDetailsItemDto>, Errors>> GetOrderDetailsItemsAsync(
@@ -852,92 +942,92 @@ public sealed class OrdersReadRepository(
                 .ToErrors();
         }
     }
-    
+
     public async Task<Result<PaymentFiscalizationDto, Errors>> GetPaymentFiscalizationDataAsync(
-    PaymentId paymentId,
-    CancellationToken cancellationToken = default)
-{
-    try
+        PaymentId paymentId,
+        CancellationToken cancellationToken = default)
     {
-        var sql = """
-                  SELECT
-                      p.id AS PaymentId,
-                      p.number AS PaymentNumber,
-
-                      o.id AS OrderId,
-                      o.number AS OrderNumber,
-
-                      CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
-                      c.email AS CustomerEmail,
-                      c.phone AS CustomerPhone,
-
-                      pt.name AS PaymentTypeName,
-                      pm.name AS PaymentMethodName,
-
-                      p.amount AS Amount,
-                      p.payment_date AS PaymentDate
-
-                  FROM payments p
-                  INNER JOIN orders o ON o.id = p.order_id
-                  INNER JOIN customers c ON c.id = o.customer_id
-                  INNER JOIN payment_types pt ON pt.id = p.payment_type_id
-                  INNER JOIN payment_methods pm ON pm.id = p.payment_method_id
-
-                  WHERE p.id = @paymentId
-                    AND p.deleted_at IS NULL
-                    AND o.deleted_at IS NULL
-                    AND c.deleted_at IS NULL
-                    AND pt.deleted_at IS NULL
-                    AND pm.deleted_at IS NULL
-                  """;
-
-        var data = await dbContext.Database
-            .SqlQueryRaw<PaymentFiscalizationSqlDto>(
-                sql,
-                CreateParameter("@paymentId", paymentId.Value))
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (data is null)
+        try
         {
-            return CommonErrors.NotFound(
-                    "payment.fiscalization.data.not.found",
-                    "Данные для фискализации платежа не найдены",
-                    paymentId.Value)
+            var sql = """
+                      SELECT
+                          p.id AS PaymentId,
+                          CONCAT(N'PAY-', CONVERT(nvarchar(36), p.id)) AS PaymentNumber,
+
+                          o.id AS OrderId,
+                          o.number AS OrderNumber,
+
+                          CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+                          c.email AS CustomerEmail,
+                          c.phone_number AS CustomerPhone,
+
+                          pt.name AS PaymentTypeName,
+                          pm.name AS PaymentMethodName,
+
+                          p.amount AS Amount,
+                          p.payment_date AS PaymentDate
+
+                      FROM payments p
+                      INNER JOIN orders o ON o.id = p.order_id
+                      INNER JOIN customers c ON c.id = o.customer_id
+                      INNER JOIN payment_types pt ON pt.id = p.payment_type_id
+                      INNER JOIN payment_methods pm ON pm.id = p.payment_method_id
+
+                      WHERE p.id = @paymentId
+                        AND p.deleted_at IS NULL
+                        AND o.deleted_at IS NULL
+                        AND c.deleted_at IS NULL
+                        AND pt.deleted_at IS NULL
+                        AND pm.deleted_at IS NULL
+                      """;
+
+            var data = await dbContext.Database
+                .SqlQueryRaw<PaymentFiscalizationSqlDto>(
+                    sql,
+                    CreateParameter("@paymentId", paymentId.Value))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (data is null)
+            {
+                return CommonErrors.NotFound(
+                        "payment.fiscalization.data.not.found",
+                        "Данные для фискализации платежа не найдены",
+                        paymentId.Value)
+                    .ToErrors();
+            }
+
+            return new PaymentFiscalizationDto(
+                PaymentId: data.PaymentId,
+                PaymentNumber: data.PaymentNumber,
+                OrderId: data.OrderId,
+                OrderNumber: data.OrderNumber,
+                CustomerFullName: data.CustomerFullName,
+                CustomerEmail: data.CustomerEmail,
+                CustomerPhone: data.CustomerPhone,
+                PaymentTypeName: data.PaymentTypeName,
+                PaymentMethodName: data.PaymentMethodName,
+                Amount: data.Amount,
+                PaymentDate: data.PaymentDate);
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("get.payment.fiscalization.data.was.cancelled")
                 .ToErrors();
         }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get payment fiscalization data by payment id {PaymentId}",
+                paymentId.Value);
 
-        return new PaymentFiscalizationDto(
-            PaymentId: data.PaymentId,
-            PaymentNumber: data.PaymentNumber,
-            OrderId: data.OrderId,
-            OrderNumber: data.OrderNumber,
-            CustomerFullName: data.CustomerFullName,
-            CustomerEmail: data.CustomerEmail,
-            CustomerPhone: data.CustomerPhone,
-            PaymentTypeName: data.PaymentTypeName,
-            PaymentMethodName: data.PaymentMethodName,
-            Amount: data.Amount,
-            PaymentDate: data.PaymentDate);
+            return CommonErrors.Db(
+                    "get.payment.fiscalization.data.from.db.exception",
+                    "Failed to get payment fiscalization data")
+                .ToErrors();
+        }
     }
-    catch (OperationCanceledException)
-    {
-        return CommonErrors
-            .OperationCancelled("get.payment.fiscalization.data.was.cancelled")
-            .ToErrors();
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(
-            ex,
-            "Failed to get payment fiscalization data by payment id {PaymentId}",
-            paymentId.Value);
-
-        return CommonErrors.Db(
-                "get.payment.fiscalization.data.from.db.exception",
-                "Failed to get payment fiscalization data")
-            .ToErrors();
-    }
-}
 
     private static SearchData CreateSearchData(string? search)
     {

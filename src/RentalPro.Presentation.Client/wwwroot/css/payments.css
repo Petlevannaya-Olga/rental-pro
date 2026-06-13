@@ -176,3 +176,10 @@
         margin-left: 0;
     }
 }
+
+.payment-summary-grid small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+}

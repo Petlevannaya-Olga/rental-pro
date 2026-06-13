@@ -14,9 +14,11 @@ public static class OrderStatusesSeeder
         {
             "Подтвержден",
             "Выдан",
+            "Готов к выдаче",
             "Возвращен",
             "Просрочен",
-            "Отменен"
+            "Отменен",
+            "Выполняется"
         };
 
         foreach (var name in names)

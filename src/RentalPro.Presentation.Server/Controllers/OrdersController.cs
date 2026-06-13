@@ -11,6 +11,7 @@ using RentalPro.Application.Orders.GetOrderByIdQuery;
 using RentalPro.Application.Orders.GetOrderDocumentsQuery;
 using RentalPro.Application.Orders.GetOrdersQuery;
 using RentalPro.Application.Orders.GetOrderStatsQuery;
+using RentalPro.Application.Orders.IssueOrderCommand;
 using RentalPro.Application.Orders.UpdateOrderCommand;
 using RentalPro.Application.Orders.UpdateOrderItemRentalPeriodCommand;
 using RentalPro.Contracts.Orders;
@@ -36,7 +37,8 @@ public sealed class OrdersController(
     IQueryHandler<byte[], ExportRentalContractQuery> exportRentalContractHandler,
     IQueryHandler<IReadOnlyList<OrderDocumentDto>, GetOrderDocumentsQuery> getOrderDocumentsHandler,
     IQueryHandler<byte[], ExportReturnActQuery> exportReturnActHandler,
-    IQueryHandler<byte[], ExportTransferActQuery> exportTransferActHandler)
+    IQueryHandler<byte[], ExportTransferActQuery> exportTransferActHandler,
+    ICommandHandler<IssueOrderCommand> issueOrderHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -330,5 +332,22 @@ public sealed class OrdersController(
             result.Value,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             $"return_act_{date:yyyyMMdd}_{DateTime.Now:yyyyMMdd_HHmmss}.docx");
+    }
+    
+    [HttpPost("{id:guid}/issue")]
+    public async Task<IActionResult> IssueOrder(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new IssueOrderCommand(id);
+
+        var result = await issueOrderHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
     }
 }

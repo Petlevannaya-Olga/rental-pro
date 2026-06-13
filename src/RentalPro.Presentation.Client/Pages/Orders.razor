@@ -1318,7 +1318,17 @@
                         </button>
                     }
 
-                    @if (_viewOrder.StatusName == "Подтвержден")
+                    @if (_viewOrder.StatusName == "Готов к выдаче")
+                    {
+                        <button class="primary-button"
+                                type="button"
+                                @onclick="IssueToolsAsync">
+                            <i class="bi bi-box-seam"></i>
+                            Выдать инструменты
+                        </button>
+                    }
+                    
+                    @if (_viewOrder.TotalRemainingAmount > 0)
                     {
                         <button class="primary-button"
                                 type="button"
@@ -1364,16 +1374,22 @@
                         <div>
                             <span>Аренда</span>
                             <strong>@_viewOrder.TotalCost.ToString("N0") ₽</strong>
+                            <small>Оплачено: @_viewOrder.PaidRentalAmount.ToString("N0") ₽</small>
+                            <small>Осталось: @_viewOrder.RemainingRentalAmount.ToString("N0") ₽</small>
                         </div>
 
                         <div>
                             <span>Залог</span>
                             <strong>@_viewOrder.DepositTotal.ToString("N0") ₽</strong>
+                            <small>Оплачено: @_viewOrder.PaidDepositAmount.ToString("N0") ₽</small>
+                            <small>Осталось: @_viewOrder.RemainingDepositAmount.ToString("N0") ₽</small>
                         </div>
 
                         <div class="total">
                             <span>Итого</span>
                             <strong>@((_viewOrder.TotalCost + _viewOrder.DepositTotal).ToString("N0")) ₽</strong>
+                            <small>Оплачено: @_viewOrder.TotalPaidAmount.ToString("N0") ₽</small>
+                            <small>Осталось: @_viewOrder.TotalRemainingAmount.ToString("N0") ₽</small>
                         </div>
                     </div>
                 </div>
@@ -1410,7 +1426,8 @@
                         <input type="number"
                                min="1"
                                step="0.01"
-                               @bind="_paymentForm.Amount"/>
+                               @bind="_paymentForm.Amount"
+                               disabled="@(_paymentForm.PaymentTypeId == FullPaymentId)" />
                     </div>
 
                     <div class="tool-form-field">
@@ -1452,6 +1469,9 @@
 
 @code
 {
+    private static readonly Guid FullPaymentId =
+        Guid.Parse("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF");
+    
     private bool _isPaymentModalOpen;
 
     private PaymentFormModel _paymentForm = new();
@@ -1723,6 +1743,23 @@
         _isActionsMenuOpen = false;
     }
 
+    private async Task OpenViewModal(Guid orderId)
+    {
+        var result = await OrdersService.GetByIdAsync(orderId);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _viewOrder = result.Value;
+
+        await LoadOrderDocumentsAsync(orderId);
+
+        _isViewModalOpen = true;
+    }
+    
     private async Task OpenViewModal(OrderDto order)
     {
         _isViewModalOpen = true;
@@ -2112,13 +2149,15 @@
             return;
         }
 
+        var createdOrderId = result.Value.Id;
+
         CloseCreateModal();
 
-        _currentPage = 1;
+        await LoadOrdersAsync();
+
+        await OpenViewModal(createdOrderId);
 
         NotificationService.Success("Заказ успешно создан");
-
-        await LoadOrdersAsync();
     }
 
     private void OpenDeleteModal()
@@ -2634,7 +2673,7 @@
 
         _paymentForm = new PaymentFormModel
         {
-            Amount = _viewOrder.TotalCost + _viewOrder.DepositTotal,
+            Amount = _viewOrder.TotalRemainingAmount,
             PaymentDate = DateTime.Now
         };
 
@@ -2650,6 +2689,98 @@
     }
 
     private async Task CreatePaymentAsync()
+    {
+        if (_paymentForm.PaymentTypeId == FullPaymentId)
+        {
+            await CreateFullPaymentAsync();
+            return;
+        }
+
+        await CreateSinglePaymentAsync();
+    }
+    
+    private async Task CreateFullPaymentAsync()
+    {
+        if (_viewOrder is null)
+            return;
+
+        var rentalType = _paymentTypes
+            .FirstOrDefault(x => x.Name == "Аренда");
+
+        var depositType = _paymentTypes
+            .FirstOrDefault(x => x.Name == "Залог");
+
+        if (rentalType is null || depositType is null)
+        {
+            NotificationService.Error(
+                "Не найдены типы оплаты");
+
+            return;
+        }
+
+        if (_paymentForm.PaymentMethodId is null)
+        {
+            NotificationService.Error(
+                "Выберите способ оплаты");
+
+            return;
+        }
+
+        if (_viewOrder.RemainingRentalAmount > 0)
+        {
+            var rentalRequest = new CreatePaymentRequest(
+                _viewOrder.Id,
+                rentalType.Id,
+                _paymentForm.PaymentMethodId.Value,
+                _viewOrder.RemainingRentalAmount,
+                _paymentForm.PaymentDate,
+                _paymentForm.Comment);
+
+            var rentalResult =
+                await PaymentsService.CreatePaymentAsync(
+                    rentalRequest);
+
+            if (rentalResult.IsFailure)
+            {
+                NotificationService.Error(
+                    rentalResult.Error.Message);
+
+                return;
+            }
+        }
+
+        if (_viewOrder.RemainingDepositAmount > 0)
+        {
+            var depositRequest = new CreatePaymentRequest(
+                _viewOrder.Id,
+                depositType.Id,
+                _paymentForm.PaymentMethodId.Value,
+                _viewOrder.RemainingDepositAmount,
+                _paymentForm.PaymentDate,
+                _paymentForm.Comment);
+
+            var depositResult =
+                await PaymentsService.CreatePaymentAsync(
+                    depositRequest);
+
+            if (depositResult.IsFailure)
+            {
+                NotificationService.Error(
+                    depositResult.Error.Message);
+
+                return;
+            }
+        }
+
+        ClosePaymentModal();
+
+        await ReloadViewOrderAsync();
+
+        NotificationService.Success(
+            "Полная оплата успешно принята");
+    }
+    
+    private async Task CreateSinglePaymentAsync()
     {
         if (_viewOrder is null)
         {
@@ -2693,6 +2824,8 @@
 
         ClosePaymentModal();
 
+        await ReloadViewOrderAsync();
+
         NotificationService.Success("Оплата успешно принята");
     }
     
@@ -2704,7 +2837,17 @@
             "Не удалось загрузить типы оплаты");
 
         if (typesResult.IsSuccess)
-            _paymentTypes = typesResult.Value;
+            _paymentTypes =
+            [
+                new DictionaryItem(
+                    FullPaymentId,
+                    "Полная оплата",
+                    null,
+                    string.Empty,
+                    null),
+
+                ..typesResult.Value
+            ];
 
         var methodsResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
             "api/payment-methods",
@@ -2720,6 +2863,14 @@
         if (_viewOrder is null || _paymentForm.PaymentTypeId is null)
             return;
 
+        if (_paymentForm.PaymentTypeId == FullPaymentId)
+        {
+            _paymentForm.Amount =
+                _viewOrder.TotalRemainingAmount;
+
+            return;
+        }
+
         var selectedType = _paymentTypes
             .FirstOrDefault(x => x.Id == _paymentForm.PaymentTypeId);
 
@@ -2728,12 +2879,55 @@
 
         _paymentForm.Amount = selectedType.Name switch
         {
-            "Аренда" => _viewOrder.TotalCost,
-            "Залог" => _viewOrder.DepositTotal,
-            _ => _viewOrder.TotalCost + _viewOrder.DepositTotal
+            "Аренда" => _viewOrder.RemainingRentalAmount,
+            "Залог" => _viewOrder.RemainingDepositAmount,
+            "Возврат залога" => _viewOrder.PaidDepositAmount,
+            _ => 0
         };
     }
+
+    private async Task ReloadViewOrderAsync()
+    {
+        if (_viewOrder is null)
+            return;
+
+        var orderId = _viewOrder.Id;
+
+        var result = await OrdersService.GetByIdAsync(orderId);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _viewOrder = result.Value;
+
+        await LoadOrderDocumentsAsync(orderId);
+    }
     
+    private async Task IssueToolsAsync()
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var result = await OrdersService.IssueAsync(_viewOrder.Id);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        await ReloadViewOrderAsync();
+        await LoadOrdersAsync();
+
+        NotificationService.Success("Инструменты успешно выданы");
+    }
+
     private sealed class PaymentFormModel
     {
         public Guid? PaymentTypeId { get; set; }
