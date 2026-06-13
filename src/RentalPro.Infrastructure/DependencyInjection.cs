@@ -65,6 +65,8 @@ public static class DependencyInjection
         services.AddScoped<IFiscalReceiptService, TestOrangeDataFiscalReceiptService>();
         services.AddScoped<IPaymentsRepository, PaymentsRepository>();
         services.AddScoped<IPaymentsReadRepository, PaymentsReadRepository>();
+        
+        services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
         return services;
     }
 }

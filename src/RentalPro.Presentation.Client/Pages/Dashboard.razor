@@ -1,270 +1,397 @@
 ﻿@page "/dashboard"
+@using RentalPro.Contracts.Dashboard
+@using RentalPro.Presentation.Client.Services
 @layout AdminLayout
+@inject DashboardService DashboardService
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
 
 <div class="dashboard">
 
-    <div class="stats-grid">
-
-        <div class="stat-card">
-            <div class="stat-icon stat-blue">
-                <i class="bi bi-briefcase"></i>
-            </div>
-
-            <div>
-                <div class="stat-title">Инструментов</div>
-                <div class="stat-value">125</div>
-                <div class="stat-change positive">+12 за неделю</div>
-            </div>
+    @if (_isLoading)
+    {
+        <div class="dashboard-loading">
+            Загрузка дашборда...
         </div>
+    }
+    else if (_dashboard is not null)
+    {
+        <div class="stats-grid">
 
-        <div class="stat-card">
-            <div class="stat-icon stat-green">
-                <i class="bi bi-calendar-check"></i>
-            </div>
-
-            <div>
-                <div class="stat-title">В аренде</div>
-                <div class="stat-value">34</div>
-                <div class="stat-change positive">+5 за сегодня</div>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon stat-orange">
-                <i class="bi bi-wrench"></i>
-            </div>
-
-            <div>
-                <div class="stat-title">На ремонте</div>
-                <div class="stat-value">3</div>
-                <div class="stat-change negative">-1 за неделю</div>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon stat-purple">
-                <i class="bi bi-people"></i>
-            </div>
-
-            <div>
-                <div class="stat-title">Клиенты</div>
-                <div class="stat-value">248</div>
-                <div class="stat-change positive">+18 за месяц</div>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon stat-cyan">
-                <i class="bi bi-wallet2"></i>
-            </div>
-
-            <div>
-                <div class="stat-title">Выручка за месяц</div>
-                <div class="stat-value">345 000 ₽</div>
-                <div class="stat-change positive">+16%</div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="dashboard-actions">
-
-        <button class="dashboard-action-card">
-            <i class="bi bi-receipt"></i>
-            <span>Новый заказ</span>
-        </button>
-
-        <button class="dashboard-action-card">
-            <i class="bi bi-person-plus"></i>
-            <span>Новый клиент</span>
-        </button>
-
-        <button class="dashboard-action-card">
-            <i class="bi bi-exclamation-circle"></i>
-            <span>Новый штраф</span>
-        </button>
-
-        <button class="dashboard-action-card">
-            <i class="bi bi-cart-plus"></i>
-            <span>Новая закупка</span>
-        </button>
-
-    </div>
-
-    <div class="dashboard-row">
-
-        <div class="dashboard-card dashboard-large">
-
-            <div class="card-header">
-                <h3>Последние заказы</h3>
-
-                <button class="card-button">
-                    Все заказы
-                </button>
-            </div>
-
-            <table class="orders-table">
-                <thead>
-                <tr>
-                    <th>№ заказа</th>
-                    <th>Клиент</th>
-                    <th>Инструментов</th>
-                    <th>Дата выдачи</th>
-                    <th>Дата возврата</th>
-                    <th>Статус</th>
-                    <th>Сумма</th>
-                </tr>
-                </thead>
-
-                <tbody>
-                <tr>
-                    <td>00057</td>
-                    <td>Петров А.С.</td>
-                    <td>3</td>
-                    <td>14.05.2024</td>
-                    <td>21.05.2024</td>
-                    <td><span class="badge-success">Активен</span></td>
-                    <td>3 500 ₽</td>
-                </tr>
-
-                <tr>
-                    <td>00056</td>
-                    <td>Сидоров И.П.</td>
-                    <td>1</td>
-                    <td>14.05.2024</td>
-                    <td>16.05.2024</td>
-                    <td><span class="badge-success">Активен</span></td>
-                    <td>800 ₽</td>
-                </tr>
-
-                <tr>
-                    <td>00055</td>
-                    <td>Кузнецов М.В.</td>
-                    <td>2</td>
-                    <td>13.05.2024</td>
-                    <td>20.05.2024</td>
-                    <td><span class="badge-success">Активен</span></td>
-                    <td>2 400 ₽</td>
-                </tr>
-                </tbody>
-            </table>
-
-        </div>
-
-        <div class="dashboard-card">
-
-            <h3>Статусы инструментов</h3>
-
-            <div class="status-chart">
-                <div class="chart-circle">
-                    <div class="chart-center">
-                        <div>125</div>
-                        <small>Всего</small>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-blue">
+                    <i class="bi bi-briefcase"></i>
                 </div>
 
-                <div class="chart-legend">
-                    <div>
-                        <span class="dot green"></span>
-                        <span>Доступен</span>
-                        <strong>88</strong>
-                    </div>
+                <div>
+                    <div class="stat-title">Инструментов</div>
+                    <div class="stat-value">@_dashboard.Stats.TotalTools</div>
+                </div>
+            </div>
 
-                    <div>
-                        <span class="dot blue"></span>
-                        <span>В аренде</span>
-                        <strong>34</strong>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-green">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
 
-                    <div>
-                        <span class="dot orange"></span>
-                        <span>На ремонте</span>
-                        <strong>3</strong>
-                    </div>
+                <div>
+                    <div class="stat-title">В аренде</div>
+                    <div class="stat-value">@_dashboard.Stats.RentedTools</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon stat-orange">
+                    <i class="bi bi-bookmark-check"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">Забронировано</div>
+                    <div class="stat-value">@_dashboard.Stats.BookedTools</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon stat-orange">
+                    <i class="bi bi-wrench"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">На ремонте</div>
+                    <div class="stat-value">@_dashboard.Stats.ToolsInRepair</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon stat-purple">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">Клиенты</div>
+                    <div class="stat-value">@_dashboard.Stats.TotalCustomers</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon stat-cyan">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">Выручка за месяц</div>
+                    <div class="stat-value">@FormatMoney(_dashboard.Stats.MonthlyRevenue)</div>
                 </div>
             </div>
 
         </div>
 
-    </div>
+        <div class="dashboard-row">
 
-    <div class="dashboard-row bottom-row">
+            <div class="dashboard-card dashboard-large">
 
-        <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Последние заказы</h3>
 
-            <div class="card-header">
-                <h3>Ближайшие возвраты</h3>
+                    <button class="card-button" @onclick="GoToOrders">
+                        Все заказы
+                    </button>
+                </div>
+
+                <table class="orders-table">
+                    <thead>
+                    <tr>
+                        <th>№ заказа</th>
+                        <th>Клиент</th>
+                        <th>Инструментов</th>
+                        <th>Дата выдачи</th>
+                        <th>Дата возврата</th>
+                        <th>Статус</th>
+                        <th>Сумма</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @if (_dashboard.RecentOrders.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="empty-cell">
+                                Заказов пока нет
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var order in _dashboard.RecentOrders)
+                        {
+                            <tr class="clickable-row" @onclick="() => GoToOrder(order.Id)">
+                                <td>@order.Number</td>
+                                <td>@order.CustomerFullName</td>
+                                <td>@order.ToolsCount</td>
+                                <td>@FormatDate(order.StartDate)</td>
+                                <td>@FormatDate(order.PlannedReturnDate)</td>
+                                <td>
+                                    <span class="@GetStatusBadgeClass(order.StatusName)">
+                                        @order.StatusName
+                                    </span>
+                                </td>
+                                <td>@FormatMoney(order.TotalCost)</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+
             </div>
 
-            <div class="returns-list">
+            <div class="dashboard-card">
 
-                <div class="return-item">
-                    <div>
-                        <strong>Петров А.С.</strong>
-                        <span>Перфоратор Bosch GBH 2-26</span>
-                    </div>
-                    <span class="return-date today">Сегодня</span>
-                </div>
+                <h3>Статусы инструментов</h3>
 
-                <div class="return-item">
-                    <div>
-                        <strong>Иванов И.П.</strong>
-                        <span>Шуруповерт Makita DF331D</span>
+                <div class="status-chart">
+                    <div class="chart-circle" style="@ChartStyle">
+                        <div class="chart-center">
+                            <div>@_dashboard.Stats.TotalTools</div>
+                            <small>Всего</small>
+                        </div>
                     </div>
-                    <span class="return-date tomorrow">Завтра</span>
-                </div>
 
-                <div class="return-item">
-                    <div>
-                        <strong>Сидоров А.В.</strong>
-                        <span>Болгарка DeWalt DWE4217</span>
+                    <div class="chart-legend">
+                        <div>
+                            <span class="dot green"></span>
+                            <span>Доступен</span>
+                            <strong>@_dashboard.ToolStatuses.Available</strong>
+                        </div>
+
+                        <div>
+                            <span class="dot blue"></span>
+                            <span>В аренде</span>
+                            <strong>@_dashboard.ToolStatuses.Rented</strong>
+                        </div>
+
+                        <div>
+                            <span class="dot yellow"></span>
+                            <span>Забронирован</span>
+                            <strong>@_dashboard.ToolStatuses.Booked</strong>
+                        </div>
+
+                        <div>
+                            <span class="dot orange"></span>
+                            <span>На ремонте</span>
+                            <strong>@_dashboard.ToolStatuses.InRepair</strong>
+                        </div>
                     </div>
-                    <span class="return-date">03.06.2026</span>
                 </div>
 
             </div>
 
         </div>
 
-        <div class="dashboard-card">
+        <div class="dashboard-row bottom-row">
 
-            <div class="card-header">
-                <h3>Просроченные возвраты</h3>
+            <div class="dashboard-card">
+
+                <div class="card-header">
+                    <h3>Ближайшие возвраты</h3>
+                </div>
+
+                <div class="returns-list">
+
+                    @if (_dashboard.UpcomingReturns.Count == 0)
+                    {
+                        <div class="empty-list">
+                            Ближайших возвратов нет
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in _dashboard.UpcomingReturns)
+                        {
+                            <div class="return-item clickable-row" @onclick="() => GoToOrder(item.OrderId)">
+                                <div>
+                                    <strong>@item.CustomerFullName</strong>
+                                    <span>@item.ToolsNames</span>
+                                </div>
+
+                                <span class="@GetReturnDateClass(item.Days)">
+                                    @GetReturnDateText(item)
+                                </span>
+                            </div>
+                        }
+                    }
+
+                </div>
+
             </div>
 
-            <div class="overdue-list">
+            <div class="dashboard-card">
 
-                <div class="overdue-item">
-                    <div>
-                        <strong>Петров А.С.</strong>
-                        <span>Перфоратор Bosch GBH 2-26</span>
-                    </div>
-
-                    <span class="overdue-days">3 дня</span>
+                <div class="card-header">
+                    <h3>Просроченные возвраты</h3>
                 </div>
 
-                <div class="overdue-item">
-                    <div>
-                        <strong>Иванов И.П.</strong>
-                        <span>Шуруповерт Makita DF331D</span>
-                    </div>
+                <div class="overdue-list">
 
-                    <span class="overdue-days">2 дня</span>
-                </div>
+                    @if (_dashboard.OverdueReturns.Count == 0)
+                    {
+                        <div class="empty-list">
+                            Просроченных возвратов нет
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in _dashboard.OverdueReturns)
+                        {
+                            <div class="overdue-item clickable-row" @onclick="() => GoToOrder(item.OrderId)">
+                                <div>
+                                    <strong>@item.CustomerFullName</strong>
+                                    <span>@item.ToolsNames</span>
+                                </div>
 
-                <div class="overdue-item">
-                    <div>
-                        <strong>Сидоров А.В.</strong>
-                        <span>Болгарка DeWalt DWE4217</span>
-                    </div>
+                                <span class="overdue-days">
+                                    @FormatDays(item.Days)
+                                </span>
+                            </div>
+                        }
+                    }
 
-                    <span class="overdue-days">1 день</span>
                 </div>
 
             </div>
 
         </div>
-
-    </div>
+    }
 
 </div>
+
+@code {
+    private DashboardDto? _dashboard;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardAsync();
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        _isLoading = true;
+
+        var result = await DashboardService.GetDashboardAsync();
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error("Не удалось загрузить данные дашборда");
+            _isLoading = false;
+            return;
+        }
+
+        _dashboard = result.Value;
+        _isLoading = false;
+    }
+
+    private void GoToOrders()
+    {
+        NavigationManager.NavigateTo("/orders");
+    }
+
+    private void GoToOrder(Guid orderId)
+    {
+        NavigationManager.NavigateTo($"/orders/{orderId}");
+    }
+
+    private static string FormatDate(DateOnly? date)
+    {
+        return date?.ToString("dd.MM.yyyy") ?? "—";
+    }
+
+    private static string FormatDate(DateOnly date)
+    {
+        return date.ToString("dd.MM.yyyy");
+    }
+
+    private static string FormatMoney(decimal value)
+    {
+        return $"{value:N0} ₽";
+    }
+
+    private static string GetStatusBadgeClass(string statusName)
+    {
+        return statusName switch
+        {
+            "Завершён" => "badge-muted",
+            "Ожидает возврата залога" => "badge-warning",
+            "Забронирован" => "badge-info",
+            "В аренде" => "badge-success",
+            _ => "badge-success"
+        };
+    }
+
+    private static string GetReturnDateClass(int days)
+    {
+        return days switch
+        {
+            0 => "return-date today",
+            1 => "return-date tomorrow",
+            _ => "return-date"
+        };
+    }
+
+    private static string GetReturnDateText(DashboardReturnDto item)
+    {
+        return item.Days switch
+        {
+            0 => "Сегодня",
+            1 => "Завтра",
+            _ => FormatDate(item.PlannedReturnDate)
+        };
+    }
+
+    private static string FormatDays(int days)
+    {
+        var abs = Math.Abs(days);
+
+        var word = (abs % 10) switch
+        {
+            1 when abs % 100 != 11 => "день",
+            >= 2 and <= 4 when (abs % 100 < 10 || abs % 100 >= 20) => "дня",
+            _ => "дней"
+        };
+
+        return $"{abs} {word}";
+    }
+    
+    private string ChartStyle
+    {
+        get
+        {
+            if (_dashboard is null)
+                return string.Empty;
+
+            var statuses = _dashboard.ToolStatuses;
+
+            var total = statuses.Available +
+                        statuses.Rented +
+                        statuses.Booked +
+                        statuses.InRepair;
+
+            if (total == 0)
+                return string.Empty;
+
+            var available = statuses.Available * 100m / total;
+            var rented = statuses.Rented * 100m / total;
+            var booked = statuses.Booked * 100m / total;
+
+            var availableEnd = available;
+            var rentedEnd = available + rented;
+            var bookedEnd = available + rented + booked;
+
+            return
+                $"background: conic-gradient(" +
+                $"#5dbb46 0% {availableEnd:F2}%, " +
+                $"#2f6fed {availableEnd:F2}% {rentedEnd:F2}%, " +
+                $"#f0c419 {rentedEnd:F2}% {bookedEnd:F2}%, " +
+                $"#d97a16 {bookedEnd:F2}% 100%);";
+        }
+    }
+}

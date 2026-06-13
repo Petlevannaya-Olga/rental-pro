@@ -1,0 +1,89 @@
+<div class="dashboard">
+
+    <div class="stats-grid">
+        @for (var i = 0; i < 6; i++)
+        {
+            <div class="stat-card skeleton-stat-card">
+                <div class="skeleton skeleton-icon"></div>
+
+                <div class="skeleton-stat-content">
+                    <div class="skeleton skeleton-text short"></div>
+                    <div class="skeleton skeleton-text value"></div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="dashboard-row">
+
+        <div class="dashboard-card dashboard-large">
+            <div class="card-header">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-button"></div>
+            </div>
+
+            <div class="skeleton-table">
+                @for (var i = 0; i < 4; i++)
+                {
+                    <div class="skeleton-table-row">
+                        <div class="skeleton skeleton-cell"></div>
+                        <div class="skeleton skeleton-cell wide"></div>
+                        <div class="skeleton skeleton-cell small"></div>
+                        <div class="skeleton skeleton-cell"></div>
+                        <div class="skeleton skeleton-cell"></div>
+                        <div class="skeleton skeleton-badge"></div>
+                        <div class="skeleton skeleton-cell"></div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="skeleton skeleton-title"></div>
+
+            <div class="status-chart skeleton-status-chart">
+                <div class="skeleton skeleton-circle"></div>
+
+                <div class="chart-legend skeleton-legend">
+                    @for (var i = 0; i < 4; i++)
+                    {
+                        <div>
+                            <span class="skeleton skeleton-dot"></span>
+                            <span class="skeleton skeleton-legend-text"></span>
+                            <strong class="skeleton skeleton-legend-value"></strong>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dashboard-row bottom-row">
+
+        @for (var card = 0; card < 2; card++)
+        {
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="skeleton skeleton-title"></div>
+                </div>
+
+                <div class="returns-list">
+                    @for (var i = 0; i < 3; i++)
+                    {
+                        <div class="return-item">
+                            <div>
+                                <div class="skeleton skeleton-return-name"></div>
+                                <div class="skeleton skeleton-return-tool"></div>
+                            </div>
+
+                            <div class="skeleton skeleton-return-badge"></div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+
+</div>
