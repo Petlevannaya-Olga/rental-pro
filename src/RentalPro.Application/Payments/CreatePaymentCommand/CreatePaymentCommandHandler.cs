@@ -7,7 +7,7 @@ using RentalPro.Domain.Payments;
 using RentalPro.Shared;
 using RentalPro.Shared.Abstractions;
 
-namespace RentalPro.Application.Payments;
+namespace RentalPro.Application.Payments.CreatePaymentCommand;
 
 public sealed class CreatePaymentHandler(
     IPaymentsRepository paymentsRepository,
@@ -20,7 +20,7 @@ public sealed class CreatePaymentHandler(
     : ICommandHandler<Guid, CreatePaymentCommand>
 {
     public async Task<Result<Guid, Errors>> Handle(
-        CreatePaymentCommand command,
+        Payments.CreatePaymentCommand.CreatePaymentCommand command,
         CancellationToken cancellationToken = default)
     {
         var transactionResult = await transactionManager.BeginTransactionAsync(

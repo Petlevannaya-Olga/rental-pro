@@ -9,6 +9,7 @@ using RentalPro.Application.Repositories;
 using RentalPro.Application.Services;
 using RentalPro.Contracts.Customers;
 using RentalPro.Contracts.Orders;
+using RentalPro.Contracts.Payments;
 using RentalPro.Contracts.Users;
 using RentalPro.Infrastructure.Auth;
 using RentalPro.Infrastructure.Database;
@@ -52,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IExcelExportService<UserDto>, UsersExportService>();
         services.AddScoped<IExcelExportService<CustomerDto>, CustomersExportService>();
         services.AddScoped<IExcelExportService<OrderDto>, OrdersExportService>();
+        services.AddScoped<IExcelExportService<PaymentDto>, PaymentsExportService>();
         
         services.AddScoped<IContractDocumentService, ContractDocumentService>();
         services.AddScoped<IContractPdfService, ContractPdfService>();
@@ -62,6 +64,7 @@ public static class DependencyInjection
         
         services.AddScoped<IFiscalReceiptService, TestOrangeDataFiscalReceiptService>();
         services.AddScoped<IPaymentsRepository, PaymentsRepository>();
+        services.AddScoped<IPaymentsReadRepository, PaymentsReadRepository>();
         return services;
     }
 }

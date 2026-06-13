@@ -1,6 +1,6 @@
 using RentalPro.Shared.Abstractions;
 
-namespace RentalPro.Application.Payments;
+namespace RentalPro.Application.Payments.CreatePaymentCommand;
 
 public sealed record CreatePaymentCommand(
     Guid OrderId,
