@@ -6,4 +6,8 @@ public sealed record DashboardStatsDto(
     int BookedTools,
     int ToolsInRepair,
     int TotalCustomers,
-    decimal MonthlyRevenue);
+    decimal MonthlyRevenue,
+    int ActiveOrders,
+    int NewOrdersThisMonth,
+    decimal DepositsReceived,
+    int OverdueReturnsCount);

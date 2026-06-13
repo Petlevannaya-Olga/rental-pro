@@ -22,6 +22,9 @@ public sealed class DashboardReadRepository(
 
     private const string CompletedOrderStatus = "Завершен";
     private const string WaitingDepositRefundStatus = "Ожидает возврата залога";
+    
+    private const string DepositPaymentType = "Залог";
+
 
     public async Task<Result<DashboardDto, Errors>> GetAsync(
         CancellationToken cancellationToken = default)
@@ -61,61 +64,125 @@ public sealed class DashboardReadRepository(
     }
 
     private async Task<DashboardStatsDto> GetStatsAsync(
-        CancellationToken cancellationToken)
-    {
-        var now = DateTime.Now;
-        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+    CancellationToken cancellationToken)
+{
+    var now = DateTime.Now;
+    var startOfMonth = new DateTime(now.Year, now.Month, 1);
+    var today = DateTime.Today;
 
-        const string sql = """
-                           SELECT
-                               ISNULL((SELECT COUNT(*) FROM tools WHERE deleted_at IS NULL), 0) AS TotalTools,
+    const string sql = """
+                       SELECT
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM tools
+                               WHERE deleted_at IS NULL
+                           ), 0) AS TotalTools,
 
-                               ISNULL((
-                                   SELECT COUNT(*)
-                                   FROM tools t
-                                   INNER JOIN tool_statuses ts ON ts.id = t.status_id
-                                   WHERE t.deleted_at IS NULL
-                                     AND ts.name = @rentedStatus
-                               ), 0) AS RentedTools,
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM tools t
+                               INNER JOIN tool_statuses ts
+                                   ON ts.id = t.status_id
+                               WHERE t.deleted_at IS NULL
+                                 AND ts.name = @rentedStatus
+                           ), 0) AS RentedTools,
 
-                               ISNULL((
-                                   SELECT COUNT(*)
-                                   FROM tools t
-                                   INNER JOIN tool_statuses ts ON ts.id = t.status_id
-                                   WHERE t.deleted_at IS NULL
-                                     AND ts.name = @bookedStatus
-                               ), 0) AS BookedTools,
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM tools t
+                               INNER JOIN tool_statuses ts
+                                   ON ts.id = t.status_id
+                               WHERE t.deleted_at IS NULL
+                                 AND ts.name = @bookedStatus
+                           ), 0) AS BookedTools,
 
-                               ISNULL((
-                                   SELECT COUNT(*)
-                                   FROM tools t
-                                   INNER JOIN tool_statuses ts ON ts.id = t.status_id
-                                   WHERE t.deleted_at IS NULL
-                                     AND ts.name = @repairStatus
-                               ), 0) AS ToolsInRepair,
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM tools t
+                               INNER JOIN tool_statuses ts
+                                   ON ts.id = t.status_id
+                               WHERE t.deleted_at IS NULL
+                                 AND ts.name = @repairStatus
+                           ), 0) AS ToolsInRepair,
 
-                               ISNULL((SELECT COUNT(*) FROM customers WHERE deleted_at IS NULL), 0) AS TotalCustomers,
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM customers
+                               WHERE deleted_at IS NULL
+                           ), 0) AS TotalCustomers,
 
-                               ISNULL((
-                                   SELECT SUM(p.amount)
-                                   FROM payments p
-                                   INNER JOIN payment_types pt ON pt.id = p.payment_type_id
-                                   WHERE p.deleted_at IS NULL
-                                     AND pt.name = @rentPaymentType
-                                     AND p.payment_date >= @startOfMonth
-                               ), 0) AS MonthlyRevenue
-                           """;
+                           CAST(ISNULL((
+                               SELECT SUM(p.amount)
+                               FROM payments p
+                               INNER JOIN payment_types pt
+                                   ON pt.id = p.payment_type_id
+                               WHERE p.deleted_at IS NULL
+                                 AND pt.name = @rentPaymentType
+                                 AND p.payment_date >= @startOfMonth
+                           ), 0) AS decimal(18, 2)) AS MonthlyRevenue,
 
-        return await dbContext.Database
-            .SqlQueryRaw<DashboardStatsDto>(
-                sql,
-                CreateParameter("@rentedStatus", RentedStatus),
-                CreateParameter("@bookedStatus", BookedStatus),
-                CreateParameter("@repairStatus", RepairStatus),
-                CreateParameter("@rentPaymentType", RentPaymentType),
-                CreateParameter("@startOfMonth", startOfMonth))
-            .SingleAsync(cancellationToken);
-    }
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM orders o
+                               INNER JOIN order_statuses os
+                                   ON os.id = o.status_id
+                               WHERE o.deleted_at IS NULL
+                                 AND os.name <> @completedStatus
+                           ), 0) AS ActiveOrders,
+
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM orders o
+                               WHERE o.deleted_at IS NULL
+                                 AND o.order_date >= @startOfMonth
+                           ), 0) AS NewOrdersThisMonth,
+
+                           CAST(ISNULL((
+                               SELECT SUM(p.amount)
+                               FROM payments p
+                               INNER JOIN payment_types pt
+                                   ON pt.id = p.payment_type_id
+                               WHERE p.deleted_at IS NULL
+                                 AND pt.name = @depositPaymentType
+                                 AND p.payment_date >= @startOfMonth
+                           ), 0) AS decimal(18, 2)) AS DepositsReceived,
+
+                           ISNULL((
+                               SELECT COUNT(*)
+                               FROM
+                               (
+                                   SELECT o.id
+                                   FROM orders o
+                                   INNER JOIN order_statuses os
+                                       ON os.id = o.status_id
+                                   INNER JOIN order_items oi
+                                       ON oi.order_id = o.id
+                                      AND oi.deleted_at IS NULL
+                                   WHERE o.deleted_at IS NULL
+                                     AND os.name NOT IN (
+                                         @completedStatus,
+                                         @waitingDepositRefundStatus
+                                     )
+                                   GROUP BY o.id
+                                   HAVING MAX(oi.planned_return_date) < @today
+                               ) overdue_orders
+                           ), 0) AS OverdueReturnsCount
+                       """;
+
+    return await dbContext.Database
+        .SqlQueryRaw<DashboardStatsDto>(
+            sql,
+            CreateParameter("@rentedStatus", RentedStatus),
+            CreateParameter("@bookedStatus", BookedStatus),
+            CreateParameter("@repairStatus", RepairStatus),
+            CreateParameter("@rentPaymentType", RentPaymentType),
+            CreateParameter("@depositPaymentType", DepositPaymentType),
+            CreateParameter("@completedStatus", CompletedOrderStatus),
+            CreateParameter("@waitingDepositRefundStatus", WaitingDepositRefundStatus),
+            CreateParameter("@startOfMonth", startOfMonth),
+            CreateParameter("@today", today))
+        .SingleAsync(cancellationToken);
+}
 
     private async Task<DashboardToolStatusesDto> GetToolStatusesAsync(
         CancellationToken cancellationToken)

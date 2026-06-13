@@ -72,6 +72,58 @@
                     <div class="stat-value">@_dashboard.Stats.TotalCustomers</div>
                 </div>
             </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon stat-blue">
+                    <i class="bi bi-journal-check"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">Активные заказы</div>
+                    <div class="stat-value">
+                        @_dashboard.Stats.ActiveOrders
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon stat-green">
+                    <i class="bi bi-plus-square"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">Новых заказов</div>
+                    <div class="stat-value">
+                        @_dashboard.Stats.NewOrdersThisMonth
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon stat-orange">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">Просрочено</div>
+                    <div class="stat-value">
+                        @_dashboard.Stats.OverdueReturnsCount
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon stat-purple">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+
+                <div>
+                    <div class="stat-title">Получено залогов</div>
+                    <div class="stat-value">
+                        @FormatMoney(_dashboard.Stats.DepositsReceived)
+                    </div>
+                </div>
+            </div>
 
             <div class="stat-card">
                 <div class="stat-icon stat-cyan">
