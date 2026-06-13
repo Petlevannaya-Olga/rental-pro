@@ -15,6 +15,7 @@ public sealed class CreatePaymentHandler(
     IOrdersReadRepository ordersReadRepository,
     IOrderStatusesRepository orderStatusesRepository,
     IFiscalReceiptService fiscalReceiptService,
+    IPaymentTypesRepository paymentTypesRepository,
     ITransactionManager transactionManager)
     : ICommandHandler<Guid, CreatePaymentCommand>
 {
@@ -45,7 +46,7 @@ public sealed class CreatePaymentHandler(
         }
 
         var payment = paymentResult.Value;
-        
+
         Console.WriteLine($"PAYMENT TYPE ENTITY: {payment.PaymentTypeId.Value}");
         Console.WriteLine($"PAYMENT METHOD ENTITY: {payment.PaymentMethodId.Value}");
 
@@ -118,6 +119,18 @@ public sealed class CreatePaymentHandler(
             return completePaymentResult.Error;
         }
 
+        var completeOrderResult = await MoveOrderToCompletedIfDepositRefundedAsync(
+            command.OrderId,
+            command.PaymentTypeId,
+            command.Amount,
+            cancellationToken);
+
+        if (completeOrderResult.IsFailure)
+        {
+            transaction.Rollback();
+            return completeOrderResult.Error;
+        }
+
         var saveOrderStatusResult = await transactionManager.SaveChangesAsync(
             cancellationToken);
 
@@ -133,6 +146,77 @@ public sealed class CreatePaymentHandler(
             return commitResult.Error.ToErrors();
 
         return payment.Id.Value;
+    }
+
+    private async Task<UnitResult<Errors>> MoveOrderToCompletedIfDepositRefundedAsync(
+        Guid orderId,
+        Guid paymentTypeId,
+        decimal refundAmount,
+        CancellationToken cancellationToken)
+    {
+        var orderIdResult = OrderId.Create(orderId);
+
+        if (orderIdResult.IsFailure)
+            return orderIdResult.Error.ToErrors();
+
+        var paymentTypeNameResult = PaymentTypeName.Create("Возврат залога");
+
+        if (paymentTypeNameResult.IsFailure)
+            return paymentTypeNameResult.Error.ToErrors();
+
+        var paymentTypeResult = await paymentTypesRepository.GetByAsync(
+            x => x.Name == paymentTypeNameResult.Value,
+            cancellationToken);
+
+        if (paymentTypeResult.IsFailure)
+            return paymentTypeResult.Error.ToErrors();
+
+        if (paymentTypeResult.Value.Id.Value != paymentTypeId)
+            return UnitResult.Success<Errors>();
+
+        var orderDetailsResult = await ordersReadRepository.GetByIdAsync(
+            orderIdResult.Value,
+            cancellationToken);
+
+        if (orderDetailsResult.IsFailure)
+            return orderDetailsResult.Error;
+
+        var orderDetails = orderDetailsResult.Value;
+
+        if (!orderDetails.AllItemsReturned)
+            return UnitResult.Success<Errors>();
+
+        if (orderDetails.RemainingDepositRefundAmount > 0.01m)
+            return UnitResult.Success<Errors>();
+
+        var completedStatusNameResult = OrderStatusName.Create("Завершен");
+
+        if (completedStatusNameResult.IsFailure)
+            return completedStatusNameResult.Error.ToErrors();
+
+        var completedStatusResult = await orderStatusesRepository.GetByAsync(
+            x => x.Name == completedStatusNameResult.Value,
+            cancellationToken);
+
+        if (completedStatusResult.IsFailure)
+            return completedStatusResult.Error.ToErrors();
+
+        var orderResult = await ordersRepository.GetByAsync(
+            x => x.Id == orderIdResult.Value,
+            cancellationToken);
+
+        if (orderResult.IsFailure)
+            return orderResult.Error.ToErrors();
+
+        var order = orderResult.Value;
+
+        var changeStatusResult = order.ChangeStatus(
+            completedStatusResult.Value.Id.Value);
+
+        if (changeStatusResult.IsFailure)
+            return changeStatusResult.Error.ToErrors();
+
+        return UnitResult.Success<Errors>();
     }
 
     private async Task<UnitResult<Errors>> MoveOrderToReadyForIssueIfPaidAsync(

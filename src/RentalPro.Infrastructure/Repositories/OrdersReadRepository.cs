@@ -36,7 +36,10 @@ public sealed class OrdersReadRepository(
         decimal TotalPaidAmount,
         decimal RemainingRentalAmount,
         decimal RemainingDepositAmount,
-        decimal TotalRemainingAmount);
+        decimal TotalRemainingAmount,
+        decimal RefundedDepositAmount,
+        decimal RemainingDepositRefundAmount,
+        bool AllItemsReturned);
 
     private sealed record RentalContractSqlDto(
         Guid OrderId,
@@ -261,6 +264,9 @@ public sealed class OrdersReadRepository(
                 RemainingRentalAmount: header.RemainingRentalAmount,
                 RemainingDepositAmount: header.RemainingDepositAmount,
                 TotalRemainingAmount: header.TotalRemainingAmount,
+                RefundedDepositAmount: header.RefundedDepositAmount,
+                RemainingDepositRefundAmount: header.RemainingDepositRefundAmount,
+                AllItemsReturned: header.AllItemsReturned,
                 Items: items);
         }
         catch (OperationCanceledException)
@@ -482,7 +488,27 @@ public sealed class OrdersReadRepository(
                               ELSE ISNULL(totals.TotalCost, 0)
                                    + ISNULL(totals.DepositTotal, 0)
                                    - ISNULL(payments.TotalPaidAmount, 0)
-                          END AS TotalRemainingAmount
+                          END AS TotalRemainingAmount,
+                          
+                          ISNULL(payments.RefundedDepositAmount, 0) AS RefundedDepositAmount,
+                      
+                      CASE
+                          WHEN ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0) < 0
+                              THEN 0
+                          ELSE ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0)
+                      END AS RemainingDepositRefundAmount,
+                      
+                      CASE
+                          WHEN EXISTS (
+                              SELECT 1
+                              FROM order_items oi_check
+                              WHERE oi_check.order_id = o.id
+                                AND oi_check.deleted_at IS NULL
+                                AND oi_check.actual_returned_date IS NULL
+                          )
+                              THEN CAST(0 AS bit)
+                          ELSE CAST(1 AS bit)
+                      END AS AllItemsReturned
 
                       FROM orders o
                       INNER JOIN customers c ON c.id = o.customer_id
@@ -521,7 +547,13 @@ public sealed class OrdersReadRepository(
                                   WHEN pt.name IN (N'Аренда', N'Залог')
                                       THEN p.amount
                                   ELSE 0
-                              END) AS TotalPaidAmount
+                              END) AS TotalPaidAmount,
+                              
+                              SUM(CASE
+                                    WHEN pt.name = N'Возврат залога'
+                                        THEN p.amount
+                                    ELSE 0
+                                END) AS RefundedDepositAmount
 
                           FROM payments p
                           INNER JOIN payment_types pt ON pt.id = p.payment_type_id

@@ -1328,6 +1328,17 @@
                         </button>
                     }
 
+                    @if (_viewOrder.AllItemsReturned &&
+                         _viewOrder.RemainingDepositRefundAmount > 0)
+                    {
+                        <button class="primary-button"
+                                type="button"
+                                @onclick="OpenDepositRefundModal">
+                            <i class="bi bi-cash-coin"></i>
+                            Вернуть залог
+                        </button>
+                    }
+
                     @if (_viewOrder.StatusName == "Готов к выдаче")
                     {
                         <button class="primary-button"
@@ -1387,7 +1398,7 @@
                         <label class="return-item-row">
                             <input type="checkbox"
                                    checked="@_returnForm.SelectedOrderItemIds.Contains(item.Id)"
-                                   @onchange="e => ToggleReturnItem(item.Id, e)" />
+                                   @onchange="e => ToggleReturnItem(item.Id, e)"/>
 
                             <div class="return-item-content">
                                 <div class="return-item-name">
@@ -1557,6 +1568,105 @@
             </div>
         </div>
     }
+
+    @if (_isDepositRefundModalOpen && _viewOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="payment-modal"
+                 @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Возврат залога</h3>
+                        <p>Заказ № @_viewOrder.Number</p>
+                    </div>
+
+                    <button type="button"
+                            @onclick="CloseDepositRefundModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="payment-summary">
+                    <div class="payment-summary-row">
+                        <span>Клиент</span>
+                        <strong>@_viewOrder.CustomerFullName</strong>
+                    </div>
+
+                    <div class="payment-summary-row">
+                        <span>Осталось вернуть</span>
+                        <strong>
+                            @_viewOrder.RemainingDepositRefundAmount.ToString("N2") ₽
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="payment-form-grid">
+
+                    <div class="tool-form-field">
+                        <label>Сумма возврата <span>*</span></label>
+
+                        <InputNumber @bind-Value="_depositRefundForm.Amount"
+                                     class="form-control"/>
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Способ возврата <span>*</span></label>
+
+                        <InputSelect @bind-Value="_depositRefundForm.PaymentMethodId"
+                                     class="form-select">
+
+                            <option value="">Выберите способ</option>
+
+                            @foreach (var method in _paymentMethods)
+                            {
+                                <option value="@method.Id">
+                                    @method.Name
+                                </option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Дата возврата</label>
+
+                        <InputDate @bind-Value="_depositRefundForm.PaymentDate"
+                                   class="form-control"/>
+                    </div>
+
+                    <div class="tool-form-field full">
+                        <label>Комментарий</label>
+
+                        <InputText @bind-Value="_depositRefundForm.Comment"
+                                   class="form-control"
+                                   placeholder="Комментарий"/>
+                    </div>
+
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDepositRefundModal">
+                        Отмена
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="ReturnDepositAsync">
+
+                        <i class="bi bi-cash-coin"></i>
+
+                        Вернуть залог
+
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    }
     <CreateCustomerModal IsOpen="_isCreateCustomerModalOpen"
                          IsOpenChanged="CloseCreateCustomerModal"
                          CustomerCreated="OnCustomerCreated"/>
@@ -1564,6 +1674,10 @@
 
 @code
 {
+    private bool _isDepositRefundModalOpen;
+
+    private DepositRefundFormModel _depositRefundForm = new();
+
     private bool _isReturnModalOpen;
 
     private ReturnFormModel _returnForm = new();
@@ -3085,7 +3199,7 @@
 
         NotificationService.Success("Возврат успешно оформлен");
     }
-    
+
     private void ToggleReturnItem(Guid orderItemId, ChangeEventArgs e)
     {
         var isChecked = e.Value is bool value && value;
@@ -3099,6 +3213,93 @@
         }
 
         _returnForm.SelectedOrderItemIds.Remove(orderItemId);
+    }
+
+    private async Task OpenDepositRefundModal()
+    {
+        if (_viewOrder is null)
+            return;
+
+        _depositRefundForm = new DepositRefundFormModel
+        {
+            Amount = _viewOrder.RemainingDepositRefundAmount,
+            PaymentDate = DateTime.Now
+        };
+
+        await LoadPaymentDictionariesAsync();
+
+        _isDepositRefundModalOpen = true;
+    }
+
+    private void CloseDepositRefundModal()
+    {
+        _isDepositRefundModalOpen = false;
+        _depositRefundForm = new DepositRefundFormModel();
+    }
+
+    private async Task ReturnDepositAsync()
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        if (!_viewOrder.AllItemsReturned)
+        {
+            NotificationService.Error("Залог можно вернуть только после возврата всех инструментов");
+            return;
+        }
+
+        if (_depositRefundForm.PaymentMethodId is null)
+        {
+            NotificationService.Error("Выберите способ возврата");
+            return;
+        }
+
+        if (_depositRefundForm.Amount <= 0)
+        {
+            NotificationService.Error("Сумма возврата должна быть больше 0");
+            return;
+        }
+
+        if (_depositRefundForm.Amount > _viewOrder.RemainingDepositRefundAmount)
+        {
+            NotificationService.Error("Сумма возврата не может быть больше остатка залога");
+            return;
+        }
+
+        var refundType = _paymentTypes
+            .FirstOrDefault(x => x.Name == "Возврат залога");
+
+        if (refundType is null)
+        {
+            NotificationService.Error("Не найден тип оплаты 'Возврат залога'");
+            return;
+        }
+
+        var request = new CreatePaymentRequest(
+            _viewOrder.Id,
+            refundType.Id,
+            _depositRefundForm.PaymentMethodId.Value,
+            _depositRefundForm.Amount,
+            _depositRefundForm.PaymentDate,
+            _depositRefundForm.Comment);
+
+        var result = await PaymentsService.CreatePaymentAsync(request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        CloseDepositRefundModal();
+
+        await ReloadViewOrderAsync();
+        await LoadOrdersAsync();
+
+        NotificationService.Success("Залог успешно возвращён");
     }
 
     private sealed class PaymentFormModel
@@ -3116,5 +3317,13 @@
         public string? ReturnCondition { get; set; } = "Исправно";
         public string? DamageComment { get; set; }
         public List<Guid> SelectedOrderItemIds { get; set; } = [];
+    }
+
+    private sealed class DepositRefundFormModel
+    {
+        public Guid? PaymentMethodId { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; } = DateTime.Now;
+        public string? Comment { get; set; }
     }
 }
