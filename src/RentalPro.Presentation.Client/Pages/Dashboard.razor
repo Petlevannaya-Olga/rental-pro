@@ -10,9 +10,7 @@
 
     @if (_isLoading)
     {
-        <div class="dashboard-loading">
-            Загрузка дашборда...
-        </div>
+        <DashboardSkeleton />
     }
     else if (_dashboard is not null)
     {
