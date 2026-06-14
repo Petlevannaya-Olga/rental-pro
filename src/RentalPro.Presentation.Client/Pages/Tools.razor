@@ -319,10 +319,14 @@
 
                 <div class="menu-divider"></div>
 
-                <button class="menu-item" @onclick='() => ExecuteToolAction("Перевод в ремонт")'>
-                    <i class="bi bi-wrench-adjustable"></i>
-                    Перевести в ремонт
-                </button>
+                @if (_selectedTool?.StatusName == "Доступен")
+                {
+                    <button class="menu-item"
+                            @onclick='() => ExecuteToolAction("Перевод в ремонт")'>
+                        <i class="bi bi-wrench-adjustable"></i>
+                        Перевести в ремонт
+                    </button>
+                }
 
                 <button class="menu-item" @onclick='() => ExecuteToolAction("Списание")'>
                     <i class="bi bi-box-seam"></i>

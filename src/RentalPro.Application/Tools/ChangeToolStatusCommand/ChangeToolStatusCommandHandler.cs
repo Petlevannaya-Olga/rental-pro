@@ -15,12 +15,15 @@ public sealed class ChangeToolStatusCommandHandler(
     ILogger<ChangeToolStatusCommandHandler> logger)
     : ICommandHandler<ChangeToolStatusCommand>
 {
+    private const string AvailableStatusName = "Доступен";
+    private const string RepairStatusName = "На ремонте";
+
     public async Task<UnitResult<Errors>> Handle(
         ChangeToolStatusCommand command,
         CancellationToken cancellationToken)
     {
         var toolId = ToolId.Restore(command.ToolId);
-        var statusId = ToolStatusId.Restore(command.StatusId);
+        var newStatusId = ToolStatusId.Restore(command.StatusId);
 
         var toolResult = await toolsRepository.GetByAsync(
             x => x.Id == toolId,
@@ -33,26 +36,56 @@ public sealed class ChangeToolStatusCommandHandler(
         {
             return CommonErrors.NotFound(
                     "tool.not.found",
-                    $"Tool with id '{command.ToolId}' was not found")
+                    $"Инструмент с id '{command.ToolId}' не найден")
                 .ToErrors();
         }
 
-        var statusResult = await toolStatusesRepository.GetByAsync(
-            x => x.Id == statusId,
+        var tool = toolResult.Value;
+
+        var newStatusResult = await toolStatusesRepository.GetByAsync(
+            x => x.Id == newStatusId,
             cancellationToken);
 
-        if (statusResult.IsFailure)
-            return statusResult.Error.ToErrors();
+        if (newStatusResult.IsFailure)
+            return newStatusResult.Error.ToErrors();
 
-        if (statusResult.Value is null)
+        if (newStatusResult.Value is null)
         {
             return CommonErrors.NotFound(
                     "tool.status.not.found",
-                    $"Tool status with id '{command.StatusId}' was not found")
+                    $"Статус инструмента с id '{command.StatusId}' не найден")
                 .ToErrors();
         }
 
-        var changeStatusResult = toolResult.Value.ChangeStatus(
+        var newStatus = newStatusResult.Value;
+
+        var currentStatusResult = await toolStatusesRepository.GetByAsync(
+            x => x.Id == tool.StatusId,
+            cancellationToken);
+
+        if (currentStatusResult.IsFailure)
+            return currentStatusResult.Error.ToErrors();
+
+        if (currentStatusResult.Value is null)
+        {
+            return CommonErrors.NotFound(
+                    "tool.current.status.not.found",
+                    "Текущий статус инструмента не найден")
+                .ToErrors();
+        }
+
+        var currentStatus = currentStatusResult.Value;
+
+        if (newStatus.Name.Value == RepairStatusName &&
+            currentStatus.Name.Value != AvailableStatusName)
+        {
+            return CommonErrors.Validation(
+                    "tool.can.be.sent.to.repair.only.when.available",
+                    "Перевести в ремонт можно только доступный инструмент")
+                .ToErrors();
+        }
+
+        var changeStatusResult = tool.ChangeStatus(
             command.StatusId);
 
         if (changeStatusResult.IsFailure)
@@ -65,8 +98,9 @@ public sealed class ChangeToolStatusCommandHandler(
             return saveResult.Error.ToErrors();
 
         logger.LogInformation(
-            "Tool status was changed. ToolId = {ToolId}, StatusId = {StatusId}",
+            "Tool status was changed. ToolId = {ToolId}, OldStatusId = {OldStatusId}, NewStatusId = {NewStatusId}",
             command.ToolId,
+            currentStatus.Id.Value,
             command.StatusId);
 
         return UnitResult.Success<Errors>();
