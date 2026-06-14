@@ -25,7 +25,6 @@ public sealed class UpdateToolCommandHandler(
         var toolId = ToolId.Restore(command.Id);
         var categoryId = ToolCategoryId.Restore(command.CategoryId);
         var manufacturerId = ManufacturerId.Restore(command.ManufacturerId);
-        var statusId = ToolStatusId.Restore(command.StatusId);
 
         var toolResult = await toolsRepository.GetByAsync(
             x => x.Id == toolId,
@@ -72,28 +71,12 @@ public sealed class UpdateToolCommandHandler(
                 .ToErrors();
         }
 
-        var statusResult = await toolStatusRepository.GetByAsync(
-            x => x.Id == statusId,
-            cancellationToken);
-
-        if (statusResult.IsFailure)
-            return statusResult.Error.ToErrors();
-
-        if (statusResult.Value is null)
-        {
-            return CommonErrors.NotFound(
-                    "tool.status.not.found",
-                    $"Tool status with id '{command.StatusId}' was not found")
-                .ToErrors();
-        }
-
         var updateResult = toolResult.Value.UpdateMainInfo(
             articleNumber: command.ArticleNumber,
             name: command.Name,
             description: command.Description,
             categoryId: command.CategoryId,
             manufacturerId: command.ManufacturerId,
-            statusId: command.StatusId,
             rentalPricePerDay: command.RentalPricePerDay,
             depositAmount: command.DepositAmount,
             serialNumber: command.SerialNumber,

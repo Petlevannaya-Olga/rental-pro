@@ -31,9 +31,6 @@ public sealed class UpdateToolCommandValidator
         RuleFor(x => x.ManufacturerId)
             .MustBeValueObject(ManufacturerId.Create);
 
-        RuleFor(x => x.StatusId)
-            .MustBeValueObject(ToolStatusId.Create);
-
         RuleFor(x => x.RentalPricePerDay)
             .MustBeValueObject(Money.Create);
 

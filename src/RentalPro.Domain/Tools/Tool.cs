@@ -167,7 +167,6 @@ public sealed class Tool : AuditableEntity<ToolId>
         string? description,
         Guid categoryId,
         Guid manufacturerId,
-        Guid statusId,
         decimal rentalPricePerDay,
         decimal depositAmount,
         string serialNumber,
@@ -199,11 +198,6 @@ public sealed class Tool : AuditableEntity<ToolId>
 
         if (manufacturerIdResult.IsFailure)
             return manufacturerIdResult.Error;
-
-        var statusIdResult = ToolStatusId.Create(statusId);
-
-        if (statusIdResult.IsFailure)
-            return statusIdResult.Error;
 
         var rentalPriceResult = Money.Create(rentalPricePerDay);
 
@@ -240,7 +234,6 @@ public sealed class Tool : AuditableEntity<ToolId>
         Description = descriptionResult.Value;
         CategoryId = categoryIdResult.Value;
         ManufacturerId = manufacturerIdResult.Value;
-        StatusId = statusIdResult.Value;
         RentalPricePerDay = rentalPriceResult.Value;
         DepositAmount = depositAmountResult.Value;
         SerialNumber = serialNumberResult.Value;

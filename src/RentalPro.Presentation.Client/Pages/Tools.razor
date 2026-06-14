@@ -730,15 +730,13 @@
                                 </div>
 
                                 <div class="tool-form-field">
-                                    <label>Статус <span>*</span></label>
-                                    <InputSelect @bind-Value="_editTool.StatusId">
-                                        <option value="">Выберите статус</option>
-                                        @foreach (var status in _statuses)
-                                        {
-                                            <option value="@status.Id">@status.Name</option>
-                                        }
-                                    </InputSelect>
-                                    <ValidationMessage For="@(() => _editTool.StatusId)"/>
+                                    <label>Статус</label>
+
+                                    <div class="readonly-status">
+                                        <span class="@GetStatusClass(_editingTool.StatusName)">
+                                            @_editingTool.StatusName
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div class="tool-form-field">
@@ -1501,7 +1499,6 @@
             Description: _editTool.Description,
             CategoryId: _editTool.CategoryId.Value,
             ManufacturerId: _editTool.ManufacturerId.Value,
-            StatusId: _editTool.StatusId.Value,
             RentalPricePerDay: _editTool.RentalPricePerDay,
             DepositAmount: _editTool.DepositAmount,
             SerialNumber: _editTool.SerialNumber,
@@ -1572,5 +1569,21 @@
 
         await LoadStatsAsync();
         await LoadToolsAsync();
+    }
+    
+    private static string GetStatusClass(string statusName)
+    {
+        return statusName.Trim().ToLowerInvariant() switch
+        {
+            "доступен" => "status-badge available",
+
+            "забронирован" => "status-badge reserved",
+
+            "в аренде" => "status-badge rented",
+
+            "на ремонте" => "status-badge maintenance",
+
+            _ => "status-badge"
+        };
     }
 }
