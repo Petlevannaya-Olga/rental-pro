@@ -7,14 +7,20 @@ using RentalPro.Shared.Abstractions;
 namespace RentalPro.Application.Customers.DeleteCustomerCommand;
 
 public sealed class DeleteCustomerCommandHandler(
-    ICustomersRepository repository)
+    ICustomersRepository repository,
+    IOrdersReadRepository ordersReadRepository)
     : ICommandHandler<DeleteCustomerCommand>
 {
     public async Task<UnitResult<Errors>> Handle(
         DeleteCustomerCommand command,
         CancellationToken cancellationToken)
     {
-        var customerId = CustomerId.Create(command.Id).Value;
+        var customerIdResult = CustomerId.Create(command.Id);
+
+        if (customerIdResult.IsFailure)
+            return customerIdResult.Error.ToErrors();
+
+        var customerId = customerIdResult.Value;
 
         var customer = await repository.GetByIdAsync(
             customerId,
@@ -22,13 +28,25 @@ public sealed class DeleteCustomerCommandHandler(
 
         if (customer is null)
         {
-            return new Errors(
-            [
-                new Error(
+            return CommonErrors.NotFound(
                     "customer.not.found",
-                    "Клиент не найден",
-                    ErrorType.NOT_FOUND)
-            ]);
+                    "Клиент не найден")
+                .ToErrors();
+        }
+
+        var hasOrdersResult = await ordersReadRepository.CustomerHasOrdersAsync(
+            command.Id,
+            cancellationToken);
+
+        if (hasOrdersResult.IsFailure)
+            return hasOrdersResult.Error;
+
+        if (hasOrdersResult.Value)
+        {
+            return CommonErrors.Validation(
+                    "customer.delete.forbidden.has.orders",
+                    "Нельзя удалить клиента, у которого есть заказы")
+                .ToErrors();
         }
 
         var deleteResult = customer.Delete();

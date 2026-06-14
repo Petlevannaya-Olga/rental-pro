@@ -276,40 +276,81 @@ public sealed class CustomersReadRepository(
                                       """;
 
     private const string WhereClause = """
-                                       WHERE c.deleted_at IS NULL
-                                         AND (
-                                             @search IS NULL
-                                             OR c.last_name LIKE @searchPattern
-                                             OR c.first_name LIKE @searchPattern
-                                             OR c.middle_name LIKE @searchPattern
-                                             OR c.phone_number LIKE @searchPattern
-                                             OR c.email LIKE @searchPattern
-                                             OR c.passport_series LIKE @searchPattern
-                                             OR c.passport_number LIKE @searchPattern
-                                             OR c.postal_code LIKE @searchPattern
-                                             OR c.region LIKE @searchPattern
-                                             OR c.city LIKE @searchPattern
-                                             OR c.street LIKE @searchPattern
-                                             OR c.house LIKE @searchPattern
-                                             OR c.building LIKE @searchPattern
-                                             OR c.apartment LIKE @searchPattern
-                                         )
-                                         AND (
-                                             @hasOrders IS NULL
-                                             OR (@hasOrders = 1 AND oc.OrdersCount > 0)
-                                             OR (@hasOrders = 0 AND oc.OrdersCount = 0)
-                                         )
-                                         AND (
-                                             @isRegular IS NULL
-                                             OR (@isRegular = 1 AND oc.OrdersCount >= 2)
-                                             OR (@isRegular = 0 AND oc.OrdersCount < 2)
-                                         )
-                                         AND (
-                                             @hasActiveOrders IS NULL
-                                             OR (@hasActiveOrders = 1 AND ISNULL(oc.ActiveOrdersCount, 0) > 0)
-                                             OR (@hasActiveOrders = 0 AND ISNULL(oc.ActiveOrdersCount, 0) = 0)
-                                         )
-                                       """;
+                                   WHERE c.deleted_at IS NULL
+                                     AND (
+                                         @search IS NULL
+
+                                         OR c.last_name LIKE @searchPattern
+                                         OR c.first_name LIKE @searchPattern
+                                         OR c.middle_name LIKE @searchPattern
+                                         OR c.phone_number LIKE @searchPattern
+                                         OR c.email LIKE @searchPattern
+
+                                         OR c.passport_series LIKE @searchPattern
+                                         OR c.passport_number LIKE @searchPattern
+                                         OR CONCAT(c.passport_series, N' ', c.passport_number) LIKE @searchPattern
+                                         OR CONCAT(c.passport_series, c.passport_number) LIKE @searchPattern
+
+                                         OR c.postal_code LIKE @searchPattern
+                                         OR c.region LIKE @searchPattern
+                                         OR c.city LIKE @searchPattern
+                                         OR c.street LIKE @searchPattern
+                                         OR c.house LIKE @searchPattern
+                                         OR c.building LIKE @searchPattern
+                                         OR c.apartment LIKE @searchPattern
+
+                                         OR CONCAT(c.last_name, N' ', c.first_name, N' ', c.middle_name) LIKE @searchPattern
+
+                                         OR CONCAT(
+                                             c.postal_code,
+                                             N' ',
+                                             c.region,
+                                             N' ',
+                                             c.city,
+                                             N' ',
+                                             c.street,
+                                             N' ',
+                                             c.house,
+                                             N' ',
+                                             ISNULL(c.building, N''),
+                                             N' ',
+                                             ISNULL(c.apartment, N'')
+                                         ) LIKE @searchPattern
+
+                                         OR CONCAT(
+                                             c.region,
+                                             N' ',
+                                             c.city,
+                                             N' ',
+                                             c.street,
+                                             N' ',
+                                             c.house
+                                         ) LIKE @searchPattern
+
+                                         OR CONCAT(
+                                             c.city,
+                                             N' ',
+                                             c.street,
+                                             N' ',
+                                             c.house
+                                         ) LIKE @searchPattern
+                                     )
+                                     AND (
+                                         @hasOrders IS NULL
+                                         OR (@hasOrders = 1 AND oc.OrdersCount > 0)
+                                         OR (@hasOrders = 0 AND oc.OrdersCount = 0)
+                                     )
+                                     AND (
+                                         @isRegular IS NULL
+                                         OR (@isRegular = 1 AND oc.OrdersCount >= 2)
+                                         OR (@isRegular = 0 AND oc.OrdersCount < 2)
+                                     )
+                                     AND (
+                                         @hasActiveOrders IS NULL
+                                         OR (@hasActiveOrders = 1 AND ISNULL(oc.ActiveOrdersCount, 0) > 0)
+                                         OR (@hasActiveOrders = 0 AND ISNULL(oc.ActiveOrdersCount, 0) = 0)
+                                     )
+                                   """;
 
     public async Task<Result<List<CustomerOrderHistoryItemDto>, Errors>> GetOrderHistoryAsync(
         Guid customerId,

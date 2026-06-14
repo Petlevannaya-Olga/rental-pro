@@ -61,4 +61,8 @@ public interface IOrdersReadRepository
     Task<Result<PaymentFiscalizationDto, Errors>> GetPaymentFiscalizationDataAsync(
         PaymentId paymentId,
         CancellationToken cancellationToken = default);
+    
+    Task<Result<bool, Errors>> CustomerHasOrdersAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default);
 }

@@ -307,12 +307,15 @@
                     История заказов
                 </button>
 
-                <div class="menu-divider"></div>
+                @if (_selectedCustomer.OrdersCount == 0)
+                {
+                    <div class="menu-divider"></div>
 
-                <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
-                    <i class="bi bi-trash"></i>
-                    Удалить
-                </button>
+                    <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
+                        <i class="bi bi-trash"></i>
+                        Удалить
+                    </button>
+                }
 
             </div>
         </div>
@@ -1423,8 +1426,8 @@
         var request = new ExportCustomersRequest(
             _search,
             HasOrders,
-            IsRegular,
             HasActiveOrders,
+            IsRegular,
             _sortBy,
             _descending);
 
@@ -1575,4 +1578,4 @@
         _selectedOrderNumber = null;
         _selectedOrderItems = [];
     }
-}ы
+}

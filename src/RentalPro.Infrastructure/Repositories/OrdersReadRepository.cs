@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using RentalPro.Application.Repositories;
 using RentalPro.Contracts.Orders;
 using RentalPro.Contracts.Payments;
+using RentalPro.Domain.Customers;
 using RentalPro.Domain.Orders;
 using RentalPro.Domain.Payments;
 using RentalPro.Shared;
@@ -1083,6 +1084,42 @@ public sealed class OrdersReadRepository(
             return CommonErrors.Db(
                     "get.payment.fiscalization.data.from.db.exception",
                     "Failed to get payment fiscalization data")
+                .ToErrors();
+        }
+    }
+    
+    public async Task<Result<bool, Errors>> CustomerHasOrdersAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var customerIdValue = CustomerId.Restore(customerId);
+
+            var hasOrders = await dbContext.Orders
+                .AnyAsync(
+                    order => order.CustomerId == customerIdValue &&
+                             order.DeletedAt == null,
+                    cancellationToken);
+
+            return hasOrders;
+        }
+        catch (OperationCanceledException)
+        {
+            return CommonErrors
+                .OperationCancelled("check.customer.orders.was.cancelled")
+                .ToErrors();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to check orders for customer {CustomerId}",
+                customerId);
+
+            return CommonErrors.Db(
+                    "check.customer.orders.from.db.exception",
+                    "Не удалось проверить наличие заказов у клиента")
                 .ToErrors();
         }
     }
