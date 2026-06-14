@@ -16,6 +16,7 @@ public sealed class CustomersReadRepository(
     public async Task<Result<PagedResult<CustomerDto>, Errors>> GetPagedAsync(
         string? search,
         bool? hasOrders,
+        bool? isRegular,
         bool? hasActiveOrders,
         string? sortBy,
         bool descending,
@@ -43,6 +44,7 @@ public sealed class CustomersReadRepository(
                 searchText,
                 searchPattern,
                 hasOrders,
+                isRegular,
                 hasActiveOrders,
                 cancellationToken);
 
@@ -79,6 +81,7 @@ public sealed class CustomersReadRepository(
                     CreateParameter("@search", searchText),
                     CreateParameter("@searchPattern", searchPattern),
                     CreateParameter("@hasOrders", hasOrders),
+                    CreateParameter("@isRegular", isRegular),
                     CreateParameter("@hasActiveOrders", hasActiveOrders),
                     CreateParameter("@offset", offset),
                     CreateParameter("@pageSize", pageSize))
@@ -118,6 +121,7 @@ public sealed class CustomersReadRepository(
                        SELECT
                            COUNT(c.id) AS TotalCount,
                            ISNULL(SUM(CASE WHEN oc.OrdersCount > 0 THEN 1 ELSE 0 END), 0) AS WithOrdersCount,
+                           ISNULL(SUM(CASE WHEN oc.OrdersCount >= 2 THEN 1 ELSE 0 END), 0) AS RegularCustomersCount,
                            ISNULL(SUM(CASE WHEN oc.ActiveOrdersCount > 0 THEN 1 ELSE 0 END), 0) AS WithActiveOrdersCount
                        {FromClause}
                        WHERE c.deleted_at IS NULL
@@ -151,6 +155,7 @@ public sealed class CustomersReadRepository(
     public async Task<Result<IReadOnlyList<CustomerDto>, Errors>> GetForExportAsync(
         string? search,
         bool? hasOrders,
+        bool? isRegular,
         bool? hasActiveOrders,
         string? sortBy,
         bool descending,
@@ -200,6 +205,7 @@ public sealed class CustomersReadRepository(
                     CreateParameter("@search", searchText),
                     CreateParameter("@searchPattern", searchPattern),
                     CreateParameter("@hasOrders", hasOrders),
+                    CreateParameter("@isRegular", isRegular),
                     CreateParameter("@hasActiveOrders", hasActiveOrders))
                 .ToListAsync(cancellationToken);
 
@@ -228,6 +234,7 @@ public sealed class CustomersReadRepository(
         string? searchText,
         string? searchPattern,
         bool? hasOrders,
+        bool? isRegular,
         bool? hasActiveOrders,
         CancellationToken cancellationToken)
     {
@@ -243,6 +250,7 @@ public sealed class CustomersReadRepository(
                 CreateParameter("@search", searchText),
                 CreateParameter("@searchPattern", searchPattern),
                 CreateParameter("@hasOrders", hasOrders),
+                CreateParameter("@isRegular", isRegular),
                 CreateParameter("@hasActiveOrders", hasActiveOrders))
             .SingleAsync(cancellationToken);
     }
@@ -292,6 +300,11 @@ public sealed class CustomersReadRepository(
                                              OR (@hasOrders = 0 AND oc.OrdersCount = 0)
                                          )
                                          AND (
+                                             @isRegular IS NULL
+                                             OR (@isRegular = 1 AND oc.OrdersCount >= 2)
+                                             OR (@isRegular = 0 AND oc.OrdersCount < 2)
+                                         )
+                                         AND (
                                              @hasActiveOrders IS NULL
                                              OR (@hasActiveOrders = 1 AND ISNULL(oc.ActiveOrdersCount, 0) > 0)
                                              OR (@hasActiveOrders = 0 AND ISNULL(oc.ActiveOrdersCount, 0) = 0)
@@ -316,6 +329,8 @@ public sealed class CustomersReadRepository(
             "passport" => $"ORDER BY c.passport_series {direction}, c.passport_number {direction}",
             "orders" => $"ORDER BY oc.OrdersCount {direction}",
             "orderscount" => $"ORDER BY oc.OrdersCount {direction}",
+            "regular" => $"ORDER BY oc.OrdersCount {direction}",
+            "isregular" => $"ORDER BY oc.OrdersCount {direction}",
             "activeorders" => $"ORDER BY oc.ActiveOrdersCount {direction}",
             "activeorderscount" => $"ORDER BY oc.ActiveOrdersCount {direction}",
             "createdat" => $"ORDER BY c.created_at {direction}",

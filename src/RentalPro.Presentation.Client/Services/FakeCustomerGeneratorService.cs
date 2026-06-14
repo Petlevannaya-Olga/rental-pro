@@ -128,7 +128,7 @@ public sealed class FakeCustomerGeneratorService
                 : _faker.PickRandom(FemaleMiddleNames),
 
             PhoneNumber = $"+79{_faker.Random.Number(100000000, 999999999)}",
-            Email = _faker.Internet.Email(firstName, lastName, "rentalpro.ru").ToLowerInvariant(),
+            Email = _faker.Internet.Email(firstName, lastName).ToLowerInvariant(),
 
             PassportSeries = _faker.Random.Number(1000, 9999).ToString(),
             PassportNumber = _faker.Random.Number(100000, 999999).ToString(),

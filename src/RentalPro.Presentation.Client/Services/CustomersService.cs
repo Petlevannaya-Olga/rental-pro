@@ -34,6 +34,9 @@ public sealed class CustomersService(
 
             if (request.HasActiveOrders.HasValue)
                 parameters["hasActiveOrders"] = request.HasActiveOrders.Value.ToString();
+            
+            if (request.IsRegular.HasValue)
+                parameters["isRegular"] = request.IsRegular.Value.ToString();
 
             var url = QueryHelpers.AddQueryString(
                 "api/customers",
@@ -253,6 +256,9 @@ public sealed class CustomersService(
 
             if (request.HasActiveOrders.HasValue)
                 parameters["hasActiveOrders"] = request.HasActiveOrders.Value.ToString();
+            
+            if (request.IsRegular.HasValue)
+                parameters["isRegular"] = request.IsRegular.Value.ToString();
 
             var url = QueryHelpers.AddQueryString(
                 "api/customers/export",

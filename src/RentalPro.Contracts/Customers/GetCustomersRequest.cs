@@ -3,6 +3,7 @@ namespace RentalPro.Contracts.Customers;
 public sealed record GetCustomersRequest(
     string? Search,
     bool? HasOrders,
+    bool? IsRegular,
     bool? HasActiveOrders,
     string? SortBy,
     bool Descending = false,

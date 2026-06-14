@@ -30,6 +30,7 @@ public sealed class CustomersController(
         var query = new GetCustomersQuery(
             request.Search,
             request.HasOrders,
+            request.IsRegular,
             request.HasActiveOrders,
             request.SortBy,
             request.Descending,
@@ -151,6 +152,7 @@ public sealed class CustomersController(
         var query = new ExportCustomersQuery(
             request.Search,
             request.HasOrders,
+            request.IsRegular,
             request.HasActiveOrders,
             request.SortBy,
             request.Descending);

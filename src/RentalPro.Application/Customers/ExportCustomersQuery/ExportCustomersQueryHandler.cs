@@ -19,6 +19,7 @@ public sealed class ExportCustomersQueryHandler(
         var customersResult = await readRepository.GetForExportAsync(
             query.Search,
             query.HasOrders,
+            query.IsRegular,
             query.HasActiveOrders,
             query.SortBy,
             query.Descending,

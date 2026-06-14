@@ -17,6 +17,7 @@ public sealed class GetCustomersQueryHandler(
         return await customersReadRepository.GetPagedAsync(
             query.Search,
             query.HasOrders,
+            query.IsRegular,
             query.HasActiveOrders,
             query.SortBy,
             query.Descending,

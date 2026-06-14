@@ -9,6 +9,7 @@ public interface ICustomersReadRepository
     Task<Result<PagedResult<CustomerDto>, Errors>> GetPagedAsync(
         string? search,
         bool? hasOrders,
+        bool? isRegular,
         bool? hasActiveOrders,
         string? sortBy,
         bool descending,
@@ -22,6 +23,7 @@ public interface ICustomersReadRepository
     Task<Result<IReadOnlyList<CustomerDto>, Errors>> GetForExportAsync(
         string? search,
         bool? hasOrders,
+        bool? isRegular,
         bool? hasActiveOrders,
         string? sortBy,
         bool descending,
