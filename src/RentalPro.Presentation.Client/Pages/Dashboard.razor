@@ -1,10 +1,12 @@
 ﻿@page "/dashboard"
 @using RentalPro.Contracts.Dashboard
+@using RentalPro.Contracts.Orders
 @using RentalPro.Presentation.Client.Services
 @layout AdminLayout
 @inject DashboardService DashboardService
 @inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
+@inject OrdersService OrdersService
 
 <div class="dashboard">
 
@@ -153,11 +155,11 @@
                     <tr>
                         <th>№ заказа</th>
                         <th>Клиент</th>
-                        <th>Инструментов</th>
-                        <th>Дата выдачи</th>
-                        <th>Дата возврата</th>
+                        <th>Инстр.</th>
+                        <th>Выдача</th>
                         <th>Статус</th>
-                        <th>Сумма</th>
+                        <th>Аренда</th>
+                        <th>Залог</th>
                     </tr>
                     </thead>
 
@@ -174,18 +176,33 @@
                     {
                         @foreach (var order in _dashboard.RecentOrders)
                         {
-                            <tr class="clickable-row" @onclick="() => GoToOrder(order.Id)">
-                                <td>@order.Number</td>
-                                <td>@order.CustomerFullName</td>
-                                <td>@order.ToolsCount</td>
-                                <td>@FormatDate(order.StartDate)</td>
-                                <td>@FormatDate(order.PlannedReturnDate)</td>
+                            <tr class="clickable-row"
+                                @onclick="() => OpenOrderItemsModal(order)">
                                 <td>
-                                    <span class="@GetStatusBadgeClass(order.StatusName)">
+                                    <strong>@order.Number</strong>
+                                </td>
+
+                                <td>@order.CustomerFullName</td>
+
+                                <td>@order.ToolsCount</td>
+
+                                <td>
+                                    @(order.StartDate?.ToString("dd.MM.yyyy") ?? "-")
+                                </td>
+
+                                <td>
+                                    <span class="@GetOrderStatusClass(order.StatusName)">
                                         @order.StatusName
                                     </span>
                                 </td>
-                                <td>@FormatMoney(order.TotalCost)</td>
+
+                                <td>
+                                    @order.TotalCost.ToString("N0") ₽
+                                </td>
+
+                                <td>
+                                    @order.DepositTotal.ToString("N0") ₽
+                                </td>
                             </tr>
                         }
                     }
@@ -311,13 +328,69 @@
 
         </div>
     }
+    
+    @if (_isOrderItemsModalOpen)
+{
+    <div class="actions-backdrop" @onclick="CloseOrderItemsModal">
+        <div class="order-items-modal" @onclick:stopPropagation="true">
+
+            <div class="actions-modal-header">
+                <div>
+                    <h3>Состав заказа</h3>
+
+                    @if (_selectedOrderDetails is not null)
+                    {
+                        <p>@_selectedOrderDetails.Number — @_selectedOrderDetails.CustomerFullName</p>
+                    }
+                    else
+                    {
+                        <p>Загрузка данных заказа</p>
+                    }
+                </div>
+
+                <button type="button" @onclick="CloseOrderItemsModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            @if (_isOrderItemsLoading)
+            {
+                <div class="table-empty">Загрузка состава заказа...</div>
+            }
+            else if (_selectedOrderDetails is null || _selectedOrderDetails.Items.Count == 0)
+            {
+                <div class="table-empty">Позиции заказа не найдены</div>
+            }
+            else
+            {
+                <div class="order-items-table-wrap">
+                    <OrderItemsTable Items="_selectedOrderDetails.Items" />
+                </div>
+            }
+
+            <div class="customer-view-footer">
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="CloseOrderItemsModal">
+                    Закрыть
+                </button>
+            </div>
+
+        </div>
+    </div>
+}
 
 </div>
 
 @code {
+    private DashboardRecentOrderDto? _selectedRecentOrder;
+    private bool _isOrderItemsModalOpen;
+    private bool _isRecentOrderModalOpen;
     private DashboardDto? _dashboard;
     private bool _isLoading = true;
-
+    private OrderDetailsDto? _selectedOrderDetails;
+    private bool _isOrderItemsLoading;
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadDashboardAsync();
@@ -443,5 +516,47 @@
                 $"#f0c419 {rentedEnd:F2}% {bookedEnd:F2}%, " +
                 $"#d97a16 {bookedEnd:F2}% 100%);";
         }
+    }
+    
+    private static string GetOrderStatusClass(string statusName)
+    {
+        return statusName.ToLowerInvariant() switch
+        {
+            "забронирован" => "status-badge reserved",
+            "выполняется" => "status-badge rented",
+            "ожидает возврата залога" => "status-badge warning",
+            "завершен" => "status-badge available",
+            "отменен" => "status-badge cancelled",
+
+            _ => "status-badge"
+        };
+    }
+    
+    private async Task OpenOrderItemsModal(DashboardRecentOrderDto order)
+    {
+        _isOrderItemsModalOpen = true;
+        _isOrderItemsLoading = true;
+        _selectedOrderDetails = null;
+
+        var result = await OrdersService.GetByIdAsync(order.Id);
+
+        if (result.IsFailure)
+        {
+            _isOrderItemsLoading = false;
+            _isOrderItemsModalOpen = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _selectedOrderDetails = result.Value;
+        _isOrderItemsLoading = false;
+    }
+    
+    private void CloseOrderItemsModal()
+    {
+        _selectedOrderDetails = null;
+        _isOrderItemsModalOpen = false;
+        _isOrderItemsLoading = false;
     }
 }

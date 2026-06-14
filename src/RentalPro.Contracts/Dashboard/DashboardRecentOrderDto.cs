@@ -6,6 +6,6 @@ public sealed record DashboardRecentOrderDto(
     string CustomerFullName,
     int ToolsCount,
     DateOnly? StartDate,
-    DateOnly? PlannedReturnDate,
     string StatusName,
-    decimal TotalCost);
+    decimal TotalCost,
+    decimal DepositTotal);

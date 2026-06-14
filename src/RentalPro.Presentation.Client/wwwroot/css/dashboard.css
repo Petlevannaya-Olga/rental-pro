@@ -1408,18 +1408,6 @@ body {
     white-space: nowrap;
 }
 
-.chart-legend div {
-    display: grid;
-    grid-template-columns: 10px 1fr auto;
-    align-items: center;
-    gap: 10px;
-}
-
-.chart-legend strong {
-    color: #0f172a;
-    font-weight: 800;
-}
-
 .bottom-row {
     grid-template-columns: 1fr 1fr;
 }
@@ -1768,4 +1756,135 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+/* Dashboard rows */
+
+.clickable-row {
+    cursor: pointer;
+}
+
+.clickable-row:hover {
+    background: #f8fafc;
+}
+
+/* Status badges */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge.available {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.rented {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-badge.reserved {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status-badge.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.cancelled {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Order items modal */
+
+.order-items-modal {
+    width: 900px;
+    max-width: calc(100vw - 48px);
+
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+
+    overflow: hidden;
+}
+
+.order-items-modal .actions-modal-header {
+    padding: 24px 24px 0 16px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.order-items-table-wrap {
+    width: 100%;
+    padding-right: 24px;
+    overflow-x: hidden;
+}
+
+.order-items-modal .order-tools-period-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.order-items-modal .order-tools-period-table th,
+.order-items-modal .order-tools-period-table td {
+    padding: 12px 8px;
+    vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.order-items-modal .order-tools-period-table th {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.order-items-modal .order-tools-period-table td {
+    font-size: 13px;
+}
+
+.order-items-modal .order-tools-period-table th:nth-child(1),
+.order-items-modal .order-tools-period-table td:nth-child(1) {
+    width: 29%;
+}
+
+.order-items-modal .order-tools-period-table th:nth-child(2),
+.order-items-modal .order-tools-period-table td:nth-child(2),
+.order-items-modal .order-tools-period-table th:nth-child(3),
+.order-items-modal .order-tools-period-table td:nth-child(3),
+.order-items-modal .order-tools-period-table th:nth-child(4),
+.order-items-modal .order-tools-period-table td:nth-child(4) {
+    width: 13%;
+}
+
+.order-items-modal .order-tools-period-table th:nth-child(5),
+.order-items-modal .order-tools-period-table td:nth-child(5) {
+    width: 5%;
+}
+
+.order-items-modal .order-tools-period-table th:nth-child(6),
+.order-items-modal .order-tools-period-table td:nth-child(6),
+.order-items-modal .order-tools-period-table th:nth-child(7),
+.order-items-modal .order-tools-period-table td:nth-child(7) {
+    width: 8%;
+}
+
+.order-items-modal .customer-view-footer {
+    padding: 14px 24px 20px;
 }

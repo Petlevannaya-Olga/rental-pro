@@ -209,43 +209,80 @@ public sealed class DashboardReadRepository(
     }
 
     private async Task<List<DashboardRecentOrderDto>> GetRecentOrdersAsync(
-        CancellationToken cancellationToken)
-    {
-        const string sql = """
-                           SELECT TOP 5
-                               o.id AS Id,
-                               o.number AS Number,
-                               CONCAT(c.last_name, N' ', c.first_name, N' ', c.middle_name) AS CustomerFullName,
-                               COUNT(oi.id) AS ToolsCount,
-                               MIN(oi.start_date) AS StartDate,
-                               MAX(oi.planned_return_date) AS PlannedReturnDate,
-                               os.name AS StatusName,
-                               CAST(ISNULL(SUM(
-                                   oi.rental_price_per_day * DATEDIFF(day, oi.start_date, oi.planned_return_date)
-                                   + oi.deposit_amount
-                               ), 0) AS decimal(18, 2)) AS TotalCost
-                           FROM orders o
-                           INNER JOIN customers c ON c.id = o.customer_id
-                           INNER JOIN order_statuses os ON os.id = o.status_id
-                           LEFT JOIN order_items oi
-                               ON oi.order_id = o.id
-                              AND oi.deleted_at IS NULL
-                           WHERE o.deleted_at IS NULL
-                           GROUP BY
-                               o.id,
-                               o.number,
+    CancellationToken cancellationToken)
+{
+    const string sql = """
+                       SELECT TOP 5
+                           o.id AS Id,
+                           o.number AS Number,
+                           CONCAT(
                                c.last_name,
+                               N' ',
                                c.first_name,
-                               c.middle_name,
-                               os.name,
-                               o.created_at
-                           ORDER BY o.created_at DESC
-                           """;
+                               N' ',
+                               c.middle_name
+                           ) AS CustomerFullName,
 
-        return await dbContext.Database
-            .SqlQueryRaw<DashboardRecentOrderDto>(sql)
-            .ToListAsync(cancellationToken);
-    }
+                           COUNT(oi.id) AS ToolsCount,
+
+                           MIN(oi.start_date) AS StartDate,
+
+                           os.name AS StatusName,
+
+                           CAST(
+                               ISNULL(
+                                   SUM(
+                                       oi.rental_price_per_day *
+                                       DATEDIFF(
+                                           day,
+                                           oi.start_date,
+                                           ISNULL(
+                                               oi.actual_returned_date,
+                                               oi.planned_return_date
+                                           )
+                                       )
+                                   ),
+                                   0
+                               ) AS decimal(18, 2)
+                           ) AS TotalCost,
+
+                           CAST(
+                               ISNULL(
+                                   SUM(oi.deposit_amount),
+                                   0
+                               ) AS decimal(18, 2)
+                           ) AS DepositTotal
+
+                       FROM orders o
+
+                       INNER JOIN customers c
+                           ON c.id = o.customer_id
+
+                       INNER JOIN order_statuses os
+                           ON os.id = o.status_id
+
+                       LEFT JOIN order_items oi
+                           ON oi.order_id = o.id
+                          AND oi.deleted_at IS NULL
+
+                       WHERE o.deleted_at IS NULL
+
+                       GROUP BY
+                           o.id,
+                           o.number,
+                           c.last_name,
+                           c.first_name,
+                           c.middle_name,
+                           os.name,
+                           o.created_at
+
+                       ORDER BY o.created_at DESC
+                       """;
+
+    return await dbContext.Database
+        .SqlQueryRaw<DashboardRecentOrderDto>(sql)
+        .ToListAsync(cancellationToken);
+}
 
     private async Task<List<DashboardReturnDto>> GetUpcomingReturnsAsync(
         CancellationToken cancellationToken)

@@ -171,6 +171,8 @@
 
 .order-tools-period-table {
     margin-top: 12px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 .order-tools-period-table th,
@@ -561,7 +563,6 @@
     justify-content: flex-end;
     align-items: center;
     gap: 12px;
-    margin-top: 24px;
 }
 
 .customer-view-footer .secondary-button,

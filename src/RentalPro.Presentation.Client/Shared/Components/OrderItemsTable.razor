@@ -1,0 +1,80 @@
+@using RentalPro.Contracts.Orders
+
+<table class="users-table order-tools-period-table">
+    <thead>
+    <tr>
+        <th>Инструмент</th>
+        <th>Начало аренды</th>
+        <th>План возврата</th>
+        <th>Факт возврата</th>
+        <th>Дней</th>
+        <th>Аренда</th>
+        <th>Залог</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    @if (Items.Count == 0)
+    {
+        <tr>
+            <td colspan="7" class="empty-cell">
+                Позиции заказа отсутствуют
+            </td>
+        </tr>
+    }
+    else
+    {
+        @foreach (var item in Items)
+        {
+            <tr>
+                <td>
+                    <strong>@item.ToolName</strong>
+
+                    <span class="table-subtitle">
+                        @($"{item.RentalPricePerDay:N0} ₽ / день")
+                    </span>
+                </td>
+
+                <td>
+                    @item.StartDate.ToString("dd.MM.yyyy")
+                </td>
+
+                <td>
+                    @item.PlannedReturnDate.ToString("dd.MM.yyyy")
+                </td>
+
+                <td>
+                    @(item.ActualReturnedDate?.ToString("dd.MM.yyyy") ?? "—")
+                </td>
+
+                <td>
+                    @GetItemRentalDays(item)
+                </td>
+
+                <td>
+                    @($"{item.TotalAmount:N0} ₽")
+                </td>
+
+                <td>
+                    @($"{item.DepositAmount:N0} ₽")
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public IReadOnlyList<OrderDetailsItemDto> Items { get; set; } = [];
+
+    private static string GetItemRentalDays(OrderDetailsItemDto item)
+    {
+        var days = (item.PlannedReturnDate.ToDateTime(TimeOnly.MinValue)
+                    - item.StartDate.ToDateTime(TimeOnly.MinValue))
+            .Days;
+
+        return $"{days} дн.";
+    }
+}
