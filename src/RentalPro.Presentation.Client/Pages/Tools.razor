@@ -1,7 +1,6 @@
 ﻿@page "/tools"
 @layout AdminLayout
 
-@using System.ComponentModel.DataAnnotations
 @using RentalPro.Contracts.Tools
 @using RentalPro.Presentation.Client.Models
 @using RentalPro.Presentation.Client.Models.Dictionaries
@@ -233,15 +232,29 @@
                 {
                     <tr>
                         <td>
-                            <div class="user-cell">
-                                <div class="user-avatar">
-                                    <i class="bi bi-tools"></i>
-                                </div>
+                            <div class="tool-cell">
+
+                                @if (!string.IsNullOrWhiteSpace(tool.PhotoPath))
+                                {
+                                    <img class="tool-avatar-image"
+                                         src="@GetToolImageUrl(tool.PhotoPath)"
+                                         alt="@tool.Name" />
+                                }
+                                else
+                                {
+                                    <div class="tool-avatar">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+                                }
 
                                 <div>
                                     <strong>@tool.Name</strong>
-                                    <span>Инв. № @tool.InventoryNumber</span>
+
+                                    <span class="table-subtitle">
+                                        @tool.InventoryNumber
+                                    </span>
                                 </div>
+
                             </div>
                         </td>
 
@@ -461,15 +474,11 @@
                                 <div class="tool-form-field">
                                     <label>Статус</label>
 
-                                    <InputSelect @bind-Value="_newTool.StatusId"
-                                                 disabled>
-                                        @foreach (var status in _statuses)
-                                        {
-                                            <option value="@status.Id">
-                                                @status.Name
-                                            </option>
-                                        }
-                                    </InputSelect>
+                                    <div class="readonly-status">
+                                        <span class="status-badge available">
+                                            Доступен
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div class="tool-form-field">
@@ -542,12 +551,12 @@
     @if (_isViewModalOpen && _viewTool is not null)
     {
         <div class="actions-backdrop">
-            <div class="tool-view-modal" @onclick:stopPropagation="true">
+            <div class="tool-details-modal" @onclick:stopPropagation="true">
 
                 <div class="actions-modal-header">
                     <div>
-                        <h3>@_viewTool.Name</h3>
-                        <p>Карточка инструмента</p>
+                        <h3>Просмотр инструмента</h3>
+                        <p>@_viewTool.Name</p>
                     </div>
 
                     <button type="button" @onclick="CloseViewModal">
@@ -555,9 +564,9 @@
                     </button>
                 </div>
 
-                <div class="tool-view-layout">
+                <div class="tool-details-layout">
 
-                    <div class="tool-view-photo">
+                    <div class="tool-details-photo-card">
                         @if (!string.IsNullOrWhiteSpace(_viewTool.PhotoPath))
                         {
                             <img src="@GetToolImageUrl(_viewTool.PhotoPath)"
@@ -565,75 +574,78 @@
                         }
                         else
                         {
-                            <div class="tool-view-photo-empty">
+                            <div class="tool-details-photo-empty">
                                 <i class="bi bi-camera"></i>
                                 <span>Фотография не загружена</span>
                             </div>
                         }
                     </div>
 
-                    <div class="tool-view-info">
+                    <div class="tool-details-grid">
 
-                        <div class="tool-view-grid">
-                            <div class="tool-view-item">
-                                <span>Артикул</span>
-                                <strong>@_viewTool.ArticleNumber</strong>
-                            </div>
-
-                            <div class="tool-view-item">
-                                <span>Категория</span>
-                                <strong>@_viewTool.CategoryName</strong>
-                            </div>
-
-                            <div class="tool-view-item">
-                                <span>Производитель</span>
-                                <strong>@_viewTool.ManufacturerName</strong>
-                            </div>
-
-                            <div class="tool-view-item">
-                                <span>Статус</span>
-                                <strong>
-                                <span class="@GetStatusClass(_viewTool.StatusName)">
-                                    @_viewTool.StatusName
-                                </span>
-                                </strong>
-                            </div>
-
-                            <div class="tool-view-item">
-                                <span>Серийный номер</span>
-                                <strong>@_viewTool.SerialNumber</strong>
-                            </div>
-
-                            <div class="tool-view-item">
-                                <span>Инвентарный номер</span>
-                                <strong>@_viewTool.InventoryNumber</strong>
-                            </div>
-
-                            <div class="tool-view-item">
-                                <span>Аренда за день</span>
-                                <strong>@_viewTool.RentalPricePerDay.ToString("N0") ₽</strong>
-                            </div>
-
-                            <div class="tool-view-item">
-                                <span>Залог</span>
-                                <strong>@_viewTool.DepositAmount.ToString("N0") ₽</strong>
-                            </div>
+                        <div class="customer-detail-item">
+                            <span>Название</span>
+                            <strong>@_viewTool.Name</strong>
                         </div>
 
-                        <div class="tool-view-section">
+                        <div class="customer-detail-item">
+                            <span>Артикул</span>
+                            <strong>@_viewTool.ArticleNumber</strong>
+                        </div>
+
+                        <div class="customer-detail-item">
+                            <span>Категория</span>
+                            <strong>@_viewTool.CategoryName</strong>
+                        </div>
+
+                        <div class="customer-detail-item">
+                            <span>Производитель</span>
+                            <strong>@_viewTool.ManufacturerName</strong>
+                        </div>
+
+                        <div class="customer-detail-item">
+                            <span>Статус</span>
+                            <strong>
+                            <span class="@GetStatusClass(_viewTool.StatusName)">
+                                @_viewTool.StatusName
+                            </span>
+                            </strong>
+                        </div>
+
+                        <div class="customer-detail-item">
+                            <span>Серийный номер</span>
+                            <strong>@_viewTool.SerialNumber</strong>
+                        </div>
+
+                        <div class="customer-detail-item">
+                            <span>Инвентарный номер</span>
+                            <strong>@_viewTool.InventoryNumber</strong>
+                        </div>
+
+                        <div class="customer-detail-item">
+                            <span>Аренда за день</span>
+                            <strong>@_viewTool.RentalPricePerDay.ToString("N0") ₽</strong>
+                        </div>
+
+                        <div class="customer-detail-item">
+                            <span>Залог</span>
+                            <strong>@_viewTool.DepositAmount.ToString("N0") ₽</strong>
+                        </div>
+
+                        <div class="customer-detail-item">
                             <span>Текущее состояние</span>
-                            <p>@(_viewTool.CurrentCondition ?? "Не указано")</p>
+                            <strong>@(_viewTool.CurrentCondition ?? "Не указано")</strong>
                         </div>
 
-                        <div class="tool-view-section">
+                        <div class="customer-detail-item tool-details-description">
                             <span>Описание</span>
-                            <p>@(_viewTool.Description ?? "Описание не указано")</p>
+                            <strong>@(_viewTool.Description ?? "Описание не указано")</strong>
                         </div>
 
                     </div>
                 </div>
 
-                <div class="tool-form-actions modal-footer">
+                <div class="customer-view-footer">
                     <button class="secondary-button"
                             type="button"
                             @onclick="CloseViewModal">
@@ -812,97 +824,97 @@
             </div>
         </div>
     }
-    
-    @if (_isRentalHistoryModalOpen && _rentalHistoryTool is not null)
-{
-    <div class="actions-backdrop" @onclick="CloseRentalHistoryModal">
-        <div class="rental-history-modal" @onclick:stopPropagation="true">
 
-            <div class="actions-modal-header">
-                <div>
-                    <h3>История аренды</h3>
-                    <p>@_rentalHistoryTool.Name — инв. № @_rentalHistoryTool.InventoryNumber</p>
+    @if (_isRentalHistoryModalOpen && _rentalHistoryTool is not null)
+    {
+        <div class="actions-backdrop" @onclick="CloseRentalHistoryModal">
+            <div class="rental-history-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>История аренды</h3>
+                        <p>@_rentalHistoryTool.Name — инв. № @_rentalHistoryTool.InventoryNumber</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseRentalHistoryModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
 
-                <button type="button" @onclick="CloseRentalHistoryModal">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-
-            <div class="rental-history-table-wrap">
-                @if (_isRentalHistoryLoading)
-                {
-                    <div class="table-empty">
-                        Загрузка истории аренды...
-                    </div>
-                }
-                else if (_rentalHistory.Count == 0)
-                {
-                    <div class="table-empty">
-                        По этому инструменту еще не было аренд
-                    </div>
-                }
-                else
-                {
-                    <table class="users-table rental-history-table">
-                        <thead>
-                        <tr>
-                            <th>№ заказа</th>
-                            <th>Клиент</th>
-                            <th>Начало</th>
-                            <th>План</th>
-                            <th>Факт</th>
-                            <th>Дней</th>
-                            <th>Сумма</th>
-                            <th>Статус</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        @foreach (var item in _rentalHistory)
-                        {
+                <div class="rental-history-table-wrap">
+                    @if (_isRentalHistoryLoading)
+                    {
+                        <div class="table-empty">
+                            Загрузка истории аренды...
+                        </div>
+                    }
+                    else if (_rentalHistory.Count == 0)
+                    {
+                        <div class="table-empty">
+                            По этому инструменту еще не было аренд
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="users-table rental-history-table">
+                            <thead>
                             <tr>
-                                <td>
-                                    <strong>@item.OrderNumber</strong>
-                                </td>
+                                <th>№ заказа</th>
+                                <th>Клиент</th>
+                                <th>Начало</th>
+                                <th>План</th>
+                                <th>Факт</th>
+                                <th>Дней</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                            </tr>
+                            </thead>
 
-                                <td>@item.CustomerFullName</td>
+                            <tbody>
+                            @foreach (var item in _rentalHistory)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@item.OrderNumber</strong>
+                                    </td>
 
-                                <td>@item.StartDate.ToString("dd.MM.yyyy")</td>
+                                    <td>@item.CustomerFullName</td>
 
-                                <td>@item.PlannedReturnDate.ToString("dd.MM.yyyy")</td>
+                                    <td>@item.StartDate.ToString("dd.MM.yyyy")</td>
 
-                                <td>
-                                    @(item.ActualReturnedDate?.ToString("dd.MM.yyyy") ?? "-")
-                                </td>
+                                    <td>@item.PlannedReturnDate.ToString("dd.MM.yyyy")</td>
 
-                                <td>@item.RentalDays</td>
+                                    <td>
+                                        @(item.ActualReturnedDate?.ToString("dd.MM.yyyy") ?? "-")
+                                    </td>
 
-                                <td>@($"{item.RentalAmount:N0} ₽")</td>
+                                    <td>@item.RentalDays</td>
 
-                                <td>
+                                    <td>@($"{item.RentalAmount:N0} ₽")</td>
+
+                                    <td>
                                     <span class="@GetOrderStatusClass(item.OrderStatusName)">
                                         @item.OrderStatusName
                                     </span>
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                }
-            </div>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                </div>
 
-            <div class="customer-view-footer">
-                <button class="secondary-button"
-                        type="button"
-                        @onclick="CloseRentalHistoryModal">
-                    Закрыть
-                </button>
-            </div>
+                <div class="customer-view-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseRentalHistoryModal">
+                        Закрыть
+                    </button>
+                </div>
 
+            </div>
         </div>
-    </div>
-}
+    }
 
 </div>
 
@@ -912,7 +924,7 @@
     private bool _isRentalHistoryModalOpen;
     private List<ToolRentalHistoryItemDto> _rentalHistory = [];
     private bool _isRentalHistoryLoading;
-    
+
     private readonly Random _random = new();
     private CancellationTokenSource? _searchCts;
     private const int PageSize = 5;
@@ -1220,7 +1232,7 @@
             CloseActionsMenu();
             return;
         }
-        
+
         if (action == "Перевод в ремонт")
         {
             await ChangeToolStatus(_selectedTool, "На ремонте");
@@ -1232,7 +1244,7 @@
             await ChangeToolStatus(_selectedTool, "Списан");
             return;
         }
-        
+
         if (action == "История аренды")
         {
             var tool = _selectedTool;
@@ -1244,7 +1256,7 @@
 
             return;
         }
-        
+
         if (action == "Завершение ремонта")
         {
             await ChangeToolStatus(_selectedTool, "Доступен");
@@ -1291,7 +1303,6 @@
             Description: _newTool.Description,
             CategoryId: _newTool.CategoryId.Value,
             ManufacturerId: _newTool.ManufacturerId.Value,
-            StatusId: _newTool.StatusId.Value,
             RentalPricePerDay: _newTool.RentalPricePerDay,
             DepositAmount: _newTool.DepositAmount,
             SerialNumber: _newTool.SerialNumber,
@@ -1476,7 +1487,6 @@
                 Description: tool.Description,
                 CategoryId: tool.CategoryId!.Value,
                 ManufacturerId: tool.ManufacturerId!.Value,
-                StatusId: tool.StatusId!.Value,
                 RentalPricePerDay: tool.RentalPricePerDay,
                 DepositAmount: tool.DepositAmount,
                 SerialNumber: tool.SerialNumber,
@@ -1657,7 +1667,7 @@
         await LoadStatsAsync();
         await LoadToolsAsync();
     }
-    
+
     private async Task ChangeToolStatus(
         ToolDto tool,
         string statusName)
@@ -1688,7 +1698,7 @@
         await LoadStatsAsync();
         await LoadToolsAsync();
     }
-    
+
     private static string GetStatusClass(string statusName)
     {
         return statusName.Trim().ToLowerInvariant() switch
@@ -1701,7 +1711,7 @@
             _ => "status-badge"
         };
     }
-    
+
     private async Task OpenRentalHistoryModal(ToolDto tool)
     {
         _rentalHistoryTool = tool;
@@ -1721,7 +1731,7 @@
         _rentalHistory = result.Value;
         _isRentalHistoryLoading = false;
     }
-    
+
     private void CloseRentalHistoryModal()
     {
         _isRentalHistoryModalOpen = false;

@@ -77,7 +77,6 @@ public sealed class ToolsController(
                 request.Description,
                 request.CategoryId,
                 request.ManufacturerId,
-                request.StatusId,
                 request.RentalPricePerDay,
                 request.DepositAmount,
                 request.SerialNumber,

@@ -6,7 +6,6 @@ public sealed record CreateToolRequest(
     string? Description,
     Guid CategoryId,
     Guid ManufacturerId,
-    Guid StatusId,
     decimal RentalPricePerDay,
     decimal DepositAmount,
     string SerialNumber,
