@@ -17,6 +17,7 @@ public sealed class ChangeToolStatusCommandHandler(
 {
     private const string AvailableStatusName = "Доступен";
     private const string RepairStatusName = "На ремонте";
+    private const string WrittenOffStatusName = "Списан";
 
     public async Task<UnitResult<Errors>> Handle(
         ChangeToolStatusCommand command,
@@ -76,14 +77,12 @@ public sealed class ChangeToolStatusCommandHandler(
 
         var currentStatus = currentStatusResult.Value;
 
-        if (newStatus.Name.Value == RepairStatusName &&
-            currentStatus.Name.Value != AvailableStatusName)
-        {
-            return CommonErrors.Validation(
-                    "tool.can.be.sent.to.repair.only.when.available",
-                    "Перевести в ремонт можно только доступный инструмент")
-                .ToErrors();
-        }
+        var validationResult = ValidateManualStatusChange(
+            currentStatus.Name.Value,
+            newStatus.Name.Value);
+
+        if (validationResult.IsFailure)
+            return validationResult.Error.ToErrors();
 
         var changeStatusResult = tool.ChangeStatus(
             command.StatusId);
@@ -104,5 +103,32 @@ public sealed class ChangeToolStatusCommandHandler(
             command.StatusId);
 
         return UnitResult.Success<Errors>();
+    }
+
+    private static UnitResult<Error> ValidateManualStatusChange(
+        string currentStatusName,
+        string newStatusName)
+    {
+        if (currentStatusName == AvailableStatusName &&
+            newStatusName == RepairStatusName)
+        {
+            return UnitResult.Success<Error>();
+        }
+
+        if (currentStatusName == RepairStatusName &&
+            newStatusName == AvailableStatusName)
+        {
+            return UnitResult.Success<Error>();
+        }
+
+        if (currentStatusName == RepairStatusName &&
+            newStatusName == WrittenOffStatusName)
+        {
+            return UnitResult.Success<Error>();
+        }
+
+        return CommonErrors.Validation(
+            "tool.manual.status.change.forbidden",
+            "Через страницу инструментов доступны только переходы: доступен → на ремонте, на ремонте → доступен, на ремонте → списан");
     }
 }

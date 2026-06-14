@@ -252,7 +252,7 @@
                         <td>@tool.DepositAmount.ToString("N0") ₽</td>
 
                         <td>
-                            <span class="@GetToolStatusClass(tool.StatusName)">
+                            <span class="@GetStatusClass(tool.StatusName)">
                                 @tool.StatusName
                             </span>
                         </td>
@@ -317,28 +317,41 @@
                     История аренды
                 </button>
 
-                <div class="menu-divider"></div>
+                @if (_selectedTool?.StatusName is "Доступен" or "На ремонте")
+                {
+                    <div class="menu-divider"></div>
+                }
 
                 @if (_selectedTool?.StatusName == "Доступен")
                 {
-                    <button class="menu-item"
-                            @onclick='() => ExecuteToolAction("Перевод в ремонт")'>
+                    <button class="menu-item" @onclick='() => ExecuteToolAction("Перевод в ремонт")'>
                         <i class="bi bi-wrench-adjustable"></i>
                         Перевести в ремонт
                     </button>
                 }
 
-                <button class="menu-item" @onclick='() => ExecuteToolAction("Списание")'>
-                    <i class="bi bi-box-seam"></i>
-                    Списать
-                </button>
+                @if (_selectedTool?.StatusName == "На ремонте")
+                {
+                    <button class="menu-item" @onclick='() => ExecuteToolAction("Завершение ремонта")'>
+                        <i class="bi bi-check-circle"></i>
+                        Завершить ремонт
+                    </button>
 
-                <div class="menu-divider"></div>
+                    <button class="menu-item" @onclick='() => ExecuteToolAction("Списание")'>
+                        <i class="bi bi-box-seam"></i>
+                        Списать
+                    </button>
+                }
 
-                <button class="menu-item menu-danger" @onclick='() => ExecuteToolAction("Удаление")'>
-                    <i class="bi bi-trash"></i>
-                    Удалить
-                </button>
+                @if (_selectedTool?.StatusName is not ("Забронирован" or "В аренде"))
+                {
+                    <div class="menu-divider"></div>
+
+                    <button class="menu-item menu-danger" @onclick='() => ExecuteToolAction("Удаление")'>
+                        <i class="bi bi-trash"></i>
+                        Удалить
+                    </button>
+                }
             </div>
         </div>
     }
@@ -580,7 +593,7 @@
                             <div class="tool-view-item">
                                 <span>Статус</span>
                                 <strong>
-                                <span class="@GetToolStatusClass(_viewTool.StatusName)">
+                                <span class="@GetStatusClass(_viewTool.StatusName)">
                                     @_viewTool.StatusName
                                 </span>
                                 </strong>
@@ -1231,6 +1244,12 @@
 
             return;
         }
+        
+        if (action == "Завершение ремонта")
+        {
+            await ChangeToolStatus(_selectedTool, "Доступен");
+            return;
+        }
 
         NotificationService.Info($"{action}: {_selectedTool.Name}");
 
@@ -1378,18 +1397,6 @@
         }
 
         NotificationService.Success("Инструменты экспортированы");
-    }
-
-    private static string GetToolStatusClass(string status)
-    {
-        return status switch
-        {
-            "Доступен" => "status-badge available",
-            "В аренде" => "status-badge rented",
-            "На ремонте" => "status-badge repair",
-            "Списан" => "status-badge danger",
-            _ => "status-badge"
-        };
     }
 
     private static T PickRandom<T>(
@@ -1687,13 +1694,10 @@
         return statusName.Trim().ToLowerInvariant() switch
         {
             "доступен" => "status-badge available",
-
             "забронирован" => "status-badge reserved",
-
             "в аренде" => "status-badge rented",
-
             "на ремонте" => "status-badge maintenance",
-
+            "списан" => "status-badge written-off",
             _ => "status-badge"
         };
     }

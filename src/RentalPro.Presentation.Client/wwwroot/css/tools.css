@@ -885,3 +885,8 @@
 .rental-history-modal .customer-view-footer {
     padding: 14px 24px 20px;
 }
+
+.status-badge.written-off {
+    background: #f3f4f6;
+    color: #6b7280;
+}
