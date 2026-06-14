@@ -1,15 +1,15 @@
 ﻿<div class="table-paging">
 
+    <span>
+        @($"Показано {StartItem}-{EndItem} из {TotalItems}")
+    </span>
+    
     <div class="table-paging-left">
         @if (LeftContent is not null)
         {
             @LeftContent
         }
     </div>
-
-    <span>
-        @($"Показано {StartItem}-{EndItem} из {TotalItems}")
-    </span>
 
     <div class="paging-actions">
 
