@@ -311,6 +311,92 @@ public sealed class CustomersReadRepository(
                                          )
                                        """;
 
+    public async Task<Result<List<CustomerOrderHistoryItemDto>, Errors>> GetOrderHistoryAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            const string sql = """
+                               SELECT
+                                   o.id AS OrderId,
+                                   o.number AS OrderNumber,
+                                   o.order_date AS OrderDate,
+
+                                   COUNT(oi.id) AS ToolsCount,
+
+                                   MIN(oi.start_date) AS StartDate,
+
+                                   os.name AS StatusName,
+
+                                   CAST(
+                                       ISNULL(
+                                           SUM(
+                                               oi.rental_price_per_day *
+                                               DATEDIFF(
+                                                   day,
+                                                   oi.start_date,
+                                                   ISNULL(
+                                                       oi.actual_returned_date,
+                                                       oi.planned_return_date
+                                                   )
+                                               )
+                                           ),
+                                           0
+                                       ) AS decimal(18, 2)
+                                   ) AS RentalAmount,
+
+                                   CAST(
+                                       ISNULL(
+                                           SUM(oi.deposit_amount),
+                                           0
+                                       ) AS decimal(18, 2)
+                                   ) AS DepositAmount
+
+                               FROM orders o
+
+                               INNER JOIN order_statuses os
+                                   ON os.id = o.status_id
+
+                               LEFT JOIN order_items oi
+                                   ON oi.order_id = o.id
+                                  AND oi.deleted_at IS NULL
+
+                               WHERE o.customer_id = @customerId
+                                 AND o.deleted_at IS NULL
+
+                               GROUP BY
+                                   o.id,
+                                   o.number,
+                                   o.order_date,
+                                   os.name,
+                                   o.created_at
+
+                               ORDER BY o.created_at DESC
+                               """;
+
+            var history = await dbContext.Database
+                .SqlQueryRaw<CustomerOrderHistoryItemDto>(
+                    sql,
+                    CreateParameter("@customerId", customerId))
+                .ToListAsync(cancellationToken);
+
+            return history;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get order history for customer {CustomerId}",
+                customerId);
+
+            return CommonErrors.LoadFailed(
+                    "customer.order.history.load.failed",
+                    "Не удалось загрузить историю заказов клиента")
+                .ToErrors();
+        }
+    }
+
     private static string GetOrderBy(
         string? sortBy,
         bool descending)

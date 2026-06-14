@@ -2,12 +2,14 @@
 @layout AdminLayout
 
 @using RentalPro.Contracts.Customers
+@using RentalPro.Contracts.Orders
 @using RentalPro.Presentation.Client.Models.Customers
 @using RentalPro.Presentation.Client.Services
 
 @inject CustomersService CustomersService
 @inject NotificationService NotificationService
 @inject FakeCustomerGeneratorService FakeCustomerGeneratorService
+@inject OrdersService OrdersService
 
 <div class="users-page">
 
@@ -18,7 +20,7 @@
             <StatCard Title="Всего клиентов"
                       Value="@_statsTotalCount.ToString()"
                       Icon="bi bi-people"
-                      Color="blue" />
+                      Color="blue"/>
         </div>
 
         <div class="stats-filter-card @GetStatsCardClass("withOrders")"
@@ -26,7 +28,7 @@
             <StatCard Title="С заказами"
                       Value="@_withOrdersCount.ToString()"
                       Icon="bi bi-receipt"
-                      Color="orange" />
+                      Color="orange"/>
         </div>
 
         <div class="stats-filter-card @GetStatsCardClass("regular")"
@@ -34,7 +36,7 @@
             <StatCard Title="Постоянные"
                       Value="@_regularCustomersCount.ToString()"
                       Icon="bi bi-star"
-                      Color="purple" />
+                      Color="purple"/>
         </div>
 
         <div class="stats-filter-card @GetStatsCardClass("withActiveOrders")"
@@ -42,7 +44,7 @@
             <StatCard Title="С активной арендой"
                       Value="@_withActiveOrdersCount.ToString()"
                       Icon="bi bi-tools"
-                      Color="green" />
+                      Color="green"/>
         </div>
 
         <button class="users-add-card"
@@ -57,75 +59,75 @@
 
         <div class="customers-filters">
 
-    <div class="customers-filters-top">
+            <div class="customers-filters-top">
 
-        <div class="filter-group search-filter">
-            <label>Поиск</label>
+                <div class="filter-group search-filter">
+                    <label>Поиск по ФИО, телефону, email или адресу</label>
 
-            <div class="search-box">
-                <i class="bi bi-search"></i>
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
 
-                <input placeholder="ФИО, телефон, email, паспорт или адрес..."
-                       value="@_search"
-                       @oninput="OnSearchChanged" />
+                        <input placeholder="ФИО, телефон, email, паспорт или адрес..."
+                               value="@_search"
+                               @oninput="OnSearchChanged"/>
+                    </div>
+                </div>
+
+                <button class="secondary-button"
+                        @onclick="ExportCustomers">
+                    <i class="bi bi-download"></i>
+                    Экспорт
+                </button>
+
             </div>
+
+            <div class="customers-filters-bottom">
+
+                <div class="filter-group">
+                    <label>Заказы</label>
+
+                    <select class="filter-select"
+                            @bind="_ordersFilter"
+                            @bind:after="ApplyFilters">
+                        <option value="">Все клиенты</option>
+                        <option value="withOrders">С заказами</option>
+                        <option value="withoutOrders">Без заказов</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Постоянные</label>
+
+                    <select class="filter-select"
+                            @bind="_regularFilter"
+                            @bind:after="ApplyFilters">
+                        <option value="">Все клиенты</option>
+                        <option value="regular">Постоянные</option>
+                        <option value="notRegular">Не постоянные</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Активная аренда</label>
+
+                    <select class="filter-select"
+                            @bind="_activeOrdersFilter"
+                            @bind:after="ApplyFilters">
+                        <option value="">Все клиенты</option>
+                        <option value="withActiveOrders">С активной арендой</option>
+                        <option value="withoutActiveOrders">Без активной аренды</option>
+                    </select>
+                </div>
+
+                <button class="secondary-button"
+                        @onclick="ResetFilters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Сбросить
+                </button>
+
+            </div>
+
         </div>
-
-        <button class="secondary-button"
-                @onclick="ExportCustomers">
-            <i class="bi bi-download"></i>
-            Экспорт
-        </button>
-
-    </div>
-
-    <div class="customers-filters-bottom">
-
-        <div class="filter-group">
-            <label>Заказы</label>
-
-            <select class="filter-select"
-                    @bind="_ordersFilter"
-                    @bind:after="ApplyFilters">
-                <option value="">Все клиенты</option>
-                <option value="withOrders">С заказами</option>
-                <option value="withoutOrders">Без заказов</option>
-            </select>
-        </div>
-
-        <div class="filter-group">
-            <label>Постоянные</label>
-
-            <select class="filter-select"
-                    @bind="_regularFilter"
-                    @bind:after="ApplyFilters">
-                <option value="">Все клиенты</option>
-                <option value="regular">Постоянные</option>
-                <option value="notRegular">Не постоянные</option>
-            </select>
-        </div>
-
-        <div class="filter-group">
-            <label>Активная аренда</label>
-
-            <select class="filter-select"
-                    @bind="_activeOrdersFilter"
-                    @bind:after="ApplyFilters">
-                <option value="">Все клиенты</option>
-                <option value="withActiveOrders">С активной арендой</option>
-                <option value="withoutActiveOrders">Без активной аренды</option>
-            </select>
-        </div>
-
-        <button class="secondary-button"
-                @onclick="ResetFilters">
-            <i class="bi bi-arrow-counterclockwise"></i>
-            Сбросить
-        </button>
-
-    </div>
-
-</div>
 
         @if (_isLoading)
         {
@@ -156,12 +158,24 @@
                             </div>
                         </td>
 
-                        <td><div class="skeleton skeleton-line medium"></div></td>
-                        <td><div class="skeleton skeleton-line medium"></div></td>
-                        <td><div class="skeleton skeleton-line medium"></div></td>
-                        <td><div class="skeleton skeleton-line small"></div></td>
-                        <td><div class="skeleton skeleton-badge"></div></td>
-                        <td><div class="skeleton skeleton-dot"></div></td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-badge"></div>
+                        </td>
+                        <td>
+                            <div class="skeleton skeleton-dot"></div>
+                        </td>
                     </tr>
                 }
                 </tbody>
@@ -293,11 +307,6 @@
                     История заказов
                 </button>
 
-                <button class="menu-item" @onclick='() => ExecuteCustomerAction("Создание заказа")'>
-                    <i class="bi bi-receipt"></i>
-                    Создать заказ
-                </button>
-
                 <div class="menu-divider"></div>
 
                 <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
@@ -326,97 +335,131 @@
                 </div>
 
                 <EditForm Model="_newCustomer" OnValidSubmit="CreateCustomer">
-                    <DataAnnotationsValidator />
+                    <DataAnnotationsValidator/>
 
-                    <div class="tool-form-panel tool-form-panel-compact">
-                        <div class="tool-form-grid tool-form-grid-compact">
+                    <div class="customer-create-layout">
 
-                            <div class="tool-form-field">
-                                <label>Фамилия <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.LastName" />
-                                <ValidationMessage For="@(() => _newCustomer.LastName)" />
+                        <div class="customer-create-section">
+                            <div class="customer-create-section-title">
+                                <i class="bi bi-person"></i>
+                                <span>Данные клиента</span>
                             </div>
 
-                            <div class="tool-form-field">
-                                <label>Имя <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.FirstName" />
-                                <ValidationMessage For="@(() => _newCustomer.FirstName)" />
-                            </div>
+                            <div class="customer-create-grid">
 
-                            <div class="tool-form-field">
-                                <label>Отчество <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.MiddleName" />
-                                <ValidationMessage For="@(() => _newCustomer.MiddleName)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Фамилия <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.LastName"
+                                               placeholder="Введите фамилию"/>
+                                    <ValidationMessage For="@(() => _newCustomer.LastName)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Телефон <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.PhoneNumber" />
-                                <ValidationMessage For="@(() => _newCustomer.PhoneNumber)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Имя <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.FirstName"
+                                               placeholder="Введите имя"/>
+                                    <ValidationMessage For="@(() => _newCustomer.FirstName)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Email <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.Email" />
-                                <ValidationMessage For="@(() => _newCustomer.Email)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Отчество <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.MiddleName"
+                                               placeholder="Введите отчество"/>
+                                    <ValidationMessage For="@(() => _newCustomer.MiddleName)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Серия паспорта <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.PassportSeries" />
-                                <ValidationMessage For="@(() => _newCustomer.PassportSeries)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Телефон <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.PhoneNumber"
+                                               placeholder="Введите номер телефона"/>
+                                    <ValidationMessage For="@(() => _newCustomer.PhoneNumber)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Номер паспорта <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.PassportNumber" />
-                                <ValidationMessage For="@(() => _newCustomer.PassportNumber)" />
-                            </div>
+                                <div class="tool-form-field wide">
+                                    <label>Email <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.Email"
+                                               placeholder="Введите email"/>
+                                    <ValidationMessage For="@(() => _newCustomer.Email)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Индекс <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.PostalCode" />
-                                <ValidationMessage For="@(() => _newCustomer.PostalCode)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Серия паспорта <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.PassportSeries"
+                                               placeholder="Введите серию паспорта"/>
+                                    <ValidationMessage For="@(() => _newCustomer.PassportSeries)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Регион <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.Region" />
-                                <ValidationMessage For="@(() => _newCustomer.Region)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Номер паспорта <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.PassportNumber"
+                                               placeholder="Введите номер паспорта"/>
+                                    <ValidationMessage For="@(() => _newCustomer.PassportNumber)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Город <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.City" />
-                                <ValidationMessage For="@(() => _newCustomer.City)" />
                             </div>
-
-                            <div class="tool-form-field">
-                                <label>Улица <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.Street" />
-                                <ValidationMessage For="@(() => _newCustomer.Street)" />
-                            </div>
-
-                            <div class="tool-form-field">
-                                <label>Дом <span>*</span></label>
-                                <InputText @bind-Value="_newCustomer.House" />
-                                <ValidationMessage For="@(() => _newCustomer.House)" />
-                            </div>
-
-                            <div class="tool-form-field">
-                                <label>Корпус</label>
-                                <InputText @bind-Value="_newCustomer.Building" />
-                            </div>
-
-                            <div class="tool-form-field">
-                                <label>Квартира/офис</label>
-                                <InputText @bind-Value="_newCustomer.Apartment" />
-                            </div>
-
                         </div>
+
+                        <div class="customer-create-section">
+                            <div class="customer-create-section-title">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>Адрес</span>
+                            </div>
+
+                            <div class="customer-create-grid">
+
+                                <div class="tool-form-field">
+                                    <label>Индекс <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.PostalCode"
+                                               placeholder="Введите индекс"/>
+                                    <ValidationMessage For="@(() => _newCustomer.PostalCode)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Регион <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.Region"
+                                               placeholder="Введите регион"/>
+                                    <ValidationMessage For="@(() => _newCustomer.Region)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Город <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.City"
+                                               placeholder="Введите город"/>
+                                    <ValidationMessage For="@(() => _newCustomer.City)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Улица <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.Street"
+                                               placeholder="Введите улицу"/>
+                                    <ValidationMessage For="@(() => _newCustomer.Street)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Дом <span>*</span></label>
+                                    <InputText @bind-Value="_newCustomer.House"
+                                               placeholder="Введите номер дома"/>
+                                    <ValidationMessage For="@(() => _newCustomer.House)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Корпус</label>
+                                    <InputText @bind-Value="_newCustomer.Building"
+                                               placeholder="Введите корпус"/>
+                                </div>
+
+                                <div class="tool-form-field wide">
+                                    <label>Квартира/офис</label>
+                                    <InputText @bind-Value="_newCustomer.Apartment"
+                                               placeholder="Введите квартиру или офис"/>
+                                </div>
+
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="tool-form-actions modal-footer">
+                    <div class="customer-create-actions">
                         <button class="secondary-button"
                                 type="button"
                                 @onclick="CloseCreateModal">
@@ -536,97 +579,131 @@
                 </div>
 
                 <EditForm Model="_editCustomer" OnValidSubmit="UpdateCustomer">
-                    <DataAnnotationsValidator />
+                    <DataAnnotationsValidator/>
 
-                    <div class="tool-form-panel tool-form-panel-compact">
-                        <div class="tool-form-grid tool-form-grid-compact">
+                    <div class="customer-create-layout">
 
-                            <div class="tool-form-field">
-                                <label>Фамилия <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.LastName" />
-                                <ValidationMessage For="@(() => _editCustomer.LastName)" />
+                        <div class="customer-create-section">
+                            <div class="customer-create-section-title">
+                                <i class="bi bi-person"></i>
+                                <span>Данные клиента</span>
                             </div>
 
-                            <div class="tool-form-field">
-                                <label>Имя <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.FirstName" />
-                                <ValidationMessage For="@(() => _editCustomer.FirstName)" />
-                            </div>
+                            <div class="customer-create-grid">
 
-                            <div class="tool-form-field">
-                                <label>Отчество <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.MiddleName" />
-                                <ValidationMessage For="@(() => _editCustomer.MiddleName)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Фамилия <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.LastName"
+                                               placeholder="Введите фамилию"/>
+                                    <ValidationMessage For="@(() => _editCustomer.LastName)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Телефон <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.PhoneNumber" />
-                                <ValidationMessage For="@(() => _editCustomer.PhoneNumber)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Имя <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.FirstName"
+                                               placeholder="Введите имя"/>
+                                    <ValidationMessage For="@(() => _editCustomer.FirstName)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Email <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.Email" />
-                                <ValidationMessage For="@(() => _editCustomer.Email)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Отчество <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.MiddleName"
+                                               placeholder="Введите отчество"/>
+                                    <ValidationMessage For="@(() => _editCustomer.MiddleName)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Серия паспорта <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.PassportSeries" />
-                                <ValidationMessage For="@(() => _editCustomer.PassportSeries)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Телефон <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.PhoneNumber"
+                                               placeholder="Введите номер телефона"/>
+                                    <ValidationMessage For="@(() => _editCustomer.PhoneNumber)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Номер паспорта <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.PassportNumber" />
-                                <ValidationMessage For="@(() => _editCustomer.PassportNumber)" />
-                            </div>
+                                <div class="tool-form-field wide">
+                                    <label>Email <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.Email"
+                                               placeholder="Введите email"/>
+                                    <ValidationMessage For="@(() => _editCustomer.Email)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Индекс <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.PostalCode" />
-                                <ValidationMessage For="@(() => _editCustomer.PostalCode)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Серия паспорта <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.PassportSeries"
+                                               placeholder="Введите серию паспорта"/>
+                                    <ValidationMessage For="@(() => _editCustomer.PassportSeries)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Регион <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.Region" />
-                                <ValidationMessage For="@(() => _editCustomer.Region)" />
-                            </div>
+                                <div class="tool-form-field">
+                                    <label>Номер паспорта <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.PassportNumber"
+                                               placeholder="Введите номер паспорта"/>
+                                    <ValidationMessage For="@(() => _editCustomer.PassportNumber)"/>
+                                </div>
 
-                            <div class="tool-form-field">
-                                <label>Город <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.City" />
-                                <ValidationMessage For="@(() => _editCustomer.City)" />
                             </div>
-
-                            <div class="tool-form-field">
-                                <label>Улица <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.Street" />
-                                <ValidationMessage For="@(() => _editCustomer.Street)" />
-                            </div>
-
-                            <div class="tool-form-field">
-                                <label>Дом <span>*</span></label>
-                                <InputText @bind-Value="_editCustomer.House" />
-                                <ValidationMessage For="@(() => _editCustomer.House)" />
-                            </div>
-
-                            <div class="tool-form-field">
-                                <label>Корпус</label>
-                                <InputText @bind-Value="_editCustomer.Building" />
-                            </div>
-
-                            <div class="tool-form-field">
-                                <label>Квартира/офис</label>
-                                <InputText @bind-Value="_editCustomer.Apartment" />
-                            </div>
-
                         </div>
+
+                        <div class="customer-create-section">
+                            <div class="customer-create-section-title">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>Адрес</span>
+                            </div>
+
+                            <div class="customer-create-grid">
+
+                                <div class="tool-form-field">
+                                    <label>Индекс <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.PostalCode"
+                                               placeholder="Введите индекс"/>
+                                    <ValidationMessage For="@(() => _editCustomer.PostalCode)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Регион <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.Region"
+                                               placeholder="Введите регион"/>
+                                    <ValidationMessage For="@(() => _editCustomer.Region)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Город <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.City"
+                                               placeholder="Введите город"/>
+                                    <ValidationMessage For="@(() => _editCustomer.City)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Улица <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.Street"
+                                               placeholder="Введите улицу"/>
+                                    <ValidationMessage For="@(() => _editCustomer.Street)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Дом <span>*</span></label>
+                                    <InputText @bind-Value="_editCustomer.House"
+                                               placeholder="Введите номер дома"/>
+                                    <ValidationMessage For="@(() => _editCustomer.House)"/>
+                                </div>
+
+                                <div class="tool-form-field">
+                                    <label>Корпус</label>
+                                    <InputText @bind-Value="_editCustomer.Building"
+                                               placeholder="Введите корпус"/>
+                                </div>
+
+                                <div class="tool-form-field wide">
+                                    <label>Квартира/офис</label>
+                                    <InputText @bind-Value="_editCustomer.Apartment"
+                                               placeholder="Введите квартиру или офис"/>
+                                </div>
+
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="tool-form-actions modal-footer">
+                    <div class="customer-create-actions">
                         <button class="secondary-button"
                                 type="button"
                                 @onclick="CloseEditModal">
@@ -683,10 +760,151 @@
         </div>
     }
 
+    @if (_isOrderHistoryModalOpen && _orderHistoryCustomer is not null)
+    {
+        <div class="actions-backdrop" @onclick="CloseOrderHistoryModal">
+            <div class="customer-history-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>История заказов</h3>
+                        <p>@_orderHistoryCustomer.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseOrderHistoryModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="customer-history-table-wrap">
+                    @if (_isOrderHistoryLoading)
+                    {
+                        <div class="table-empty">
+                            Загрузка истории заказов...
+                        </div>
+                    }
+                    else if (_orderHistory.Count == 0)
+                    {
+                        <div class="table-empty">
+                            У клиента пока нет заказов
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="users-table customer-history-table">
+                            <thead>
+                            <tr>
+                                <th>Заказ</th>
+                                <th>Инстр.</th>
+                                <th>Выдача</th>
+                                <th>Статус</th>
+                                <th>Аренда</th>
+                                <th>Залог</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            @foreach (var item in _orderHistory)
+                            {
+                                <tr class="clickable-row"
+                                    @onclick="() => OpenCustomerOrderItemsModal(item.OrderId)">
+                                    <td>
+                                        <strong>@item.OrderNumber</strong>
+                                        <span class="table-subtitle">
+                                        @item.OrderDate.ToString("dd.MM.yyyy")
+                                    </span>
+                                    </td>
+
+                                    <td>@item.ToolsCount</td>
+
+                                    <td>
+                                        @(item.StartDate?.ToString("dd.MM.yyyy") ?? "-")
+                                    </td>
+
+                                    <td>
+                                    <span class="@GetOrderStatusClass(item.StatusName)">
+                                        @item.StatusName
+                                    </span>
+                                    </td>
+
+                                    <td>@($"{item.RentalAmount:N0} ₽")</td>
+
+                                    <td>@($"{item.DepositAmount:N0} ₽")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                <div class="customer-view-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseOrderHistoryModal">
+                        Закрыть
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    @if (_isOrderItemsModalOpen)
+    {
+        <div class="actions-backdrop" @onclick="CloseOrderItemsModal">
+            <div class="order-items-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Состав заказа</h3>
+                        <p>@(_selectedOrderNumber is null ? "Загрузка данных заказа" : $"Заказ № {_selectedOrderNumber}")</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseOrderItemsModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="order-items-table-wrap">
+                    @if (_isOrderItemsLoading)
+                    {
+                        <div class="table-empty">
+                            Загрузка состава заказа...
+                        </div>
+                    }
+                    else
+                    {
+                        <OrderItemsTable Items="_selectedOrderItems" />
+                    }
+                </div>
+
+                <div class="customer-view-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseOrderItemsModal">
+                        Закрыть
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
 </div>
 
 @code
 {
+    private bool _isOrderItemsModalOpen;
+    private bool _isOrderItemsLoading;
+
+    private string? _selectedOrderNumber;
+    private List<OrderDetailsItemDto> _selectedOrderItems = [];
+    
+    private bool _isOrderHistoryModalOpen;
+    private bool _isOrderHistoryLoading;
+
+    private CustomerDto? _orderHistoryCustomer;
+    private List<CustomerOrderHistoryItemDto> _orderHistory = [];
+
     private const int PageSize = 5;
 
     private CancellationTokenSource? _searchCts;
@@ -1138,14 +1356,66 @@
         await LoadCustomersAsync();
     }
 
-    private void ExecuteCustomerAction(string action)
+    private async Task ExecuteCustomerAction(string action)
     {
         if (_selectedCustomer is null)
             return;
 
+        if (action == "История заказов")
+        {
+            var customer = _selectedCustomer;
+
+            CloseActionsMenu();
+
+            await OpenOrderHistoryModal(customer);
+            return;
+        }
+
         NotificationService.Info($"{action}: {_selectedCustomer.FullName}");
 
         CloseActionsMenu();
+    }
+
+    private async Task OpenOrderHistoryModal(CustomerDto customer)
+    {
+        _orderHistoryCustomer = customer;
+        _orderHistory = [];
+        _isOrderHistoryModalOpen = true;
+        _isOrderHistoryLoading = true;
+
+        var result = await CustomersService.GetOrderHistoryAsync(customer.Id);
+
+        if (result.IsFailure)
+        {
+            _isOrderHistoryLoading = false;
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _orderHistory = result.Value;
+        _isOrderHistoryLoading = false;
+    }
+
+    private void CloseOrderHistoryModal()
+    {
+        _isOrderHistoryModalOpen = false;
+        _isOrderHistoryLoading = false;
+        _orderHistoryCustomer = null;
+        _orderHistory = [];
+    }
+
+    private static string GetOrderStatusClass(string statusName)
+    {
+        return statusName.Trim().ToLowerInvariant() switch
+        {
+            "забронирован" => "status-badge reserved",
+            "в аренде" => "status-badge rented",
+            "выполняется" => "status-badge rented",
+            "ожидает возврата залога" => "status-badge warning",
+            "завершен" => "status-badge available",
+            "отменен" => "status-badge cancelled",
+            _ => "status-badge"
+        };
     }
 
     private async Task ExportCustomers()
@@ -1273,4 +1543,36 @@
             ? "Адрес не указан"
             : customer.Address;
     }
-}
+    
+    private async Task OpenCustomerOrderItemsModal(Guid orderId)
+    {
+        _isOrderItemsModalOpen = true;
+        _isOrderItemsLoading = true;
+        _selectedOrderNumber = null;
+        _selectedOrderItems = [];
+
+        var result = await OrdersService.GetByIdAsync(orderId);
+
+        if (result.IsFailure)
+        {
+            _isOrderItemsModalOpen = false;
+            _isOrderItemsLoading = false;
+
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _selectedOrderNumber = result.Value.Number;
+        _selectedOrderItems = result.Value.Items.ToList();
+
+        _isOrderItemsLoading = false;
+    }
+    
+    private void CloseOrderItemsModal()
+    {
+        _isOrderItemsModalOpen = false;
+        _isOrderItemsLoading = false;
+        _selectedOrderNumber = null;
+        _selectedOrderItems = [];
+    }
+}ы

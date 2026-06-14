@@ -71,7 +71,9 @@
 
     private static string GetItemRentalDays(OrderDetailsItemDto item)
     {
-        var days = (item.PlannedReturnDate.ToDateTime(TimeOnly.MinValue)
+        var endDate = item.ActualReturnedDate ?? item.PlannedReturnDate;
+
+        var days = (endDate.ToDateTime(TimeOnly.MinValue)
                     - item.StartDate.ToDateTime(TimeOnly.MinValue))
             .Days;
 

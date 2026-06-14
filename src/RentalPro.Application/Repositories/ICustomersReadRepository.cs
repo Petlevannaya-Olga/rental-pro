@@ -28,4 +28,8 @@ public interface ICustomersReadRepository
         string? sortBy,
         bool descending,
         CancellationToken cancellationToken);
+    
+    Task<Result<List<CustomerOrderHistoryItemDto>, Errors>> GetOrderHistoryAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default);
 }

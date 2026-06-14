@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Customers.CreateCustomerCommand;
 using RentalPro.Application.Customers.DeleteCustomerCommand;
 using RentalPro.Application.Customers.ExportCustomersQuery;
+using RentalPro.Application.Customers.GetCustomerOrderHistoryQuery;
 using RentalPro.Application.Customers.GetCustomersQuery;
 using RentalPro.Application.Customers.GetCustomersStatsQuery;
 using RentalPro.Application.Customers.UpdateCustomerCommand;
@@ -19,7 +20,8 @@ public sealed class CustomersController(
     ICommandHandler<Guid, CreateCustomerCommand> createCustomerHandler,
     ICommandHandler<UpdateCustomerCommand> updateCustomerHandler,
     ICommandHandler<DeleteCustomerCommand> deleteCustomerHandler,
-    IQueryHandler<byte[], ExportCustomersQuery> exportCustomersHandler)
+    IQueryHandler<byte[], ExportCustomersQuery> exportCustomersHandler,
+    IQueryHandler<List<CustomerOrderHistoryItemDto>, GetCustomerOrderHistoryQuery> getOrderHistoryHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -168,5 +170,20 @@ public sealed class CustomersController(
             result.Value,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "customers.xlsx");
+    }
+    
+    [HttpGet("{id:guid}/order-history")]
+    public async Task<ActionResult<List<CustomerOrderHistoryItemDto>>> GetOrderHistory(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await getOrderHistoryHandler.Handle(
+            new GetCustomerOrderHistoryQuery(id),
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
     }
 }

@@ -311,4 +311,41 @@ public sealed class CustomersService(
 
         return content.ExtractErrorMessage(defaultMessage);
     }
+    
+    public async Task<Result<List<CustomerOrderHistoryItemDto>, Errors>> GetOrderHistoryAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/customers/{customerId}/order-history",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось загрузить историю заказов клиента",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "customer.order.history.load.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var history = await response.Content
+                .ReadFromJsonAsync<List<CustomerOrderHistoryItemDto>>(
+                    cancellationToken);
+
+            return history ?? [];
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "customer.order.history.load.failed",
+                "Не удалось загрузить историю заказов клиента");
+        }
+    }
 }

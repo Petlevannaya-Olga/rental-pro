@@ -618,17 +618,33 @@ public sealed class OrdersReadRepository(
 
                       oi.start_date AS StartDate,
                       oi.planned_return_date AS PlannedReturnDate,
+                      oi.actual_returned_date AS ActualReturnedDate,
 
                       oi.rental_price_per_day AS RentalPricePerDay,
                       oi.deposit_amount AS DepositAmount,
-                      oi.actual_returned_date AS ActualReturnedDate,
-                      oi.rental_price_per_day *
-                      DATEDIFF(DAY, oi.start_date, oi.planned_return_date) AS TotalAmount
+
+                      CAST(
+                          oi.rental_price_per_day *
+                          DATEDIFF(
+                              DAY,
+                              oi.start_date,
+                              ISNULL(
+                                  oi.actual_returned_date,
+                                  oi.planned_return_date
+                              )
+                          )
+                          AS decimal(18, 2)
+                      ) AS TotalAmount
+
                   FROM order_items oi
-                  INNER JOIN tools t ON t.id = oi.tool_id
+
+                  INNER JOIN tools t
+                      ON t.id = oi.tool_id
+
                   WHERE oi.order_id = @orderId
                     AND oi.deleted_at IS NULL
                     AND t.deleted_at IS NULL
+
                   ORDER BY t.name
                   """;
 
