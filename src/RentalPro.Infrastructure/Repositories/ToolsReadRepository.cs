@@ -269,6 +269,97 @@ public sealed class ToolsReadRepository(
         }
     }
 
+    public async Task<Result<List<ToolRentalHistoryItemDto>, Errors>> GetRentalHistoryAsync(
+        Guid toolId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            const string sql = """
+                               SELECT
+                                   o.id AS OrderId,
+                                   o.number AS OrderNumber,
+
+                                   c.id AS CustomerId,
+
+                                   CONCAT(
+                                       c.last_name,
+                                       N' ',
+                                       c.first_name,
+                                       N' ',
+                                       c.middle_name
+                                   ) AS CustomerFullName,
+
+                                   oi.start_date AS StartDate,
+
+                                   oi.planned_return_date AS PlannedReturnDate,
+
+                                   oi.actual_returned_date AS ActualReturnedDate,
+
+                                   DATEDIFF(
+                                       day,
+                                       oi.start_date,
+                                       ISNULL(
+                                           oi.actual_returned_date,
+                                           oi.planned_return_date
+                                       )
+                                   ) AS RentalDays,
+
+                                   CAST(
+                                       oi.rental_price_per_day *
+                                       DATEDIFF(
+                                           day,
+                                           oi.start_date,
+                                           ISNULL(
+                                               oi.actual_returned_date,
+                                               oi.planned_return_date
+                                           )
+                                       )
+                                       AS decimal(18, 2)
+                                   ) AS RentalAmount,
+
+                                   os.name AS OrderStatusName
+
+                               FROM order_items oi
+
+                               INNER JOIN orders o
+                                   ON o.id = oi.order_id
+
+                               INNER JOIN customers c
+                                   ON c.id = o.customer_id
+
+                               INNER JOIN order_statuses os
+                                   ON os.id = o.status_id
+
+                               WHERE oi.tool_id = {0}
+                                 AND oi.deleted_at IS NULL
+                                 AND o.deleted_at IS NULL
+
+                               ORDER BY oi.start_date DESC
+                               """;
+
+            var history = await dbContext.Database
+                .SqlQueryRaw<ToolRentalHistoryItemDto>(
+                    sql,
+                    toolId)
+                .ToListAsync(cancellationToken);
+
+            return history;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get rental history for tool {ToolId}",
+                toolId);
+
+            return CommonErrors.LoadFailed(
+                    "tool.rental.history.load.failed",
+                    "Не удалось получить историю аренды инструмента")
+                .ToErrors();
+        }
+    }
+
     private static IQueryable<Domain.Tools.Tool> ApplySorting(
         IQueryable<Domain.Tools.Tool> query,
         string? sortBy,
@@ -317,7 +408,7 @@ public sealed class ToolsReadRepository(
                 : query.OrderBy(x => x.CreatedAt)
         };
     }
-    
+
     private static string GetOrderBy(
         string? sortBy,
         bool descending)
@@ -339,7 +430,7 @@ public sealed class ToolsReadRepository(
             _ => $"ORDER BY t.created_at {direction}"
         };
     }
-    
+
     private static SqlParameter CreateParameter(
         string name,
         object? value)

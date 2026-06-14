@@ -39,21 +39,13 @@ public sealed class FakeToolGeneratorService
         return new ToolFormModel
         {
             Name = $"{toolName} {modelNumber}",
-
             ArticleNumber = $"ART-{_faker.Random.Number(1000, 9999)}",
-
             SerialNumber = $"SN-{_faker.Random.Number(100000, 999999)}",
-
             InventoryNumber = $"INV-{_faker.Random.Number(1000, 9999)}",
-
             RentalPricePerDay = _faker.Random.Number(500, 5000),
-
             DepositAmount = _faker.Random.Number(1000, 20000),
-
             CurrentCondition = _faker.PickRandom(Conditions),
-
             Description = $"{toolName} в исправном состоянии. Подходит для строительных и ремонтных работ.",
-
             PhotoPath = null
         };
     }

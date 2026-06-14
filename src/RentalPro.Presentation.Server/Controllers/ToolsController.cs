@@ -3,12 +3,14 @@ using RentalPro.Application.Tools.ChangeToolStatusCommand;
 using RentalPro.Application.Tools.CreateToolCommand;
 using RentalPro.Application.Tools.DeleteToolCommand;
 using RentalPro.Application.Tools.ExportToolsQuery;
+using RentalPro.Application.Tools.GetToolRentalHistoryQuery;
 using RentalPro.Application.Tools.GetToolsQuery;
 using RentalPro.Application.Tools.GetToolStatsQuery;
 using RentalPro.Application.Tools.UpdateToolCommand;
 using RentalPro.Application.Tools.UploadToolImageCommand;
 using RentalPro.Contracts.Tools;
 using RentalPro.Shared;
+using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
@@ -22,6 +24,7 @@ public sealed class ToolsController(
     DeleteToolCommandHandler deleteHandler,
     ExportToolsQueryHandler exportHandler,
     UploadToolImageCommandHandler uploadImageHandler,
+    IQueryHandler<List<ToolRentalHistoryItemDto>, GetToolRentalHistoryQuery> getRentalHistoryHandler,
     ChangeToolStatusCommandHandler changeToolStatusHandler)
     : ControllerBase
 {
@@ -192,5 +195,20 @@ public sealed class ToolsController(
             return BadRequest(result.Error);
 
         return NoContent();
+    }
+    
+    [HttpGet("{id:guid}/rental-history")]
+    public async Task<ActionResult<List<ToolRentalHistoryItemDto>>> GetRentalHistory(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await getRentalHistoryHandler.Handle(
+            new GetToolRentalHistoryQuery(id),
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
     }
 }

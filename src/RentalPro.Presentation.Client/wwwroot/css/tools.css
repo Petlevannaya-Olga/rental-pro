@@ -789,3 +789,99 @@
     background: #fee2e2;
     color: #dc2626;
 }
+
+/* Rental history modal */
+
+.rental-history-modal {
+    width: 1100px;
+    max-width: calc(100vw - 48px);
+
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+
+    overflow: hidden;
+}
+
+.rental-history-modal .actions-modal-header {
+    padding: 24px 24px 16px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.rental-history-modal .actions-modal-header button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+
+    border: none;
+    border-radius: 10px;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rental-history-modal .actions-modal-header button:hover {
+    background: #f1f5f9;
+}
+
+.rental-history-table-wrap {
+    width: 100%;
+    padding: 0 24px;
+    overflow-x: hidden;
+}
+
+.rental-history-modal .rental-history-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.rental-history-modal .rental-history-table th,
+.rental-history-modal .rental-history-table td {
+    padding: 10px 6px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.rental-history-modal .rental-history-table th:nth-child(1),
+.rental-history-modal .rental-history-table td:nth-child(1) {
+    width: 12%;
+}
+
+.rental-history-modal .rental-history-table th:nth-child(2),
+.rental-history-modal .rental-history-table td:nth-child(2) {
+    width: 24%;
+}
+
+.rental-history-modal .rental-history-table th:nth-child(3),
+.rental-history-modal .rental-history-table td:nth-child(3),
+.rental-history-modal .rental-history-table th:nth-child(4),
+.rental-history-modal .rental-history-table td:nth-child(4),
+.rental-history-modal .rental-history-table th:nth-child(5),
+.rental-history-modal .rental-history-table td:nth-child(5) {
+    width: 11%;
+}
+
+.rental-history-modal .rental-history-table th:nth-child(6),
+.rental-history-modal .rental-history-table td:nth-child(6) {
+    width: 7%;
+}
+
+.rental-history-modal .rental-history-table th:nth-child(7),
+.rental-history-modal .rental-history-table td:nth-child(7) {
+    width: 11%;
+}
+
+.rental-history-modal .rental-history-table th:nth-child(8),
+.rental-history-modal .rental-history-table td:nth-child(8) {
+    width: 13%;
+}
+
+.rental-history-modal .customer-view-footer {
+    padding: 14px 24px 20px;
+}

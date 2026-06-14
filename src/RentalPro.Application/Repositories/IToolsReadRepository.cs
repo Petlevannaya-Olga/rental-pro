@@ -30,4 +30,8 @@ public interface IToolsReadRepository
         string? sortBy,
         bool descending,
         CancellationToken cancellationToken);
+    
+    Task<Result<List<ToolRentalHistoryItemDto>, Errors>> GetRentalHistoryAsync(
+        Guid toolId,
+        CancellationToken cancellationToken = default);
 }

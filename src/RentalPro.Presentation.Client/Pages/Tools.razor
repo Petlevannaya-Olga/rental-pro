@@ -795,11 +795,107 @@
             </div>
         </div>
     }
+    
+    @if (_isRentalHistoryModalOpen && _rentalHistoryTool is not null)
+{
+    <div class="actions-backdrop" @onclick="CloseRentalHistoryModal">
+        <div class="rental-history-modal" @onclick:stopPropagation="true">
+
+            <div class="actions-modal-header">
+                <div>
+                    <h3>История аренды</h3>
+                    <p>@_rentalHistoryTool.Name — инв. № @_rentalHistoryTool.InventoryNumber</p>
+                </div>
+
+                <button type="button" @onclick="CloseRentalHistoryModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="rental-history-table-wrap">
+                @if (_isRentalHistoryLoading)
+                {
+                    <div class="table-empty">
+                        Загрузка истории аренды...
+                    </div>
+                }
+                else if (_rentalHistory.Count == 0)
+                {
+                    <div class="table-empty">
+                        По этому инструменту еще не было аренд
+                    </div>
+                }
+                else
+                {
+                    <table class="users-table rental-history-table">
+                        <thead>
+                        <tr>
+                            <th>№ заказа</th>
+                            <th>Клиент</th>
+                            <th>Начало</th>
+                            <th>План</th>
+                            <th>Факт</th>
+                            <th>Дней</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        @foreach (var item in _rentalHistory)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.OrderNumber</strong>
+                                </td>
+
+                                <td>@item.CustomerFullName</td>
+
+                                <td>@item.StartDate.ToString("dd.MM.yyyy")</td>
+
+                                <td>@item.PlannedReturnDate.ToString("dd.MM.yyyy")</td>
+
+                                <td>
+                                    @(item.ActualReturnedDate?.ToString("dd.MM.yyyy") ?? "-")
+                                </td>
+
+                                <td>@item.RentalDays</td>
+
+                                <td>@($"{item.RentalAmount:N0} ₽")</td>
+
+                                <td>
+                                    <span class="@GetOrderStatusClass(item.OrderStatusName)">
+                                        @item.OrderStatusName
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            <div class="customer-view-footer">
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="CloseRentalHistoryModal">
+                    Закрыть
+                </button>
+            </div>
+
+        </div>
+    </div>
+}
 
 </div>
 
 @code
 {
+    private ToolDto? _rentalHistoryTool;
+    private bool _isRentalHistoryModalOpen;
+    private List<ToolRentalHistoryItemDto> _rentalHistory = [];
+    private bool _isRentalHistoryLoading;
+    
     private readonly Random _random = new();
     private CancellationTokenSource? _searchCts;
     private const int PageSize = 5;
@@ -1119,6 +1215,18 @@
             await ChangeToolStatus(_selectedTool, "Списан");
             return;
         }
+        
+        if (action == "История аренды")
+        {
+            var tool = _selectedTool;
+
+            CloseActionsMenu();
+
+            if (tool is not null)
+                await OpenRentalHistoryModal(tool);
+
+            return;
+        }
 
         NotificationService.Info($"{action}: {_selectedTool.Name}");
 
@@ -1289,11 +1397,7 @@
 
     private void FillFakeToolData()
     {
-        var availableStatusId = _newTool.StatusId;
-
         _newTool = FakeToolGeneratorService.Generate();
-
-        _newTool.StatusId = availableStatusId;
 
         if (_categories.Count > 0)
         {
@@ -1332,6 +1436,15 @@
             return;
         }
 
+        var availableStatus = _statuses
+            .FirstOrDefault(x => x.Name == "Доступен");
+
+        if (availableStatus is null)
+        {
+            NotificationService.Error("Не найден статус «Доступен»");
+            return;
+        }
+
         const int count = 10;
 
         for (var i = 0; i < count; i++)
@@ -1344,8 +1457,7 @@
             tool.ManufacturerId =
                 PickRandom(_manufacturers, _random).Id;
 
-            tool.StatusId =
-                PickRandom(_statuses, _random).Id;
+            tool.StatusId = availableStatus.Id;
 
             var request = new CreateToolRequest(
                 ArticleNumber: tool.ArticleNumber,
@@ -1578,6 +1690,48 @@
 
             "на ремонте" => "status-badge maintenance",
 
+            _ => "status-badge"
+        };
+    }
+    
+    private async Task OpenRentalHistoryModal(ToolDto tool)
+    {
+        _rentalHistoryTool = tool;
+        _rentalHistory = [];
+        _isRentalHistoryModalOpen = true;
+        _isRentalHistoryLoading = true;
+
+        var result = await ToolsService.GetRentalHistoryAsync(tool.Id);
+
+        if (result.IsFailure)
+        {
+            _isRentalHistoryLoading = false;
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _rentalHistory = result.Value;
+        _isRentalHistoryLoading = false;
+    }
+    
+    private void CloseRentalHistoryModal()
+    {
+        _isRentalHistoryModalOpen = false;
+        _isRentalHistoryLoading = false;
+        _rentalHistoryTool = null;
+        _rentalHistory = [];
+    }
+
+    private static string GetOrderStatusClass(string statusName)
+    {
+        return statusName.Trim().ToLowerInvariant() switch
+        {
+            "забронирован" => "status-badge reserved",
+            "в аренде" => "status-badge rented",
+            "выполняется" => "status-badge rented",
+            "ожидает возврата залога" => "status-badge warning",
+            "завершен" => "status-badge available",
+            "отменен" => "status-badge cancelled",
             _ => "status-badge"
         };
     }

@@ -376,4 +376,42 @@ public sealed class ToolsService(HttpClient httpClient, IJSRuntime jsRuntime)
 
         return true;
     }
+    
+    public async Task<Result<List<ToolRentalHistoryItemDto>, Errors>>
+        GetRentalHistoryAsync(
+            Guid toolId,
+            CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/tools/{toolId}/rental-history",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось загрузить историю аренды",
+                    cancellationToken);
+
+                return CommonErrors.LoadFailed(
+                        "tool.history.load.failed",
+                        message)
+                    .ToErrors();
+            }
+
+            var history = await response.Content
+                .ReadFromJsonAsync<List<ToolRentalHistoryItemDto>>(
+                    cancellationToken);
+
+            return history ?? [];
+        }
+        catch (Exception ex)
+        {
+            return ex.ToErrors(
+                "tool.history.load.failed",
+                "Не удалось загрузить историю аренды");
+        }
+    }
 }
