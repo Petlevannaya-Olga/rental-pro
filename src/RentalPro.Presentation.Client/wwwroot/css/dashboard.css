@@ -361,7 +361,7 @@ body {
 
 .dashboard-row {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+    grid-template-columns: minmax(0, 2.6fr) minmax(320px, 0.75fr);
     gap: 18px;
 }
 
@@ -433,28 +433,37 @@ body {
 }
 
 .status-chart {
-    margin-top: 22px;
-    display: grid;
-    grid-template-columns: 170px 1fr;
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 14px;
 }
 
 .chart-circle {
-    width: 150px;
-    height: 150px;
+    width: 128px;
+    height: 128px;
+
     border-radius: 50%;
-    background: conic-gradient(#5cbd42 0 70%, #2563eb 70% 97%, #f7b718 97% 100%);
+
+    background: conic-gradient(
+            #5cbd42 0 70%,
+            #2563eb 70% 97%,
+            #f7b718 97% 100%
+    );
+
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .chart-center {
-    width: 84px;
-    height: 84px;
+    width: 72px;
+    height: 72px;
+
     border-radius: 50%;
     background: white;
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -462,30 +471,46 @@ body {
 }
 
 .chart-center div {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 800;
+    line-height: 1;
 }
 
 .chart-center small {
+    margin-top: 4px;
+
     color: #64748b;
+    font-size: 12px;
 }
 
 .chart-legend {
+    width: 100%;
+
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    font-size: 13px;
+    gap: 10px;
+
+    margin-top: 4px;
+
+    font-size: 12px;
 }
 
 .chart-legend div {
-    display: flex;
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
+}
+
+.chart-legend strong {
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 800;
 }
 
 .dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
 }
 
