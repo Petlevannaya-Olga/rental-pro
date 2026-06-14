@@ -3,8 +3,8 @@ namespace RentalPro.Contracts.Customers;
 public sealed record GetCustomersRequest(
     string? Search,
     bool? HasOrders,
-    bool? HasDebt,
+    bool? HasActiveOrders,
     string? SortBy,
-    bool Descending,
+    bool Descending = false,
     int Page = 1,
     int PageSize = 10);

@@ -29,12 +29,12 @@
                       Color="orange" />
         </div>
 
-        <div class="stats-filter-card @GetStatsCardClass("withDebt")"
-             @onclick='() => ApplyStatsFilter("withDebt")'>
-            <StatCard Title="С задолженностью"
-                      Value="@_withDebtCount.ToString()"
-                      Icon="bi bi-exclamation-triangle"
-                      Color="red" />
+        <div class="stats-filter-card @GetStatsCardClass("withActiveOrders")"
+             @onclick='() => ApplyStatsFilter("withActiveOrders")'>
+            <StatCard Title="С активной арендой"
+                      Value="@_withActiveOrdersCount.ToString()"
+                      Icon="bi bi-tools"
+                      Color="green" />
         </div>
 
         <button class="users-add-card"
@@ -74,14 +74,14 @@
             </div>
 
             <div class="filter-group">
-                <label>Задолженность</label>
+                <label>Активная аренда</label>
 
                 <select class="filter-select"
-                        @bind="_debtFilter"
+                        @bind="_activeOrdersFilter"
                         @bind:after="ApplyFilters">
                     <option value="">Все клиенты</option>
-                    <option value="withDebt">С задолженностью</option>
-                    <option value="withoutDebt">Без задолженности</option>
+                    <option value="withActiveOrders">С активной арендой</option>
+                    <option value="withoutActiveOrders">Без активной аренды</option>
                 </select>
             </div>
 
@@ -109,7 +109,7 @@
                     <th>Email</th>
                     <th>Паспорт</th>
                     <th>Заказов</th>
-                    <th>Долг</th>
+                    <th>Активных</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -168,8 +168,8 @@
                         Заказов <i class="bi bi-arrow-down-up"></i>
                     </th>
 
-                    <th class="sortable-column" @onclick='() => ChangeSort("hasdebt")'>
-                        Долг <i class="bi bi-arrow-down-up"></i>
+                    <th class="sortable-column" @onclick='() => ChangeSort("activeorders")'>
+                        Активных <i class="bi bi-arrow-down-up"></i>
                     </th>
 
                     <th></th>
@@ -199,8 +199,8 @@
                         <td>@customer.OrdersCount</td>
 
                         <td>
-                            <span class="@GetDebtClass(customer.HasDebt)">
-                                @(customer.HasDebt ? "Есть" : "Нет")
+                            <span class="@GetActiveOrdersClass(customer.ActiveOrdersCount)">
+                                @customer.ActiveOrdersCount
                             </span>
                         </td>
 
@@ -415,83 +415,81 @@
     }
 
     @if (_isViewModalOpen && _viewCustomer is not null)
-{
-    <div class="actions-backdrop">
-        <div class="customer-view-modal" @onclick:stopPropagation="true">
+    {
+        <div class="actions-backdrop">
+            <div class="customer-view-modal" @onclick:stopPropagation="true">
 
-            <div class="actions-modal-header">
-                <div>
-                    <h3>Просмотр клиента</h3>
-                    <p>@_viewCustomer.FullName</p>
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Просмотр клиента</h3>
+                        <p>@_viewCustomer.FullName</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseViewModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
 
-                <button type="button" @onclick="CloseViewModal">
-                    <i class="bi bi-x-lg"></i>
-                </button>
+                <div class="customer-details-grid">
+
+                    <div class="customer-detail-item">
+                        <span>ФИО</span>
+                        <strong>@_viewCustomer.FullName</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Телефон</span>
+                        <strong>@_viewCustomer.PhoneNumber</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Email</span>
+                        <strong>@_viewCustomer.Email</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Паспорт</span>
+                        <strong>@_viewCustomer.Passport</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Заказов</span>
+                        <strong>@_viewCustomer.OrdersCount</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Активных аренд</span>
+                        <strong>@_viewCustomer.ActiveOrdersCount</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Дата создания</span>
+                        <strong>@_viewCustomer.CreatedAt.ToString("dd.MM.yyyy HH:mm")</strong>
+                    </div>
+
+                    <div class="customer-detail-item">
+                        <span>Дата изменения</span>
+                        <strong>@(_viewCustomer.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong>
+                    </div>
+
+                    <div class="customer-detail-item customer-address-item">
+                        <span>Адрес</span>
+                        <strong>@GetAddressOrDash(_viewCustomer)</strong>
+                    </div>
+
+                </div>
+
+                <div class="customer-view-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseViewModal">
+                        Закрыть
+                    </button>
+                </div>
+
             </div>
-
-            <div class="customer-details-grid">
-
-                <div class="customer-detail-item">
-                    <span>ФИО</span>
-                    <strong>@_viewCustomer.FullName</strong>
-                </div>
-
-                <div class="customer-detail-item">
-                    <span>Телефон</span>
-                    <strong>@_viewCustomer.PhoneNumber</strong>
-                </div>
-
-                <div class="customer-detail-item">
-                    <span>Email</span>
-                    <strong>@_viewCustomer.Email</strong>
-                </div>
-
-                <div class="customer-detail-item">
-                    <span>Паспорт</span>
-                    <strong>@_viewCustomer.Passport</strong>
-                </div>
-
-                <div class="customer-detail-item">
-                    <span>Заказов</span>
-                    <strong>@_viewCustomer.OrdersCount</strong>
-                </div>
-
-                <div class="customer-detail-item">
-                    <span>Задолженность</span>
-                    <strong class="@GetDebtTextClass(_viewCustomer.HasDebt)">
-                        @(_viewCustomer.HasDebt ? "Есть" : "Нет")
-                    </strong>
-                </div>
-
-                <div class="customer-detail-item">
-                    <span>Дата создания</span>
-                    <strong>@_viewCustomer.CreatedAt.ToString("dd.MM.yyyy HH:mm")</strong>
-                </div>
-
-                <div class="customer-detail-item">
-                    <span>Дата изменения</span>
-                    <strong>@(_viewCustomer.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong>
-                </div>
-
-                <div class="customer-detail-item customer-address-item">
-                    <span>Адрес</span>
-                    <strong>@GetAddressOrDash(_viewCustomer)</strong>
-                </div>
-
-            </div>
-
-            <div class="customer-view-footer">
-                <button class="secondary-button"
-                        type="button"
-                        @onclick="CloseViewModal">
-                    Закрыть
-                </button>
-            </div>
-
         </div>
-    </div>
-}
+    }
 
     @if (_isEditModalOpen && _editingCustomer is not null)
     {
@@ -687,11 +685,11 @@
     private int _statsTotalCount;
     private int _filteredTotalCount;
     private int _withOrdersCount;
-    private int _withDebtCount;
+    private int _withActiveOrdersCount;
 
     private string? _search;
     private string? _ordersFilter;
-    private string? _debtFilter;
+    private string? _activeOrdersFilter;
 
     private string? _sortBy = "createdat";
     private bool _descending = true;
@@ -706,11 +704,11 @@
             _ => null
         };
 
-    private bool? HasDebt =>
-        _debtFilter switch
+    private bool? HasActiveOrders =>
+        _activeOrdersFilter switch
         {
-            "withDebt" => true,
-            "withoutDebt" => false,
+            "withActiveOrders" => true,
+            "withoutActiveOrders" => false,
             _ => null
         };
 
@@ -738,7 +736,7 @@
         var request = new GetCustomersRequest(
             Search: _search,
             HasOrders: HasOrders,
-            HasDebt: HasDebt,
+            HasActiveOrders: HasActiveOrders,
             SortBy: _sortBy,
             Descending: _descending,
             Page: _currentPage,
@@ -777,7 +775,7 @@
         {
             _statsTotalCount = 0;
             _withOrdersCount = 0;
-            _withDebtCount = 0;
+            _withActiveOrdersCount = 0;
 
             NotificationService.Error(result.Error.Message);
             return;
@@ -785,7 +783,7 @@
 
         _statsTotalCount = result.Value.TotalCount;
         _withOrdersCount = result.Value.WithOrdersCount;
-        _withDebtCount = result.Value.WithDebtCount;
+        _withActiveOrdersCount = result.Value.WithActiveOrdersCount;
     }
 
     private async Task ApplyStatsFilter(string filter)
@@ -793,7 +791,7 @@
         _activeStatsFilter = filter;
 
         _ordersFilter = null;
-        _debtFilter = null;
+        _activeOrdersFilter = null;
 
         switch (filter)
         {
@@ -801,8 +799,8 @@
                 _ordersFilter = "withOrders";
                 break;
 
-            case "withDebt":
-                _debtFilter = "withDebt";
+            case "withActiveOrders":
+                _activeOrdersFilter = "withActiveOrders";
                 break;
         }
 
@@ -813,7 +811,7 @@
 
     private async Task ApplyFilters()
     {
-        _activeStatsFilter = "custom";
+        _activeStatsFilter = ResolveActiveStatsFilter();
         _currentPage = 1;
 
         await LoadCustomersAsync();
@@ -823,7 +821,7 @@
     {
         _search = string.Empty;
         _ordersFilter = null;
-        _debtFilter = null;
+        _activeOrdersFilter = null;
         _activeStatsFilter = "all";
         _currentPage = 1;
 
@@ -833,7 +831,7 @@
     private async Task OnSearchChanged(ChangeEventArgs e)
     {
         _search = e.Value?.ToString();
-        _activeStatsFilter = "custom";
+        _activeStatsFilter = ResolveActiveStatsFilter();
 
         _searchCts?.Cancel();
         _searchCts?.Dispose();
@@ -886,6 +884,22 @@
         return _activeStatsFilter == filter
             ? "active"
             : string.Empty;
+    }
+
+    private string ResolveActiveStatsFilter()
+    {
+        if (_ordersFilter == "withOrders" && string.IsNullOrWhiteSpace(_activeOrdersFilter))
+            return "withOrders";
+
+        if (_activeOrdersFilter == "withActiveOrders" && string.IsNullOrWhiteSpace(_ordersFilter))
+            return "withActiveOrders";
+
+        if (string.IsNullOrWhiteSpace(_ordersFilter) &&
+            string.IsNullOrWhiteSpace(_activeOrdersFilter) &&
+            string.IsNullOrWhiteSpace(_search))
+            return "all";
+
+        return "custom";
     }
 
     private void OpenActionsMenu(CustomerDto customer)
@@ -1079,14 +1093,7 @@
 
     private async Task ExportCustomers()
     {
-        var request = new ExportCustomersRequest
-        {
-            Search = _search,
-            HasOrders = HasOrders,
-            HasDebt = HasDebt,
-            SortBy = _sortBy,
-            Descending = _descending
-        };
+        var request = new ExportCustomersRequest(_search, HasOrders, HasActiveOrders, _sortBy, _descending);
 
         var result = await CustomersService.ExportCustomersAsync(request);
 
@@ -1190,9 +1197,9 @@
             : initials;
     }
 
-    private static string GetDebtClass(bool hasDebt)
+    private static string GetActiveOrdersClass(int activeOrdersCount)
     {
-        return hasDebt
+        return activeOrdersCount > 0
             ? "status-badge repair"
             : "status-badge available";
     }
@@ -1202,12 +1209,5 @@
         return string.IsNullOrWhiteSpace(customer.Address)
             ? "Адрес не указан"
             : customer.Address;
-    }
-    
-    private static string GetDebtTextClass(bool hasDebt)
-    {
-        return hasDebt
-            ? "customer-debt-danger"
-            : "customer-debt-success";
     }
 }

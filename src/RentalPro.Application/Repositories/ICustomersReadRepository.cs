@@ -9,7 +9,7 @@ public interface ICustomersReadRepository
     Task<Result<PagedResult<CustomerDto>, Errors>> GetPagedAsync(
         string? search,
         bool? hasOrders,
-        bool? hasDebt,
+        bool? hasActiveOrders,
         string? sortBy,
         bool descending,
         int page,
@@ -22,7 +22,7 @@ public interface ICustomersReadRepository
     Task<Result<IReadOnlyList<CustomerDto>, Errors>> GetForExportAsync(
         string? search,
         bool? hasOrders,
-        bool? hasDebt,
+        bool? hasActiveOrders,
         string? sortBy,
         bool descending,
         CancellationToken cancellationToken);

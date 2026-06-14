@@ -298,7 +298,7 @@ public sealed class OrdersReadRepository(
                       SELECT
                           COUNT(o.id) AS TotalCount,
                           ISNULL(SUM(CASE WHEN os.name = N'Активен' THEN 1 ELSE 0 END), 0) AS ActiveCount,
-                          ISNULL(SUM(CASE WHEN os.name = N'Завершён' THEN 1 ELSE 0 END), 0) AS CompletedCount,
+                          ISNULL(SUM(CASE WHEN os.name = N'Завершен' THEN 1 ELSE 0 END), 0) AS CompletedCount,
                           ISNULL(SUM(CASE WHEN os.name = N'Просрочен' THEN 1 ELSE 0 END), 0) AS OverdueCount
                       FROM orders o
                       INNER JOIN order_statuses os ON os.id = o.status_id

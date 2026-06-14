@@ -32,8 +32,8 @@ public sealed class CustomersService(
             if (request.HasOrders.HasValue)
                 parameters["hasOrders"] = request.HasOrders.Value.ToString();
 
-            if (request.HasDebt.HasValue)
-                parameters["hasDebt"] = request.HasDebt.Value.ToString();
+            if (request.HasActiveOrders.HasValue)
+                parameters["hasActiveOrders"] = request.HasActiveOrders.Value.ToString();
 
             var url = QueryHelpers.AddQueryString(
                 "api/customers",
@@ -251,8 +251,8 @@ public sealed class CustomersService(
             if (request.HasOrders.HasValue)
                 parameters["hasOrders"] = request.HasOrders.Value.ToString();
 
-            if (request.HasDebt.HasValue)
-                parameters["hasDebt"] = request.HasDebt.Value.ToString();
+            if (request.HasActiveOrders.HasValue)
+                parameters["hasActiveOrders"] = request.HasActiveOrders.Value.ToString();
 
             var url = QueryHelpers.AddQueryString(
                 "api/customers/export",

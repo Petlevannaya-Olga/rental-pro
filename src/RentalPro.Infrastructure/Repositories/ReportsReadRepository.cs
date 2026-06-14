@@ -14,7 +14,7 @@ public sealed class ReportsReadRepository(
     : IReportsReadRepository
 {
     private const string RentPaymentType = "Аренда";
-    private const string CompletedOrderStatus = "Завершён";
+    private const string CompletedOrderStatus = "Завершен";
     private const string WaitingDepositRefundStatus = "Ожидает возврата залога";
 
     public async Task<Result<IReadOnlyList<RevenueReportDto>, Errors>> GetRevenueAsync(

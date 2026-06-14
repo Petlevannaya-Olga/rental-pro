@@ -16,7 +16,7 @@ public sealed class CustomersReadRepository(
     public async Task<Result<PagedResult<CustomerDto>, Errors>> GetPagedAsync(
         string? search,
         bool? hasOrders,
-        bool? hasDebt,
+        bool? hasActiveOrders,
         string? sortBy,
         bool descending,
         int page,
@@ -43,7 +43,7 @@ public sealed class CustomersReadRepository(
                 searchText,
                 searchPattern,
                 hasOrders,
-                hasDebt,
+                hasActiveOrders,
                 cancellationToken);
 
             var sql = $"""
@@ -64,7 +64,7 @@ public sealed class CustomersReadRepository(
                            c.building AS Building,
                            c.apartment AS Apartment,
                            oc.OrdersCount AS OrdersCount,
-                           dc.HasDebt AS HasDebt,
+                           oc.ActiveOrdersCount AS ActiveOrdersCount,
                            c.created_at AS CreatedAt,
                            c.updated_at AS UpdatedAt
                        {FromClause}
@@ -79,7 +79,7 @@ public sealed class CustomersReadRepository(
                     CreateParameter("@search", searchText),
                     CreateParameter("@searchPattern", searchPattern),
                     CreateParameter("@hasOrders", hasOrders),
-                    CreateParameter("@hasDebt", hasDebt),
+                    CreateParameter("@hasActiveOrders", hasActiveOrders),
                     CreateParameter("@offset", offset),
                     CreateParameter("@pageSize", pageSize))
                 .ToListAsync(cancellationToken);
@@ -118,7 +118,7 @@ public sealed class CustomersReadRepository(
                        SELECT
                            COUNT(c.id) AS TotalCount,
                            ISNULL(SUM(CASE WHEN oc.OrdersCount > 0 THEN 1 ELSE 0 END), 0) AS WithOrdersCount,
-                           ISNULL(SUM(CASE WHEN dc.HasDebt = 1 THEN 1 ELSE 0 END), 0) AS WithDebtCount
+                           ISNULL(SUM(CASE WHEN oc.ActiveOrdersCount > 0 THEN 1 ELSE 0 END), 0) AS WithActiveOrdersCount
                        {FromClause}
                        WHERE c.deleted_at IS NULL
                        """;
@@ -151,7 +151,7 @@ public sealed class CustomersReadRepository(
     public async Task<Result<IReadOnlyList<CustomerDto>, Errors>> GetForExportAsync(
         string? search,
         bool? hasOrders,
-        bool? hasDebt,
+        bool? hasActiveOrders,
         string? sortBy,
         bool descending,
         CancellationToken cancellationToken)
@@ -186,7 +186,7 @@ public sealed class CustomersReadRepository(
                            c.building AS Building,
                            c.apartment AS Apartment,
                            oc.OrdersCount AS OrdersCount,
-                           dc.HasDebt AS HasDebt,
+                           oc.ActiveOrdersCount AS ActiveOrdersCount,
                            c.created_at AS CreatedAt,
                            c.updated_at AS UpdatedAt
                        {FromClause}
@@ -200,7 +200,7 @@ public sealed class CustomersReadRepository(
                     CreateParameter("@search", searchText),
                     CreateParameter("@searchPattern", searchPattern),
                     CreateParameter("@hasOrders", hasOrders),
-                    CreateParameter("@hasDebt", hasDebt))
+                    CreateParameter("@hasActiveOrders", hasActiveOrders))
                 .ToListAsync(cancellationToken);
 
             return customers;
@@ -228,7 +228,7 @@ public sealed class CustomersReadRepository(
         string? searchText,
         string? searchPattern,
         bool? hasOrders,
-        bool? hasDebt,
+        bool? hasActiveOrders,
         CancellationToken cancellationToken)
     {
         var countSql = $"""
@@ -243,53 +243,29 @@ public sealed class CustomersReadRepository(
                 CreateParameter("@search", searchText),
                 CreateParameter("@searchPattern", searchPattern),
                 CreateParameter("@hasOrders", hasOrders),
-                CreateParameter("@hasDebt", hasDebt))
+                CreateParameter("@hasActiveOrders", hasActiveOrders))
             .SingleAsync(cancellationToken);
     }
 
     private const string FromClause = """
-                                  FROM customers c
-                                  OUTER APPLY
-                                  (
-                                      SELECT COUNT(*) AS OrdersCount
-                                      FROM orders o
-                                      WHERE o.customer_id = c.id
-                                        AND o.deleted_at IS NULL
-                                  ) oc
-                                  OUTER APPLY
-                                  (
-                                      SELECT
-                                          CASE
-                                              WHEN ISNULL(order_totals.TotalAmount, 0)
-                                                   > ISNULL(payment_totals.PaidAmount, 0)
-                                              THEN CAST(1 AS bit)
-                                              ELSE CAST(0 AS bit)
-                                          END AS HasDebt
-                                      FROM
+                                      FROM customers c
+                                      OUTER APPLY
                                       (
                                           SELECT
-                                              SUM(
-                                                  oi.rental_price_per_day *
-                                                  DATEDIFF(day, oi.start_date, oi.planned_return_date)
-                                                  + oi.deposit_amount
-                                              ) AS TotalAmount
+                                              COUNT(*) AS OrdersCount,
+                                              ISNULL(SUM(
+                                                  CASE
+                                                      WHEN os.name NOT IN (N'Завершен', N'Отменен')
+                                                      THEN 1
+                                                      ELSE 0
+                                                  END
+                                              ), 0) AS ActiveOrdersCount
                                           FROM orders o
-                                          INNER JOIN order_items oi ON oi.order_id = o.id
+                                          INNER JOIN order_statuses os ON os.id = o.status_id
                                           WHERE o.customer_id = c.id
                                             AND o.deleted_at IS NULL
-                                            AND oi.deleted_at IS NULL
-                                      ) order_totals
-                                      CROSS JOIN
-                                      (
-                                          SELECT SUM(p.amount) AS PaidAmount
-                                          FROM payments p
-                                          INNER JOIN orders o ON o.id = p.order_id
-                                          WHERE o.customer_id = c.id
-                                            AND o.deleted_at IS NULL
-                                            AND p.deleted_at IS NULL
-                                      ) payment_totals
-                                  ) dc
-                                  """;
+                                      ) oc
+                                      """;
 
     private const string WhereClause = """
                                        WHERE c.deleted_at IS NULL
@@ -316,8 +292,9 @@ public sealed class CustomersReadRepository(
                                              OR (@hasOrders = 0 AND oc.OrdersCount = 0)
                                          )
                                          AND (
-                                             @hasDebt IS NULL
-                                             OR dc.HasDebt = @hasDebt
+                                             @hasActiveOrders IS NULL
+                                             OR (@hasActiveOrders = 1 AND ISNULL(oc.ActiveOrdersCount, 0) > 0)
+                                             OR (@hasActiveOrders = 0 AND ISNULL(oc.ActiveOrdersCount, 0) = 0)
                                          )
                                        """;
 
@@ -339,8 +316,8 @@ public sealed class CustomersReadRepository(
             "passport" => $"ORDER BY c.passport_series {direction}, c.passport_number {direction}",
             "orders" => $"ORDER BY oc.OrdersCount {direction}",
             "orderscount" => $"ORDER BY oc.OrdersCount {direction}",
-            "hasdebt" => $"ORDER BY dc.HasDebt {direction}",
-            "debt" => $"ORDER BY dc.HasDebt {direction}",
+            "activeorders" => $"ORDER BY oc.ActiveOrdersCount {direction}",
+            "activeorderscount" => $"ORDER BY oc.ActiveOrdersCount {direction}",
             "createdat" => $"ORDER BY c.created_at {direction}",
             "updatedat" => $"ORDER BY c.updated_at {direction}",
             _ => $"ORDER BY c.created_at {direction}"

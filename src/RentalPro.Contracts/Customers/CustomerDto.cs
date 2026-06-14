@@ -17,7 +17,7 @@ public sealed record CustomerDto(
     string? Building,
     string? Apartment,
     int OrdersCount,
-    bool HasDebt,
+    int ActiveOrdersCount,
     DateTime CreatedAt,
     DateTime? UpdatedAt)
 {

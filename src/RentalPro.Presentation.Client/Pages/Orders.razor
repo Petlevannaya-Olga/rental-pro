@@ -45,7 +45,7 @@
         <div class="stats-filter-card @GetStatsCardClass("completed")"
              @onclick='() => ApplyStatsFilter("completed")'>
             <StatCard Title="Завершённые"
-                      Value="@_orders.Count(x => x.StatusName == "Завершён").ToString()"
+                      Value="@_orders.Count(x => x.StatusName == "Завершен").ToString()"
                       Icon="bi bi-check-circle"
                       Color="cyan"/>
         </div>
@@ -2022,7 +2022,7 @@
         var request = new GetCustomersRequest(
             Search: _customerSearch,
             HasOrders: null,
-            HasDebt: null,
+            HasActiveOrders: null,
             SortBy: _customerSortBy,
             Descending: _customerDescending,
             Page: _customersCurrentPage,

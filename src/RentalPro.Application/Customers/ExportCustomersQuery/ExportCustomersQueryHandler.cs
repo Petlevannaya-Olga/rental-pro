@@ -19,7 +19,7 @@ public sealed class ExportCustomersQueryHandler(
         var customersResult = await readRepository.GetForExportAsync(
             query.Search,
             query.HasOrders,
-            query.HasDebt,
+            query.HasActiveOrders,
             query.SortBy,
             query.Descending,
             cancellationToken);

@@ -30,7 +30,7 @@ public sealed class CustomersController(
         var query = new GetCustomersQuery(
             request.Search,
             request.HasOrders,
-            request.HasDebt,
+            request.HasActiveOrders,
             request.SortBy,
             request.Descending,
             request.Page,
@@ -59,7 +59,7 @@ public sealed class CustomersController(
 
         return Ok(result.Value);
     }
-    
+
     [HttpPost]
     public async Task<ActionResult<CreateCustomerResponse>> CreateCustomer(
         [FromBody] CreateCustomerRequest request,
@@ -94,7 +94,7 @@ public sealed class CustomersController(
             result.Value,
             fullName));
     }
-    
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateCustomer(
         Guid id,
@@ -127,7 +127,7 @@ public sealed class CustomersController(
 
         return NoContent();
     }
-    
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteCustomer(
         Guid id,
@@ -142,7 +142,7 @@ public sealed class CustomersController(
 
         return NoContent();
     }
-    
+
     [HttpGet("export")]
     public async Task<IActionResult> ExportCustomers(
         [FromQuery] ExportCustomersRequest request,
@@ -151,7 +151,7 @@ public sealed class CustomersController(
         var query = new ExportCustomersQuery(
             request.Search,
             request.HasOrders,
-            request.HasDebt,
+            request.HasActiveOrders,
             request.SortBy,
             request.Descending);
 
