@@ -1202,38 +1202,7 @@
                 </div>
 
                 <div class="order-section order-tools-section">
-                    <table class="users-table order-tools-period-table">
-                        <thead>
-                        <tr>
-                            <th>Инструмент</th>
-                            <th>Начало аренды</th>
-                            <th>Окончание аренды</th>
-                            <th>Дней</th>
-                            <th>Аренда</th>
-                            <th>Залог</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        @foreach (var item in _viewOrder.Items)
-                        {
-                            <tr>
-                                <td>
-                                    <strong>@item.ToolName</strong>
-                                    <span class="table-subtitle">
-                                            @($"{item.RentalPricePerDay:N0} ₽ / день")
-                                        </span>
-                                </td>
-
-                                <td>@item.StartDate.ToString("dd.MM.yyyy")</td>
-                                <td>@item.PlannedReturnDate.ToString("dd.MM.yyyy")</td>
-                                <td>@GetItemRentalDays(item)</td>
-                                <td>@($"{item.TotalAmount:N0} ₽")</td>
-                                <td>@($"{item.DepositAmount:N0} ₽")</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                    <OrderItemsTable Items="_viewOrder.Items" />
                 </div>
 
                 <div class="order-summary-card compact">
