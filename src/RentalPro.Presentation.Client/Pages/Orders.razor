@@ -315,17 +315,15 @@
                     Завершить заказ
                 </button>
 
-                <button class="menu-item" @onclick='() => ExecuteOrderAction("История изменений")'>
-                    <i class="bi bi-clock-history"></i>
-                    История изменений
-                </button>
-
-                <div class="menu-divider"></div>
-
-                <button class="menu-item menu-danger" @onclick="OpenDeleteModal">
-                    <i class="bi bi-trash"></i>
-                    Удалить
-                </button>
+                @if (_selectedOrder.StatusName == "Подтвержден")
+                {
+                    <button type="button"
+                            class="menu-item danger"
+                            @onclick="OpenCancelOrderModal">
+                        <i class="bi bi-x-circle"></i>
+                        Отменить заказ
+                    </button>
+                }
 
             </div>
         </div>
@@ -1137,7 +1135,8 @@
                                 <span>Документы</span>
                             </div>
                         </div>
-
+                        @if (_viewOrder.StatusName != "Отменен")
+                        {
                         <div class="order-documents-list">
 
                             @foreach (var document in _orderDocuments)
@@ -1191,7 +1190,13 @@
                             }
 
                         </div>
-
+                        }
+                        else
+                        {
+                            <div class="table-empty">
+                                Документы для отмененного заказа не формируются
+                            </div>
+                        }
                     </div>
 
                 </div>
@@ -1623,6 +1628,105 @@
             </div>
         </div>
     }
+    
+    @if (_isCancelOrderModalOpen && _viewOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Отмена заказа</h3>
+                        <p>Подтверждение операции</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseCancelOrderModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="actions-modal-body">
+                    <p>
+                        Вы действительно хотите отменить заказ
+                        <strong>@_viewOrder.Number</strong>?
+                    </p>
+
+                    <p class="text-muted">
+                        Заказ перейдет в статус «Отменен», а инструменты будут возвращены в статус «Доступен».
+                    </p>
+                </div>
+
+                <div class="actions-modal-footer">
+                    <button type="button"
+                            class="btn-secondary"
+                            @onclick="CloseCancelOrderModal">
+                        Нет
+                    </button>
+
+                    <button type="button"
+                            class="btn-danger"
+                            @onclick="CancelOrderAsync">
+                        Да, отменить
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (_isCancelOrderModalOpen && _cancellingOrder is not null)
+    {
+        <div class="actions-backdrop">
+            <div class="actions-modal" @onclick:stopPropagation="true">
+
+                <div class="actions-modal-header">
+                    <div>
+                        <h3>Отмена заказа</h3>
+                        <p>Подтверждение операции</p>
+                    </div>
+
+                    <button type="button"
+                            @onclick="CloseCancelOrderModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="actions-modal-body">
+
+                    <p>
+                        Вы действительно хотите отменить заказ
+                        <strong>@_cancellingOrder.Number</strong>?
+                    </p>
+
+                    <p class="text-muted">
+                        Заказ перейдет в статус «Отменен», а все инструменты будут возвращены в статус «Доступен».
+                    </p>
+
+                    <p class="text-muted">
+                        Договор останется доступным, а акты выдачи и возврата будут скрыты.
+                    </p>
+
+                </div>
+
+                <div class="tool-form-actions modal-footer">
+
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseCancelOrderModal">
+                        Нет
+                    </button>
+
+                    <button class="primary-button"
+                            type="button"
+                            @onclick="CancelOrderAsync">
+                        <i class="bi bi-x-circle"></i>
+                        Да, отменить
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    }
+    
     <CreateCustomerModal IsOpen="_isCreateCustomerModalOpen"
                          IsOpenChanged="CloseCreateCustomerModal"
                          CustomerCreated="OnCustomerCreated"/>
@@ -1630,6 +1734,8 @@
 
 @code
 {
+    private OrderDto? _cancellingOrder;
+    private bool _isCancelOrderModalOpen;
     private bool _isDepositRefundModalOpen;
 
     private DepositRefundFormModel _depositRefundForm = new();
@@ -3257,6 +3363,44 @@
         await LoadOrdersAsync();
 
         NotificationService.Success("Залог успешно возвращён");
+    }
+    
+    private void OpenCancelOrderModal()
+    {
+        if (_selectedOrder is null)
+            return;
+
+        _cancellingOrder = _selectedOrder;
+        _isActionsMenuOpen = false;
+        _isCancelOrderModalOpen = true;
+    }
+
+    private void CloseCancelOrderModal()
+    {
+        _isCancelOrderModalOpen = false;
+        _cancellingOrder = null;
+    }
+
+    private async Task CancelOrderAsync()
+    {
+        if (_cancellingOrder is null)
+            return;
+
+        var orderId = _cancellingOrder.Id;
+
+        var result = await OrdersService.CancelOrderAsync(orderId);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        CloseCancelOrderModal();
+
+        await LoadOrdersAsync();
+
+        NotificationService.Success("Заказ отменен");
     }
 
     private sealed class PaymentFormModel

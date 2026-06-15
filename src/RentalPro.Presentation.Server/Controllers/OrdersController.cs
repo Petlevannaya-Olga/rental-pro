@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RentalPro.Application.Orders.CancelOrderCommand;
 using RentalPro.Application.Orders.CompleteOrderCommand;
 using RentalPro.Application.Orders.CreateOrderCommand;
 using RentalPro.Application.Orders.DeleteOrderCommand;
@@ -40,7 +41,8 @@ public sealed class OrdersController(
     IQueryHandler<byte[], ExportReturnActQuery> exportReturnActHandler,
     IQueryHandler<byte[], ExportTransferActQuery> exportTransferActHandler,
     ICommandHandler<ReturnOrderItemsCommand> returnOrderItemsHandler,
-    ICommandHandler<IssueOrderCommand> issueOrderHandler)
+    ICommandHandler<IssueOrderCommand> issueOrderHandler,
+    ICommandHandler<CancelOrderCommand> cancelOrderCommandHandler)
     : ControllerBase
 {
     [HttpGet]
@@ -367,6 +369,23 @@ public sealed class OrdersController(
             request.OrderItemIds);
 
         var result = await returnOrderItemsHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+    
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<IActionResult> Cancel(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new CancelOrderCommand(id);
+
+        var result = await cancelOrderCommandHandler.Handle(
             command,
             cancellationToken);
 

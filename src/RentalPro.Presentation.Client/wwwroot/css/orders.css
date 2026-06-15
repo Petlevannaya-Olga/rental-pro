@@ -1079,6 +1079,7 @@
 .order-tools-section {
     max-height: 360px;
     overflow-y: auto;
+    overflow-x: hidden;
     margin-top: 14px;
     border-bottom: 1px solid #edf1f7;
 }
@@ -1162,4 +1163,84 @@
 
 .payment-form-grid .full {
     grid-column: 1 / -1;
+}
+
+.order-tools-period-table {
+    width: calc(100% - 40px);
+    margin-top: 12px;
+    margin-left: 20px;
+    margin-right: 20px;
+    table-layout: fixed;
+}
+
+.order-tools-period-table th:nth-child(4),
+.order-tools-period-table td:nth-child(4) {
+    width: 120px;
+    min-width: 120px;
+}
+
+.order-tools-period-table th:nth-child(5),
+.order-tools-period-table td:nth-child(5) {
+    width: 80px;
+    min-width: 80px;
+}
+
+.order-tools-period-table td,
+.order-tools-period-table th {
+    white-space: nowrap;
+}
+
+.order-tools-period-table {
+    width: calc(100% - 40px);
+    margin-top: 12px;
+    margin-left: 20px;
+    margin-right: 20px;
+    table-layout: fixed;
+}
+
+.order-tools-period-table th,
+.order-tools-period-table td {
+    white-space: nowrap;
+}
+
+/* Инструмент */
+.order-tools-period-table th:nth-child(1),
+.order-tools-period-table td:nth-child(1) {
+    width: 28%;
+}
+
+/* Начало аренды */
+.order-tools-period-table th:nth-child(2),
+.order-tools-period-table td:nth-child(2) {
+    width: 105px;
+}
+
+/* План возврата */
+.order-tools-period-table th:nth-child(3),
+.order-tools-period-table td:nth-child(3) {
+    width: 105px;
+}
+
+/* Факт возврата */
+.order-tools-period-table th:nth-child(4),
+.order-tools-period-table td:nth-child(4) {
+    width: 105px;
+}
+
+/* Дней */
+.order-tools-period-table th:nth-child(5),
+.order-tools-period-table td:nth-child(5) {
+    width: 65px;
+}
+
+/* Аренда */
+.order-tools-period-table th:nth-child(6),
+.order-tools-period-table td:nth-child(6) {
+    width: 90px;
+}
+
+/* Залог */
+.order-tools-period-table th:nth-child(7),
+.order-tools-period-table td:nth-child(7) {
+    width: 90px;
 }

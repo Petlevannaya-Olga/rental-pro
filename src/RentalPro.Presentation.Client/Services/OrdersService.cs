@@ -733,4 +733,33 @@ public sealed class OrdersService(
                 "Не удалось оформить возврат");
         }
     }
+    
+    public async Task<UnitResult<Errors>> CancelOrderAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.PostAsync(
+                $"api/orders/{orderId}/cancel",
+                null,
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+                return UnitResult.Success<Errors>();
+
+            var errors = await response.Content.ReadFromJsonAsync<Errors>(
+                cancellationToken);
+
+            return UnitResult.Failure(errors ?? CommonErrors.Failure(
+                "cancel.order.error",
+                "Не удалось отменить заказ"));
+        }
+        catch
+        {
+            return UnitResult.Failure(CommonErrors.Failure(
+                "cancel.order.exception",
+                "Не удалось отменить заказ").ToErrors());
+        }
+    }
 }
