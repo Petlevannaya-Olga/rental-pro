@@ -492,13 +492,13 @@ public sealed class OrdersReadRepository(
                           END AS TotalRemainingAmount,
                           
                           ISNULL(payments.RefundedDepositAmount, 0) AS RefundedDepositAmount,
-                      
+
                       CASE
                           WHEN ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0) < 0
                               THEN 0
                           ELSE ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0)
                       END AS RemainingDepositRefundAmount,
-                      
+
                       CASE
                           WHEN EXISTS (
                               SELECT 1
@@ -1087,7 +1087,7 @@ public sealed class OrdersReadRepository(
                 .ToErrors();
         }
     }
-    
+
     public async Task<Result<bool, Errors>> CustomerHasOrdersAsync(
         Guid customerId,
         CancellationToken cancellationToken = default)
@@ -1193,25 +1193,26 @@ public sealed class OrdersReadRepository(
 
             var sql = """
                       SELECT DISTINCT
-                          COALESCE(oi.actual_returned_date, oi.planned_return_date) AS Date,
-                          3 AS Type
+                          CAST(oi.start_date AS date) AS Date,
+                          2 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
                       WHERE oi.order_id = @orderId
                         AND oi.deleted_at IS NULL
                         AND t.deleted_at IS NULL
-
+                      
                       UNION
-
+                      
                       SELECT DISTINCT
-                          oi.planned_return_date AS Date,
+                          CAST(oi.actual_returned_date AS date) AS Date,
                           3 AS Type
                       FROM order_items oi
                       INNER JOIN tools t ON t.id = oi.tool_id
                       WHERE oi.order_id = @orderId
+                        AND oi.actual_returned_date IS NOT NULL
                         AND oi.deleted_at IS NULL
                         AND t.deleted_at IS NULL
-
+                      
                       ORDER BY Date, Type
                       """;
 
@@ -1232,7 +1233,6 @@ public sealed class OrdersReadRepository(
             foreach (var item in dates)
             {
                 var date = DateOnly.FromDateTime(item.Date);
-
                 var type = (OrderDocumentType)item.Type;
 
                 var title = type switch
