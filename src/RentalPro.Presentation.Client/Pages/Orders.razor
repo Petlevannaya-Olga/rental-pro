@@ -1137,59 +1137,59 @@
                         </div>
                         @if (_viewOrder.StatusName != "Отменен")
                         {
-                        <div class="order-documents-list">
+                            <div class="order-documents-list">
 
-                            @foreach (var document in _orderDocuments)
-                            {
-                                <div class="order-document-row">
-                                    <div>
-                                        <strong>@document.Title</strong>
+                                @foreach (var document in _orderDocuments)
+                                {
+                                    <div class="order-document-row">
+                                        <div>
+                                            <strong>@document.Title</strong>
+                                        </div>
+
+                                        <div class="document-actions">
+
+                                            @if (document.Type == OrderDocumentType.Contract)
+                                            {
+                                                <button class="icon-button"
+                                                        type="button"
+                                                        title="Скачать PDF"
+                                                        @onclick="DownloadContractPdfAsync">
+                                                    <i class="bi bi-file-earmark-pdf"></i>
+                                                </button>
+
+                                                <button class="icon-button"
+                                                        type="button"
+                                                        title="Скачать DOCX"
+                                                        @onclick="DownloadContractAsync">
+                                                    <i class="bi bi-file-earmark-word"></i>
+                                                </button>
+                                            }
+
+                                            @if (document is { Type: OrderDocumentType.TransferAct, Date: not null })
+                                            {
+                                                <button class="icon-button"
+                                                        type="button"
+                                                        title="Скачать DOCX"
+                                                        @onclick="() => DownloadTransferActAsync(document.Date.Value)">
+                                                    <i class="bi bi-file-earmark-word"></i>
+                                                </button>
+                                            }
+
+                                            @if (document is { Type: OrderDocumentType.ReturnAct, Date: not null })
+                                            {
+                                                <button class="icon-button"
+                                                        type="button"
+                                                        title="Скачать DOCX"
+                                                        @onclick="() => DownloadReturnActAsync(document.Date.Value)">
+                                                    <i class="bi bi-file-earmark-word"></i>
+                                                </button>
+                                            }
+
+                                        </div>
                                     </div>
+                                }
 
-                                    <div class="document-actions">
-
-                                        @if (document.Type == OrderDocumentType.Contract)
-                                        {
-                                            <button class="icon-button"
-                                                    type="button"
-                                                    title="Скачать PDF"
-                                                    @onclick="DownloadContractPdfAsync">
-                                                <i class="bi bi-file-earmark-pdf"></i>
-                                            </button>
-
-                                            <button class="icon-button"
-                                                    type="button"
-                                                    title="Скачать DOCX"
-                                                    @onclick="DownloadContractAsync">
-                                                <i class="bi bi-file-earmark-word"></i>
-                                            </button>
-                                        }
-
-                                        @if (document is { Type: OrderDocumentType.TransferAct, Date: not null })
-                                        {
-                                            <button class="icon-button"
-                                                    type="button"
-                                                    title="Скачать DOCX"
-                                                    @onclick="() => DownloadTransferActAsync(document.Date.Value)">
-                                                <i class="bi bi-file-earmark-word"></i>
-                                            </button>
-                                        }
-
-                                        @if (document is { Type: OrderDocumentType.ReturnAct, Date: not null })
-                                        {
-                                            <button class="icon-button"
-                                                    type="button"
-                                                    title="Скачать DOCX"
-                                                    @onclick="() => DownloadReturnActAsync(document.Date.Value)">
-                                                <i class="bi bi-file-earmark-word"></i>
-                                            </button>
-                                        }
-
-                                    </div>
-                                </div>
-                            }
-
-                        </div>
+                            </div>
                         }
                         else
                         {
@@ -1202,7 +1202,7 @@
                 </div>
 
                 <div class="order-section order-tools-section">
-                    <OrderItemsTable Items="_viewOrder.Items" />
+                    <OrderItemsTable Items="_viewOrder.Items"/>
                 </div>
 
                 <div class="order-summary-card compact">
@@ -1469,7 +1469,7 @@
                                 @bind:after="OnPaymentTypeChanged">
                             <option value="">Выберите тип оплаты</option>
 
-                            @foreach (var type in _paymentTypes)
+                            @foreach (var type in _paymentTypes.Where(x => x.Name != "Возврат залога"))
                             {
                                 <option value="@type.Id">@type.Name</option>
                             }
@@ -1628,50 +1628,7 @@
             </div>
         </div>
     }
-    
-    @if (_isCancelOrderModalOpen && _viewOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="actions-modal" @onclick:stopPropagation="true">
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Отмена заказа</h3>
-                        <p>Подтверждение операции</p>
-                    </div>
 
-                    <button type="button" @onclick="CloseCancelOrderModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-                <div class="actions-modal-body">
-                    <p>
-                        Вы действительно хотите отменить заказ
-                        <strong>@_viewOrder.Number</strong>?
-                    </p>
-
-                    <p class="text-muted">
-                        Заказ перейдет в статус «Отменен», а инструменты будут возвращены в статус «Доступен».
-                    </p>
-                </div>
-
-                <div class="actions-modal-footer">
-                    <button type="button"
-                            class="btn-secondary"
-                            @onclick="CloseCancelOrderModal">
-                        Нет
-                    </button>
-
-                    <button type="button"
-                            class="btn-danger"
-                            @onclick="CancelOrderAsync">
-                        Да, отменить
-                    </button>
-                </div>
-            </div>
-        </div>
-    }
-    
     @if (_isCancelOrderModalOpen && _cancellingOrder is not null)
     {
         <div class="actions-backdrop">
@@ -1701,7 +1658,7 @@
                     </p>
 
                     <p class="text-muted">
-                        Договор останется доступным, а акты выдачи и возврата будут скрыты.
+                        Документы для отмененного заказа отображаться не будут.
                     </p>
 
                 </div>
@@ -1726,7 +1683,7 @@
             </div>
         </div>
     }
-    
+
     <CreateCustomerModal IsOpen="_isCreateCustomerModalOpen"
                          IsOpenChanged="CloseCreateCustomerModal"
                          CustomerCreated="OnCustomerCreated"/>
@@ -1734,6 +1691,7 @@
 
 @code
 {
+    private Guid? _depositRefundPaymentTypeId;
     private OrderDto? _cancellingOrder;
     private bool _isCancelOrderModalOpen;
     private bool _isDepositRefundModalOpen;
@@ -2947,13 +2905,14 @@
         if (_viewOrder is null)
             return;
 
+        await LoadPaymentDictionariesAsync();
+
         _paymentForm = new PaymentFormModel
         {
+            PaymentTypeId = FullPaymentId,
             Amount = _viewOrder.TotalRemainingAmount,
             PaymentDate = DateTime.Now
         };
-
-        await LoadPaymentDictionariesAsync();
 
         _isPaymentModalOpen = true;
     }
@@ -2966,6 +2925,9 @@
 
     private async Task CreatePaymentAsync()
     {
+        if (!ValidatePaymentAmount())
+            return;
+
         if (_paymentForm.PaymentTypeId == FullPaymentId)
         {
             await CreateFullPaymentAsync();
@@ -3113,6 +3075,7 @@
             "Не удалось загрузить типы оплаты");
 
         if (typesResult.IsSuccess)
+        {
             _paymentTypes =
             [
                 new DictionaryItem(
@@ -3124,6 +3087,11 @@
 
                 ..typesResult.Value
             ];
+
+            _depositRefundPaymentTypeId = typesResult.Value
+                .FirstOrDefault(x => x.Name == "Возврат залога")
+                ?.Id;
+        }
 
         var methodsResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
             "api/payment-methods",
@@ -3157,7 +3125,6 @@
         {
             "Аренда" => _viewOrder.RemainingRentalAmount,
             "Залог" => _viewOrder.RemainingDepositAmount,
-            "Возврат залога" => _viewOrder.PaidDepositAmount,
             _ => 0
         };
     }
@@ -3332,18 +3299,15 @@
             return;
         }
 
-        var refundType = _paymentTypes
-            .FirstOrDefault(x => x.Name == "Возврат залога");
-
-        if (refundType is null)
+        if (_depositRefundPaymentTypeId is null)
         {
-            NotificationService.Error("Не найден тип оплаты 'Возврат залога'");
+            NotificationService.Error("Тип оплаты «Возврат залога» не найден");
             return;
         }
 
         var request = new CreatePaymentRequest(
             _viewOrder.Id,
-            refundType.Id,
+            _depositRefundPaymentTypeId.Value,
             _depositRefundForm.PaymentMethodId.Value,
             _depositRefundForm.Amount,
             _depositRefundForm.PaymentDate,
@@ -3364,7 +3328,7 @@
 
         NotificationService.Success("Залог успешно возвращён");
     }
-    
+
     private void OpenCancelOrderModal()
     {
         if (_selectedOrder is null)
@@ -3401,6 +3365,61 @@
         await LoadOrdersAsync();
 
         NotificationService.Success("Заказ отменен");
+    }
+
+    private bool ValidatePaymentAmount()
+    {
+        if (_viewOrder is null)
+            return false;
+
+        if (_paymentForm.PaymentTypeId is null)
+        {
+            NotificationService.Error("Выберите тип оплаты");
+            return false;
+        }
+
+        if (_paymentForm.Amount <= 0)
+        {
+            NotificationService.Error("Сумма оплаты должна быть больше 0");
+            return false;
+        }
+
+        if (_paymentForm.PaymentTypeId == FullPaymentId)
+        {
+            if (_paymentForm.Amount != _viewOrder.TotalRemainingAmount)
+            {
+                NotificationService.Error("Полная оплата должна быть равна остатку к оплате");
+                return false;
+            }
+
+            return true;
+        }
+
+        var selectedType = _paymentTypes
+            .FirstOrDefault(x => x.Id == _paymentForm.PaymentTypeId);
+
+        if (selectedType is null)
+        {
+            NotificationService.Error("Тип оплаты не найден");
+            return false;
+        }
+
+        var maxAmount = selectedType.Name switch
+        {
+            "Аренда" => _viewOrder.RemainingRentalAmount,
+            "Залог" => _viewOrder.RemainingDepositAmount,
+            _ => 0
+        };
+
+        if (_paymentForm.Amount > maxAmount)
+        {
+            NotificationService.Error(
+                $"Сумма оплаты по типу «{selectedType.Name}» не может превышать {maxAmount:N2} ₽");
+
+            return false;
+        }
+
+        return true;
     }
 
     private sealed class PaymentFormModel

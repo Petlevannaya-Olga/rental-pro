@@ -13,9 +13,7 @@ public static class PaymentMethodSeeder
         var names = new[]
         {
             "Наличные",
-            "Банковская карта",
-            "Банковский перевод",
-            "СБП"
+            "Банковская карта"
         };
 
         foreach (var name in names)
