@@ -14,7 +14,8 @@ public static class PaymentTypeSeeder
         {
             "Аренда",
             "Залог",
-            "Возврат залога"
+            "Возврат залога",
+            "Возврат аренды"
         };
 
         foreach (var name in names)

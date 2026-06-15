@@ -208,7 +208,7 @@ public sealed class ReturnOrderItemsHandler(
         
         if (!notReturnedItemsLeft)
         {
-            var completedStatusNameResult = OrderStatusName.Create("Ожидает возврата залога");
+            var completedStatusNameResult = OrderStatusName.Create("Ожидает закрытия аренды");
 
             if (completedStatusNameResult.IsFailure)
             {

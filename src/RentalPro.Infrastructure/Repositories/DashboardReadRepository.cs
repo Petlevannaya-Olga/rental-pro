@@ -21,7 +21,7 @@ public sealed class DashboardReadRepository(
     private const string RentPaymentType = "Аренда";
 
     private const string CompletedOrderStatus = "Завершен";
-    private const string WaitingDepositRefundStatus = "Ожидает возврата залога";
+    private const string WaitingDepositRefundStatus = "Ожидает закрытия аренды";
     
     private const string DepositPaymentType = "Залог";
 

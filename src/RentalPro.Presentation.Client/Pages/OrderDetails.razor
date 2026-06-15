@@ -363,14 +363,13 @@
                     </button>
                 }
 
-                @if (_viewOrder.StatusName == "Ожидает возврата залога" &&
-                     _viewOrder.RemainingDepositRefundAmount > 0)
+                @if (_viewOrder.StatusName == "Ожидает закрытия аренды")
                 {
                     <button class="primary-button"
                             type="button"
-                            @onclick="OpenDepositRefundModal">
+                            @onclick="OpenCloseRentalModal">
                         <i class="bi bi-cash-coin"></i>
-                        Вернуть залог
+                        Закрыть аренду
                     </button>
                 }
 
@@ -607,115 +606,115 @@
         </div>
     }
 
-    @if (_isDepositRefundModalOpen && _viewOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="payment-modal"
-                 @onclick:stopPropagation="true">
+    @if (_isCloseRentalModalOpen && _viewOrder is not null)
+{
+    <div class="actions-backdrop">
+        <div class="payment-modal"
+             @onclick:stopPropagation="true">
 
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Возврат залога</h3>
-                        <p>Заказ № @_viewOrder.Number</p>
-                    </div>
-
-                    <button type="button"
-                            @onclick="CloseDepositRefundModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
+            <div class="actions-modal-header">
+                <div>
+                    <h3>Закрытие аренды</h3>
+                    <p>Заказ № @_viewOrder.Number</p>
                 </div>
 
-                <div class="payment-summary">
-                    <div class="payment-summary-row">
-                        <span>Клиент</span>
-                        <strong>@_viewOrder.CustomerFullName</strong>
-                    </div>
+                <button type="button"
+                        @onclick="CloseCloseRentalModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
 
+            <div class="payment-summary">
+
+                <div class="payment-summary-row">
+                    <span>Плановая стоимость аренды</span>
+
+                    <strong>
+                        @_viewOrder.PlannedRentalAmount.ToString("N2") ₽
+                    </strong>
+                </div>
+
+                <div class="payment-summary-row">
+                    <span>Фактическая стоимость аренды</span>
+
+                    <strong>
+                        @_viewOrder.ActualRentalAmount.ToString("N2") ₽
+                    </strong>
+                </div>
+
+                <div class="payment-summary-row">
+                    <span>Оплачено по аренде</span>
+
+                    <strong>
+                        @_viewOrder.PaidRentalAmount.ToString("N2") ₽
+                    </strong>
+                </div>
+
+                <hr />
+
+                @if (_viewOrder.RentalRefundAmount > 0)
+                {
                     <div class="payment-summary-row">
-                        <span>Осталось вернуть</span>
+                        <span>К возврату клиенту</span>
+
                         <strong>
-                            @_viewOrder.RemainingDepositRefundAmount.ToString("N2") ₽
+                            @_viewOrder.RentalRefundAmount.ToString("N2") ₽
                         </strong>
                     </div>
-                </div>
+                }
+                else if (_viewOrder.RentalAdditionalPaymentAmount > 0)
+                {
+                    <div class="payment-summary-row">
+                        <span>К доплате клиентом</span>
 
-                <div class="payment-form-grid">
-
-                    <div class="tool-form-field">
-                        <label>Сумма возврата <span>*</span></label>
-
-                        <InputNumber @bind-Value="_depositRefundForm.Amount"
-                                     class="form-control"/>
+                        <strong>
+                            @_viewOrder.RentalAdditionalPaymentAmount.ToString("N2") ₽
+                        </strong>
                     </div>
+                }
+                else
+                {
+                    <div class="payment-summary-row">
+                        <span>Перерасчет аренды</span>
 
-                    <div class="tool-form-field">
-                        <label>Способ возврата <span>*</span></label>
-
-                        <InputSelect @bind-Value="_depositRefundForm.PaymentMethodId"
-                                     class="form-select">
-
-                            <option value="">Выберите способ</option>
-
-                            @foreach (var method in _paymentMethods)
-                            {
-                                <option value="@method.Id">
-                                    @method.Name
-                                </option>
-                            }
-                        </InputSelect>
+                        <strong>
+                            Не требуется
+                        </strong>
                     </div>
+                }
 
-                    <div class="tool-form-field">
-                        <label>Дата возврата</label>
+                <div class="payment-summary-row">
+                    <span>Залог к возврату</span>
 
-                        <InputDate @bind-Value="_depositRefundForm.PaymentDate"
-                                   class="form-control"/>
-                    </div>
-
-                    <div class="tool-form-field full">
-                        <label>Комментарий</label>
-
-                        <InputText @bind-Value="_depositRefundForm.Comment"
-                                   class="form-control"
-                                   placeholder="Комментарий"/>
-                    </div>
-
-                </div>
-
-                <div class="tool-form-actions modal-footer">
-
-                    <button class="secondary-button"
-                            type="button"
-                            @onclick="CloseDepositRefundModal">
-                        Отмена
-                    </button>
-
-                    <button class="primary-button"
-                            type="button"
-                            @onclick="ReturnDepositAsync">
-
-                        <i class="bi bi-cash-coin"></i>
-
-                        Вернуть залог
-
-                    </button>
-
+                    <strong>
+                        @_viewOrder.RemainingDepositRefundAmount.ToString("N2") ₽
+                    </strong>
                 </div>
 
             </div>
-        </div>
-    }
 
+            <div class="tool-form-actions modal-footer">
+
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="CloseCloseRentalModal">
+                    Закрыть
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+}
 </div>
 
 @code
 {
     [Parameter]
     public Guid Id { get; set; }
-
-    private Guid? _depositRefundPaymentTypeId;
-    private bool _isDepositRefundModalOpen;
-    private DepositRefundFormModel _depositRefundForm = new();
+    
+    private bool _isCloseRentalModalOpen;
+    private CloseRentalFormModel _closeRentalForm = new();
 
     private bool _isReturnModalOpen;
     private ReturnFormModel _returnForm = new();
@@ -786,7 +785,7 @@
             "Выполняется" => "status-badge available",
             "Готов к выдаче" => "status-badge info",
             "Подтвержден" => "status-badge info",
-            "Ожидает возврата залога" => "status-badge warning",
+            "Ожидает закрытия аренды" => "status-badge warning",
             "Завершен" => "status-badge info",
             "Просрочен" => "status-badge danger",
             "Отменен" => "status-badge neutral",
@@ -1073,10 +1072,6 @@
 
                 ..typesResult.Value
             ];
-
-            _depositRefundPaymentTypeId = typesResult.Value
-                .FirstOrDefault(x => x.Name == "Возврат залога")
-                ?.Id;
         }
 
         var methodsResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
@@ -1227,89 +1222,6 @@
         _returnForm.SelectedOrderItemIds.Remove(orderItemId);
     }
 
-    private async Task OpenDepositRefundModal()
-    {
-        if (_viewOrder is null)
-            return;
-
-        _depositRefundForm = new DepositRefundFormModel
-        {
-            Amount = _viewOrder.RemainingDepositRefundAmount,
-            PaymentDate = DateTime.Now
-        };
-
-        await LoadPaymentDictionariesAsync();
-
-        _isDepositRefundModalOpen = true;
-    }
-
-    private void CloseDepositRefundModal()
-    {
-        _isDepositRefundModalOpen = false;
-        _depositRefundForm = new DepositRefundFormModel();
-    }
-
-    private async Task ReturnDepositAsync()
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        if (!_viewOrder.AllItemsReturned)
-        {
-            NotificationService.Error("Залог можно вернуть только после возврата всех инструментов");
-            return;
-        }
-
-        if (_depositRefundForm.PaymentMethodId is null)
-        {
-            NotificationService.Error("Выберите способ возврата");
-            return;
-        }
-
-        if (_depositRefundForm.Amount <= 0)
-        {
-            NotificationService.Error("Сумма возврата должна быть больше 0");
-            return;
-        }
-
-        if (_depositRefundForm.Amount > _viewOrder.RemainingDepositRefundAmount)
-        {
-            NotificationService.Error("Сумма возврата не может быть больше остатка залога");
-            return;
-        }
-
-        if (_depositRefundPaymentTypeId is null)
-        {
-            NotificationService.Error("Тип оплаты «Возврат залога» не найден");
-            return;
-        }
-
-        var request = new CreatePaymentRequest(
-            _viewOrder.Id,
-            _depositRefundPaymentTypeId.Value,
-            _depositRefundForm.PaymentMethodId.Value,
-            _depositRefundForm.Amount,
-            _depositRefundForm.PaymentDate,
-            _depositRefundForm.Comment);
-
-        var result = await PaymentsService.CreatePaymentAsync(request);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        CloseDepositRefundModal();
-
-        await ReloadViewOrderAsync();
-
-        NotificationService.Success("Залог успешно возвращен");
-    }
-
     private bool ValidatePaymentAmount()
     {
         if (_viewOrder is null)
@@ -1364,6 +1276,22 @@
 
         return true;
     }
+    
+    private async Task OpenCloseRentalModal()
+    {
+        await LoadPaymentDictionariesAsync();
+
+        _closeRentalForm = new CloseRentalFormModel();
+
+        _isCloseRentalModalOpen = true;
+    }
+
+    private void CloseCloseRentalModal()
+    {
+        _isCloseRentalModalOpen = false;
+
+        _closeRentalForm = new CloseRentalFormModel();
+    }
 
     private sealed class PaymentFormModel
     {
@@ -1387,6 +1315,15 @@
         public Guid? PaymentMethodId { get; set; }
         public decimal Amount { get; set; }
         public DateTime PaymentDate { get; set; } = DateTime.Now;
+        public string? Comment { get; set; }
+    }
+    
+    private sealed class CloseRentalFormModel
+    {
+        public Guid? PaymentMethodId { get; set; }
+
+        public DateTime PaymentDate { get; set; } = DateTime.Now;
+
         public string? Comment { get; set; }
     }
 }

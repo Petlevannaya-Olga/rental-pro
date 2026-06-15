@@ -18,19 +18,27 @@ public sealed record OrderDetailsDto(
     DateTime? UpdatedAt,
 
     string? Comment,
-    
+
     decimal TotalCost,
     decimal DepositTotal,
-    
+
     decimal PaidRentalAmount,
     decimal PaidDepositAmount,
     decimal TotalPaidAmount,
     decimal RemainingRentalAmount,
     decimal RemainingDepositAmount,
     decimal TotalRemainingAmount,
-    
+
     decimal RefundedDepositAmount,
     decimal RemainingDepositRefundAmount,
+
+    decimal PlannedRentalAmount,
+    decimal ActualRentalAmount,
+    decimal RentalBalanceAmount,
+    decimal RentalRefundAmount,
+    decimal RentalAdditionalPaymentAmount,
+
     bool AllItemsReturned,
+
     IReadOnlyList<OrderDetailsPaymentDto> Payments,
     List<OrderDetailsItemDto> Items);
