@@ -65,4 +65,8 @@ public interface IOrdersReadRepository
     Task<Result<bool, Errors>> CustomerHasOrdersAsync(
         Guid customerId,
         CancellationToken cancellationToken = default);
+    
+    Task<Result<CloseRentalCalculationDto, Errors>> GetCloseRentalCalculationAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken);
 }

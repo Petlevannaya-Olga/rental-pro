@@ -394,12 +394,6 @@
                     </button>
                 }
 
-                <button class="secondary-button"
-                        type="button"
-                        @onclick="BackToOrders">
-                    Закрыть
-                </button>
-
             </div>
 
         </div>
@@ -427,7 +421,7 @@
                         <strong>@_viewOrder.CustomerFullName</strong>
                     </div>
                 </div>
-
+                
                 <div class="return-items-list">
                     @foreach (var item in _viewOrder.Items.Where(x => x.ActualReturnedDate is null))
                     {
@@ -691,6 +685,42 @@
                     </strong>
                 </div>
 
+                <div class="payment-form-grid">
+
+                    <div class="tool-form-field">
+                        <label>Способ оплаты / возврата <span>*</span></label>
+
+                        <InputSelect @bind-Value="_closeRentalForm.PaymentMethodId"
+                                     class="form-select">
+
+                            <option value="">Выберите способ</option>
+
+                            @foreach (var method in _paymentMethods)
+                            {
+                                <option value="@method.Id">
+                                    @method.Name
+                                </option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="tool-form-field">
+                        <label>Дата закрытия аренды</label>
+
+                        <input class="form-control"
+                               value="@_closeRentalForm.PaymentDate.ToString("dd.MM.yyyy")"
+                               readonly />
+                    </div>
+
+                    <div class="tool-form-field full">
+                        <label>Комментарий</label>
+
+                        <InputText @bind-Value="_closeRentalForm.Comment"
+                                   class="form-control"
+                                   placeholder="Комментарий"/>
+                    </div>
+
+                </div>
             </div>
 
             <div class="tool-form-actions modal-footer">
@@ -698,7 +728,14 @@
                 <button class="secondary-button"
                         type="button"
                         @onclick="CloseCloseRentalModal">
-                    Закрыть
+                    Отмена
+                </button>
+
+                <button class="primary-button"
+                        type="button"
+                        @onclick="CloseRentalAsync">
+                    <i class="bi bi-check2-circle"></i>
+                    Закрыть аренду
                 </button>
 
             </div>
@@ -1279,9 +1316,15 @@
     
     private async Task OpenCloseRentalModal()
     {
+        if (_viewOrder is null)
+            return;
+
         await LoadPaymentDictionariesAsync();
 
-        _closeRentalForm = new CloseRentalFormModel();
+        _closeRentalForm = new CloseRentalFormModel
+        {
+            PaymentDate = GetLastReturnedDate()
+        };
 
         _isCloseRentalModalOpen = true;
     }
@@ -1291,6 +1334,55 @@
         _isCloseRentalModalOpen = false;
 
         _closeRentalForm = new CloseRentalFormModel();
+    }
+    
+    private async Task CloseRentalAsync()
+    {
+        if (_viewOrder is null)
+        {
+            NotificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        if (_closeRentalForm.PaymentMethodId is null)
+        {
+            NotificationService.Error("Выберите способ оплаты или возврата");
+            return;
+        }
+
+        var request = new CloseRentalRequest(
+            _closeRentalForm.PaymentMethodId.Value,
+            _closeRentalForm.PaymentDate,
+            _closeRentalForm.Comment);
+
+        var result = await OrdersService.CloseRentalAsync(
+            _viewOrder.Id,
+            request);
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        CloseCloseRentalModal();
+
+        await ReloadViewOrderAsync();
+
+        NotificationService.Success("Аренда успешно закрыта");
+    }
+    
+    private DateTime GetLastReturnedDate()
+    {
+        if (_viewOrder is null)
+            return DateTime.Now;
+
+        var lastReturnedDate = _viewOrder.Items
+            .Where(x => x.ActualReturnedDate is not null)
+            .Max(x => x.ActualReturnedDate);
+
+        return lastReturnedDate?.ToDateTime(TimeOnly.MinValue)
+               ?? DateTime.Now;
     }
 
     private sealed class PaymentFormModel

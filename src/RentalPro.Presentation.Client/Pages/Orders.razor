@@ -286,16 +286,6 @@
                     Просмотр
                 </button>
 
-                <button class="menu-item" @onclick='() => ExecuteOrderAction("Редактирование")'>
-                    <i class="bi bi-pencil"></i>
-                    Редактировать
-                </button>
-
-                <button class="menu-item" @onclick='() => ExecuteOrderAction("Завершение заказа")'>
-                    <i class="bi bi-check-circle"></i>
-                    Завершить заказ
-                </button>
-
                 @if (_selectedOrder.StatusName == "Подтвержден")
                 {
                     <button type="button"

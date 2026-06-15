@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Orders.CancelOrderCommand;
+using RentalPro.Application.Orders.CloseRentalCommand;
 using RentalPro.Application.Orders.CompleteOrderCommand;
 using RentalPro.Application.Orders.CreateOrderCommand;
 using RentalPro.Application.Orders.DeleteOrderCommand;
@@ -42,6 +43,7 @@ public sealed class OrdersController(
     IQueryHandler<byte[], ExportTransferActQuery> exportTransferActHandler,
     ICommandHandler<ReturnOrderItemsCommand> returnOrderItemsHandler,
     ICommandHandler<IssueOrderCommand> issueOrderHandler,
+    ICommandHandler<CloseRentalCommand> closeRentalCommandHandler,
     ICommandHandler<CancelOrderCommand> cancelOrderCommandHandler)
     : ControllerBase
 {
@@ -386,6 +388,28 @@ public sealed class OrdersController(
         var command = new CancelOrderCommand(id);
 
         var result = await cancelOrderCommandHandler.Handle(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+    
+    [HttpPost("{id:guid}/close-rental")]
+    public async Task<IActionResult> CloseRental(
+        Guid id,
+        CloseRentalRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new CloseRentalCommand(
+            id,
+            request.PaymentMethodId,
+            request.PaymentDate,
+            request.Comment);
+
+        var result = await closeRentalCommandHandler.Handle(
             command,
             cancellationToken);
 

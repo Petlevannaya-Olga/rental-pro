@@ -308,7 +308,7 @@ public sealed class OrdersReadRepository(
                 .ToErrors();
         }
     }
-    
+
     private async Task<Result<IReadOnlyList<OrderDetailsPaymentDto>, Errors>> GetOrderDetailsPaymentsAsync(
         OrderId orderId,
         CancellationToken cancellationToken)
@@ -509,190 +509,192 @@ public sealed class OrdersReadRepository(
         try
         {
             var sql = """
-          SELECT
-              o.id AS Id,
-              o.number AS Number,
+                      SELECT
+                          o.id AS Id,
+                          o.number AS Number,
 
-              o.customer_id AS CustomerId,
-              CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
+                          o.customer_id AS CustomerId,
+                          CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name) AS CustomerFullName,
 
-              o.user_id AS UserId,
-              CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
+                          o.user_id AS UserId,
+                          CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name) AS UserFullName,
 
-              o.status_id AS StatusId,
-              os.name AS StatusName,
+                          o.status_id AS StatusId,
+                          os.name AS StatusName,
 
-              o.order_date AS OrderDate,
-              o.comment AS Comment,
-              o.created_at AS CreatedAt,
-              o.updated_at AS UpdatedAt,
+                          o.order_date AS OrderDate,
+                          o.comment AS Comment,
+                          o.created_at AS CreatedAt,
+                          o.updated_at AS UpdatedAt,
 
-              ISNULL(totals.PlannedRentalAmount, 0) AS TotalCost,
-              ISNULL(totals.DepositTotal, 0) AS DepositTotal,
+                          ISNULL(totals.PlannedRentalAmount, 0) AS TotalCost,
+                          ISNULL(totals.DepositTotal, 0) AS DepositTotal,
 
-              ISNULL(payments.PaidRentalAmount, 0) AS PaidRentalAmount,
-              ISNULL(payments.PaidDepositAmount, 0) AS PaidDepositAmount,
+                          ISNULL(payments.PaidRentalAmount, 0) AS PaidRentalAmount,
+                          ISNULL(payments.PaidDepositAmount, 0) AS PaidDepositAmount,
 
-              ISNULL(payments.PaidRentalAmount, 0)
-              + ISNULL(payments.PaidDepositAmount, 0) AS TotalPaidAmount,
+                          ISNULL(payments.PaidRentalAmount, 0)
+                          + ISNULL(payments.PaidDepositAmount, 0) AS TotalPaidAmount,
 
-              CASE
-                  WHEN ISNULL(totals.PlannedRentalAmount, 0) - ISNULL(payments.PaidRentalAmount, 0) < 0
-                      THEN 0
-                  ELSE ISNULL(totals.PlannedRentalAmount, 0) - ISNULL(payments.PaidRentalAmount, 0)
-              END AS RemainingRentalAmount,
+                          CASE
+                              WHEN ISNULL(totals.PlannedRentalAmount, 0) - ISNULL(payments.PaidRentalAmount, 0) < 0
+                                  THEN 0
+                              ELSE ISNULL(totals.PlannedRentalAmount, 0) - ISNULL(payments.PaidRentalAmount, 0)
+                          END AS RemainingRentalAmount,
 
-              CASE
-                  WHEN ISNULL(totals.DepositTotal, 0) - ISNULL(payments.PaidDepositAmount, 0) < 0
-                      THEN 0
-                  ELSE ISNULL(totals.DepositTotal, 0) - ISNULL(payments.PaidDepositAmount, 0)
-              END AS RemainingDepositAmount,
+                          CASE
+                              WHEN ISNULL(totals.DepositTotal, 0) - ISNULL(payments.PaidDepositAmount, 0) < 0
+                                  THEN 0
+                              ELSE ISNULL(totals.DepositTotal, 0) - ISNULL(payments.PaidDepositAmount, 0)
+                          END AS RemainingDepositAmount,
 
-              CASE
-                  WHEN ISNULL(totals.PlannedRentalAmount, 0)
-                       + ISNULL(totals.DepositTotal, 0)
-                       - (
-                            ISNULL(payments.PaidRentalAmount, 0)
-                            + ISNULL(payments.PaidDepositAmount, 0)
-                         ) < 0
-                      THEN 0
-                  ELSE ISNULL(totals.PlannedRentalAmount, 0)
-                       + ISNULL(totals.DepositTotal, 0)
-                       - (
-                            ISNULL(payments.PaidRentalAmount, 0)
-                            + ISNULL(payments.PaidDepositAmount, 0)
-                         )
-              END AS TotalRemainingAmount,
+                          CASE
+                              WHEN ISNULL(totals.PlannedRentalAmount, 0)
+                                   + ISNULL(totals.DepositTotal, 0)
+                                   - (
+                                        ISNULL(payments.PaidRentalAmount, 0)
+                                        + ISNULL(payments.PaidDepositAmount, 0)
+                                     ) < 0
+                                  THEN 0
+                              ELSE ISNULL(totals.PlannedRentalAmount, 0)
+                                   + ISNULL(totals.DepositTotal, 0)
+                                   - (
+                                        ISNULL(payments.PaidRentalAmount, 0)
+                                        + ISNULL(payments.PaidDepositAmount, 0)
+                                     )
+                          END AS TotalRemainingAmount,
 
-              ISNULL(payments.RefundedDepositAmount, 0) AS RefundedDepositAmount,
+                          ISNULL(payments.RefundedDepositAmount, 0) AS RefundedDepositAmount,
 
-              CASE
-                  WHEN ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0) < 0
-                      THEN 0
-                  ELSE ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0)
-              END AS RemainingDepositRefundAmount,
+                          CASE
+                              WHEN ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0) < 0
+                                  THEN 0
+                              ELSE ISNULL(payments.PaidDepositAmount, 0) - ISNULL(payments.RefundedDepositAmount, 0)
+                          END AS RemainingDepositRefundAmount,
 
-              ISNULL(totals.PlannedRentalAmount, 0) AS PlannedRentalAmount,
-              ISNULL(totals.ActualRentalAmount, 0) AS ActualRentalAmount,
+                          ISNULL(totals.PlannedRentalAmount, 0) AS PlannedRentalAmount,
+                          ISNULL(totals.ActualRentalAmount, 0) AS ActualRentalAmount,
 
-              ISNULL(totals.ActualRentalAmount, 0)
-              - ISNULL(payments.PaidRentalAmount, 0)
-              + ISNULL(payments.RefundedRentalAmount, 0) AS RentalBalanceAmount,
-
-              CASE
-                  WHEN ISNULL(totals.ActualRentalAmount, 0)
-                       - ISNULL(payments.PaidRentalAmount, 0)
-                       + ISNULL(payments.RefundedRentalAmount, 0) < 0
-                      THEN ABS(
                           ISNULL(totals.ActualRentalAmount, 0)
                           - ISNULL(payments.PaidRentalAmount, 0)
-                          + ISNULL(payments.RefundedRentalAmount, 0)
-                      )
-                  ELSE 0
-              END AS RentalRefundAmount,
+                          + ISNULL(payments.RefundedRentalAmount, 0) AS RentalBalanceAmount,
 
-              CASE
-                  WHEN ISNULL(totals.ActualRentalAmount, 0)
-                       - ISNULL(payments.PaidRentalAmount, 0)
-                       + ISNULL(payments.RefundedRentalAmount, 0) > 0
-                      THEN ISNULL(totals.ActualRentalAmount, 0)
-                           - ISNULL(payments.PaidRentalAmount, 0)
-                           + ISNULL(payments.RefundedRentalAmount, 0)
-                  ELSE 0
-              END AS RentalAdditionalPaymentAmount,
+                          CASE
+                              WHEN ISNULL(totals.ActualRentalAmount, 0)
+                                   - ISNULL(payments.PaidRentalAmount, 0)
+                                   + ISNULL(payments.RefundedRentalAmount, 0) < 0
+                                  THEN ABS(
+                                      ISNULL(totals.ActualRentalAmount, 0)
+                                      - ISNULL(payments.PaidRentalAmount, 0)
+                                      + ISNULL(payments.RefundedRentalAmount, 0)
+                                  )
+                              ELSE 0
+                          END AS RentalRefundAmount,
 
-              CASE
-                  WHEN EXISTS (
-                      SELECT 1
-                      FROM order_items oi_check
-                      WHERE oi_check.order_id = o.id
-                        AND oi_check.deleted_at IS NULL
-                        AND oi_check.actual_returned_date IS NULL
-                  )
-                      THEN CAST(0 AS bit)
-                  ELSE CAST(1 AS bit)
-              END AS AllItemsReturned
+                          CASE
+                              WHEN ISNULL(totals.ActualRentalAmount, 0)
+                                   - ISNULL(payments.PaidRentalAmount, 0)
+                                   + ISNULL(payments.RefundedRentalAmount, 0) > 0
+                                  THEN ISNULL(totals.ActualRentalAmount, 0)
+                                       - ISNULL(payments.PaidRentalAmount, 0)
+                                       + ISNULL(payments.RefundedRentalAmount, 0)
+                              ELSE 0
+                          END AS RentalAdditionalPaymentAmount,
 
-          FROM orders o
-          INNER JOIN customers c ON c.id = o.customer_id
-          INNER JOIN users u ON u.id = o.user_id
-          INNER JOIN order_statuses os ON os.id = o.status_id
+                          CASE
+                              WHEN EXISTS (
+                                  SELECT 1
+                                  FROM order_items oi_check
+                                  WHERE oi_check.order_id = o.id
+                                    AND oi_check.deleted_at IS NULL
+                                    AND oi_check.actual_returned_date IS NULL
+                              )
+                                  THEN CAST(0 AS bit)
+                              ELSE CAST(1 AS bit)
+                          END AS AllItemsReturned
 
-          OUTER APPLY
-          (
-              SELECT
-                  SUM(
-                      oi.rental_price_per_day *
-                      CASE
-                          WHEN DATEDIFF(DAY, oi.start_date, oi.planned_return_date) <= 0
-                              THEN 1
-                          ELSE DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
-                      END
-                  ) AS PlannedRentalAmount,
+                      FROM orders o
+                      INNER JOIN customers c ON c.id = o.customer_id
+                      INNER JOIN users u ON u.id = o.user_id
+                      INNER JOIN order_statuses os ON os.id = o.status_id
 
-                  SUM(
-                      oi.rental_price_per_day *
-                      CASE
-                          WHEN DATEDIFF(
-                                   DAY,
-                                   oi.start_date,
-                                   COALESCE(oi.actual_returned_date, oi.planned_return_date)
-                               ) <= 0
-                              THEN 1
-                          ELSE DATEDIFF(
-                                   DAY,
-                                   oi.start_date,
-                                   COALESCE(oi.actual_returned_date, oi.planned_return_date)
-                               )
-                      END
-                  ) AS ActualRentalAmount,
+                      OUTER APPLY
+                      (
+                          SELECT
+                              SUM(
+                                  oi.rental_price_per_day *
+                                  CASE
+                                      WHEN DATEDIFF(DAY, oi.start_date, oi.planned_return_date) <= 0
+                                          THEN 1
+                                      ELSE DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                                  END
+                              ) AS PlannedRentalAmount,
 
-                  SUM(oi.deposit_amount) AS DepositTotal
-              FROM order_items oi
-              WHERE oi.order_id = o.id
-                AND oi.deleted_at IS NULL
-          ) totals
+                              SUM(
+                          oi.rental_price_per_day *
+                          CASE
+                              WHEN oi.actual_returned_date IS NULL
+                                  THEN
+                                      CASE
+                                          WHEN DATEDIFF(DAY, oi.start_date, oi.planned_return_date) <= 0
+                                              THEN 1
+                                          ELSE DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                                      END
+                              ELSE
+                                  CASE
+                                      WHEN DATEDIFF(DAY, oi.start_date, oi.actual_returned_date) < 0
+                                          THEN 0
+                                      ELSE DATEDIFF(DAY, oi.start_date, oi.actual_returned_date)
+                                  END
+                          END
+                      ) AS ActualRentalAmount,
 
-          OUTER APPLY
-          (
-              SELECT
-                  SUM(CASE
-                      WHEN pt.name = N'Аренда'
-                          THEN p.amount
-                      ELSE 0
-                  END) AS PaidRentalAmount,
+                              SUM(oi.deposit_amount) AS DepositTotal
+                          FROM order_items oi
+                          WHERE oi.order_id = o.id
+                            AND oi.deleted_at IS NULL
+                      ) totals
 
-                  SUM(CASE
-                      WHEN pt.name = N'Залог'
-                          THEN p.amount
-                      ELSE 0
-                  END) AS PaidDepositAmount,
+                      OUTER APPLY
+                      (
+                          SELECT
+                              SUM(CASE
+                                  WHEN pt.name = N'Аренда'
+                                      THEN p.amount
+                                  ELSE 0
+                              END) AS PaidRentalAmount,
 
-                  SUM(CASE
-                      WHEN pt.name = N'Возврат залога'
-                          THEN p.amount
-                      ELSE 0
-                  END) AS RefundedDepositAmount,
+                              SUM(CASE
+                                  WHEN pt.name = N'Залог'
+                                      THEN p.amount
+                                  ELSE 0
+                              END) AS PaidDepositAmount,
 
-                  SUM(CASE
-                      WHEN pt.name = N'Возврат аренды'
-                          THEN p.amount
-                      ELSE 0
-                  END) AS RefundedRentalAmount
+                              SUM(CASE
+                                  WHEN pt.name = N'Возврат залога'
+                                      THEN p.amount
+                                  ELSE 0
+                              END) AS RefundedDepositAmount,
 
-              FROM payments p
-              INNER JOIN payment_types pt ON pt.id = p.payment_type_id
-              WHERE p.order_id = o.id
-                AND p.deleted_at IS NULL
-                AND pt.deleted_at IS NULL
-          ) payments
+                              SUM(CASE
+                                  WHEN pt.name = N'Возврат аренды'
+                                      THEN p.amount
+                                  ELSE 0
+                              END) AS RefundedRentalAmount
 
-          WHERE o.id = @orderId
-            AND o.deleted_at IS NULL
-            AND c.deleted_at IS NULL
-            AND u.deleted_at IS NULL
-            AND os.deleted_at IS NULL
-          """;
+                          FROM payments p
+                          INNER JOIN payment_types pt ON pt.id = p.payment_type_id
+                          WHERE p.order_id = o.id
+                            AND p.deleted_at IS NULL
+                            AND pt.deleted_at IS NULL
+                      ) payments
+
+                      WHERE o.id = @orderId
+                        AND o.deleted_at IS NULL
+                        AND c.deleted_at IS NULL
+                        AND u.deleted_at IS NULL
+                        AND os.deleted_at IS NULL
+                      """;
 
             var header = await dbContext.Database
                 .SqlQueryRaw<OrderDetailsHeaderDto>(
@@ -1324,9 +1326,9 @@ public sealed class OrdersReadRepository(
                       WHERE oi.order_id = @orderId
                         AND oi.deleted_at IS NULL
                         AND t.deleted_at IS NULL
-                      
+
                       UNION
-                      
+
                       SELECT DISTINCT
                           CAST(oi.actual_returned_date AS date) AS Date,
                           3 AS Type
@@ -1336,7 +1338,7 @@ public sealed class OrdersReadRepository(
                         AND oi.actual_returned_date IS NOT NULL
                         AND oi.deleted_at IS NULL
                         AND t.deleted_at IS NULL
-                      
+
                       ORDER BY Date, Type
                       """;
 
@@ -1612,6 +1614,143 @@ public sealed class OrdersReadRepository(
             return CommonErrors.Db(
                     "get.contract.data.from.db.exception",
                     "Failed to get rental contract data")
+                .ToErrors();
+        }
+    }
+
+    public async Task<Result<CloseRentalCalculationDto, Errors>> GetCloseRentalCalculationAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var sql = """
+                      SELECT
+                          ISNULL(totals.PlannedRentalAmount, 0) AS PlannedRentalAmount,
+                          ISNULL(totals.ActualRentalAmount, 0) AS ActualRentalAmount,
+
+                          ISNULL(payments.PaidRentalAmount, 0) AS PaidRentalAmount,
+                          ISNULL(payments.PaidDepositAmount, 0) AS PaidDepositAmount,
+
+                          ISNULL(payments.RefundedRentalAmount, 0) AS RefundedRentalAmount,
+                          ISNULL(payments.RefundedDepositAmount, 0) AS RefundedDepositAmount,
+
+                          ISNULL(totals.ActualRentalAmount, 0)
+                          - ISNULL(payments.PaidRentalAmount, 0)
+                          + ISNULL(payments.RefundedRentalAmount, 0) AS RentalBalanceAmount,
+
+                          CASE
+                              WHEN ISNULL(totals.ActualRentalAmount, 0)
+                                   - ISNULL(payments.PaidRentalAmount, 0)
+                                   + ISNULL(payments.RefundedRentalAmount, 0) < 0
+                                  THEN ABS(
+                                      ISNULL(totals.ActualRentalAmount, 0)
+                                      - ISNULL(payments.PaidRentalAmount, 0)
+                                      + ISNULL(payments.RefundedRentalAmount, 0)
+                                  )
+                              ELSE 0
+                          END AS RentalRefundAmount,
+
+                          CASE
+                              WHEN ISNULL(totals.ActualRentalAmount, 0)
+                                   - ISNULL(payments.PaidRentalAmount, 0)
+                                   + ISNULL(payments.RefundedRentalAmount, 0) > 0
+                                  THEN ISNULL(totals.ActualRentalAmount, 0)
+                                       - ISNULL(payments.PaidRentalAmount, 0)
+                                       + ISNULL(payments.RefundedRentalAmount, 0)
+                              ELSE 0
+                          END AS RentalAdditionalPaymentAmount,
+
+                          CASE
+                              WHEN ISNULL(payments.PaidDepositAmount, 0)
+                                   - ISNULL(payments.RefundedDepositAmount, 0) < 0
+                                  THEN 0
+                              ELSE ISNULL(payments.PaidDepositAmount, 0)
+                                   - ISNULL(payments.RefundedDepositAmount, 0)
+                          END AS DepositRefundAmount
+
+                      FROM orders o
+
+                      OUTER APPLY
+                      (
+                          SELECT
+                              SUM(
+                                  oi.rental_price_per_day *
+                                  CASE
+                                      WHEN DATEDIFF(DAY, oi.start_date, oi.planned_return_date) <= 0
+                                          THEN 1
+                                      ELSE DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                                  END
+                              ) AS PlannedRentalAmount,
+
+                              SUM(
+                          oi.rental_price_per_day *
+                          CASE
+                              WHEN oi.actual_returned_date IS NULL
+                                  THEN
+                                      CASE
+                                          WHEN DATEDIFF(DAY, oi.start_date, oi.planned_return_date) <= 0
+                                              THEN 1
+                                          ELSE DATEDIFF(DAY, oi.start_date, oi.planned_return_date)
+                                      END
+                              ELSE
+                                  CASE
+                                      WHEN DATEDIFF(DAY, oi.start_date, oi.actual_returned_date) < 0
+                                          THEN 0
+                                      ELSE DATEDIFF(DAY, oi.start_date, oi.actual_returned_date)
+                                  END
+                          END
+                      ) AS ActualRentalAmount
+                          FROM order_items oi
+                          WHERE oi.order_id = o.id
+                            AND oi.deleted_at IS NULL
+                      ) totals
+
+                      OUTER APPLY
+                      (
+                          SELECT
+                              SUM(CASE WHEN pt.name = N'Аренда' THEN p.amount ELSE 0 END) AS PaidRentalAmount,
+                              SUM(CASE WHEN pt.name = N'Залог' THEN p.amount ELSE 0 END) AS PaidDepositAmount,
+                              SUM(CASE WHEN pt.name = N'Возврат аренды' THEN p.amount ELSE 0 END) AS RefundedRentalAmount,
+                              SUM(CASE WHEN pt.name = N'Возврат залога' THEN p.amount ELSE 0 END) AS RefundedDepositAmount
+                          FROM payments p
+                          INNER JOIN payment_types pt ON pt.id = p.payment_type_id
+                          WHERE p.order_id = o.id
+                            AND p.deleted_at IS NULL
+                            AND pt.deleted_at IS NULL
+                      ) payments
+
+                      WHERE o.id = @orderId
+                        AND o.deleted_at IS NULL
+                      """;
+
+            var calculation = await dbContext.Database
+                .SqlQueryRaw<CloseRentalCalculationDto>(
+                    sql,
+                    CreateParameter("@orderId", orderId.Value))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (calculation is null)
+            {
+                return CommonErrors.NotFound(
+                        "order.not.found",
+                        "Заказ не найден",
+                        orderId.Value)
+                    .ToErrors();
+            }
+
+            return calculation;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get close rental calculation for order {OrderId}",
+                orderId.Value);
+
+            return CommonErrors.Db(
+                    "get.close.rental.calculation.from.db.exception",
+                    "Failed to get close rental calculation")
                 .ToErrors();
         }
     }

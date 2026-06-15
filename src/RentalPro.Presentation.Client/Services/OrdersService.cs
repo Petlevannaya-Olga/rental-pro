@@ -762,4 +762,34 @@ public sealed class OrdersService(
                 "Не удалось отменить заказ").ToErrors());
         }
     }
+    
+    public async Task<UnitResult<Errors>> CloseRentalAsync(
+        Guid orderId,
+        CloseRentalRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                $"api/orders/{orderId}/close-rental",
+                request,
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+                return UnitResult.Success<Errors>();
+
+            var errors = await response.Content.ReadFromJsonAsync<Errors>(
+                cancellationToken);
+
+            return UnitResult.Failure(errors ?? CommonErrors.Failure(
+                "close.rental.error",
+                "Не удалось закрыть аренду"));
+        }
+        catch
+        {
+            return UnitResult.Failure(CommonErrors.Failure(
+                "close.rental.exception",
+                "Не удалось закрыть аренду").ToErrors());
+        }
+    }
 }
