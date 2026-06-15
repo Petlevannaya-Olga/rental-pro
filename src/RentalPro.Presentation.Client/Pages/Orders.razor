@@ -1,16 +1,15 @@
 ﻿@page "/orders"
 @layout AdminLayout
 
-@using RentalPro.Presentation.Client.Services
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @using RentalPro.Contracts.Customers
+@using RentalPro.Contracts.OrderStatuses
+@using RentalPro.Contracts.Orders
 @using RentalPro.Contracts.Tools
 @using RentalPro.Presentation.Client.Models
 @using RentalPro.Presentation.Client.Models.Dictionaries
-@using RentalPro.Contracts.Orders
-@using RentalPro.Contracts.OrderStatuses
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
-@using RentalPro.Contracts.Payments
+@using RentalPro.Presentation.Client.Services
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject OrderStatusesService OrderStatusesService
@@ -20,7 +19,7 @@
 @inject CustomersService CustomersService
 @inject DictionaryCrudService DictionaryCrudService
 @inject FakeOrderGeneratorService FakeOrderGenerator
-@inject PaymentsService PaymentsService
+@inject NavigationManager Navigation
 
 <div class="users-page orders-page">
 
@@ -44,7 +43,7 @@
 
         <div class="stats-filter-card @GetStatsCardClass("completed")"
              @onclick='() => ApplyStatsFilter("completed")'>
-            <StatCard Title="Завершённые"
+            <StatCard Title="Завершенные"
                       Value="@_orders.Count(x => x.StatusName == "Завершен").ToString()"
                       Icon="bi bi-check-circle"
                       Color="cyan"/>
@@ -89,10 +88,11 @@
                         @bind="_status"
                         @bind:after="ApplyFilters">
                     <option value="">Все статусы</option>
-                    <option value="Активен">Активен</option>
-                    <option value="Завершён">Завершён</option>
-                    <option value="Просрочен">Просрочен</option>
-                    <option value="Отменён">Отменён</option>
+
+                    @foreach (var status in _orderStatuses)
+                    {
+                        <option value="@status.Name">@status.Name</option>
+                    }
                 </select>
             </div>
 
@@ -153,33 +153,13 @@
                             </div>
                         </td>
 
-                        <td>
-                            <div class="skeleton skeleton-line medium"></div>
-                        </td>
-
-                        <td>
-                            <div class="skeleton skeleton-badge"></div>
-                        </td>
-
-                        <td>
-                            <div class="skeleton skeleton-line small"></div>
-                        </td>
-
-                        <td>
-                            <div class="skeleton skeleton-line small"></div>
-                        </td>
-
-                        <td>
-                            <div class="skeleton skeleton-line small"></div>
-                        </td>
-
-                        <td>
-                            <div class="skeleton skeleton-line small"></div>
-                        </td>
-
-                        <td>
-                            <div class="skeleton skeleton-dot"></div>
-                        </td>
+                        <td><div class="skeleton skeleton-line medium"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-line small"></div></td>
+                        <td><div class="skeleton skeleton-line small"></div></td>
+                        <td><div class="skeleton skeleton-line small"></div></td>
+                        <td><div class="skeleton skeleton-line small"></div></td>
+                        <td><div class="skeleton skeleton-dot"></div></td>
                     </tr>
                 }
                 </tbody>
@@ -229,20 +209,20 @@
                 <tbody>
                 @foreach (var order in _orders)
                 {
-                    <tr>
+                    <tr @ondblclick="() => OpenOrder(order.Id)">
                         <td>
                             <strong>@order.Number</strong>
                             <span class="table-subtitle">
-                        @order.OrderDate.ToString("dd.MM.yyyy")
-                    </span>
+                                @order.OrderDate.ToString("dd.MM.yyyy")
+                            </span>
                         </td>
 
                         <td>@order.CustomerFullName</td>
 
                         <td>
-                    <span class="@GetOrderStatusClass(order.StatusName)">
-                        @order.StatusName
-                    </span>
+                            <span class="@GetOrderStatusClass(order.StatusName)">
+                                @order.StatusName
+                            </span>
                         </td>
 
                         <td>@order.ItemsCount шт.</td>
@@ -251,8 +231,8 @@
                             @if (order.PlannedReturnDate.HasValue)
                             {
                                 <span class="@GetReturnDateClass(order)">
-                            @order.PlannedReturnDate.Value.ToString("dd.MM.yyyy")
-                        </span>
+                                    @order.PlannedReturnDate.Value.ToString("dd.MM.yyyy")
+                                </span>
                             }
                             else
                             {
@@ -265,6 +245,7 @@
 
                         <td class="actions-cell">
                             <button class="icon-button"
+                                    @onclick:stopPropagation="true"
                                     @onclick="() => OpenActionsMenu(order)">
                                 <i class="bi bi-three-dots"></i>
                             </button>
@@ -399,9 +380,8 @@
 
                             <div class="tool-form-field">
                                 <label>Комментарий</label>
-                                <input value="@_newOrder.Comment"
-                                       placeholder="Комментарий к заказу (необязательно)"
-                                       readonly/>
+                                <input @bind="_newOrder.Comment"
+                                       placeholder="Комментарий к заказу (необязательно)"/>
                             </div>
 
                         </div>
@@ -430,8 +410,8 @@
                                         <td>
                                             <strong>@tool.ToolName</strong>
                                             <span class="table-subtitle">
-                            @tool.RentalPricePerDay.ToString("N0") ₽ / день
-                        </span>
+                                                @tool.RentalPricePerDay.ToString("N0") ₽ / день
+                                            </span>
                                         </td>
 
                                         <td>
@@ -474,12 +454,12 @@
                             }
                         </div>
                     }
+
                     @if (_newOrder.Tools.Count > 0)
                     {
                         <div class="order-summary-card compact">
 
                             <div class="order-summary-row">
-
 
                                 <div class="order-summary-item">
                                     <div class="summary-icon compact blue">
@@ -656,13 +636,8 @@
                                     </div>
                                 </td>
 
-                                <td>
-                                    <div class="skeleton skeleton-line medium"></div>
-                                </td>
-
-                                <td>
-                                    <div class="skeleton skeleton-line small"></div>
-                                </td>
+                                <td><div class="skeleton skeleton-line medium"></div></td>
+                                <td><div class="skeleton skeleton-line small"></div></td>
                             </tr>
                         }
                         </tbody>
@@ -835,24 +810,12 @@
                                     </div>
                                 </td>
 
-                                <td>
-                                    <div class="skeleton skeleton-line medium"></div>
-                                </td>
-                                <td>
-                                    <div class="skeleton skeleton-line medium"></div>
-                                </td>
-                                <td>
-                                    <div class="skeleton skeleton-line medium"></div>
-                                </td>
-                                <td>
-                                    <div class="skeleton skeleton-line small"></div>
-                                </td>
-                                <td>
-                                    <div class="skeleton skeleton-line small"></div>
-                                </td>
-                                <td>
-                                    <div class="skeleton skeleton-badge"></div>
-                                </td>
+                                <td><div class="skeleton skeleton-line medium"></div></td>
+                                <td><div class="skeleton skeleton-line medium"></div></td>
+                                <td><div class="skeleton skeleton-line medium"></div></td>
+                                <td><div class="skeleton skeleton-line small"></div></td>
+                                <td><div class="skeleton skeleton-line small"></div></td>
+                                <td><div class="skeleton skeleton-badge"></div></td>
                             </tr>
                         }
                         </tbody>
@@ -938,9 +901,9 @@
                                 <td>@tool.DepositAmount.ToString("N0") ₽</td>
 
                                 <td>
-                <span class="@GetToolStatusClass(tool.StatusName)">
-                    @tool.StatusName
-                </span>
+                                    <span class="@GetToolStatusClass(tool.StatusName)">
+                                        @tool.StatusName
+                                    </span>
                                 </td>
                             </tr>
                         }
@@ -969,713 +932,6 @@
                         <i class="bi bi-check-lg"></i>
                         Выбрать инструменты
                     </button>
-                </div>
-
-            </div>
-        </div>
-    }
-
-    @if (_isDeleteModalOpen && _deletingOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="actions-modal" @onclick:stopPropagation="true">
-
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Удалить заказ?</h3>
-                        <p>@_deletingOrder.Number</p>
-                    </div>
-
-                    <button type="button" @onclick="CloseDeleteModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-                <p>Заказ будет удалён из списка. Это действие нельзя отменить.</p>
-
-                <div class="tool-form-actions modal-footer">
-                    <button class="secondary-button"
-                            type="button"
-                            @onclick="CloseDeleteModal">
-                        Отмена
-                    </button>
-
-                    <button class="primary-button"
-                            type="button"
-                            @onclick="DeleteOrderAsync">
-                        Удалить
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    }
-
-    @if (_isViewModalOpen && _viewOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="order-view-modal compact" @onclick:stopPropagation="true">
-
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Просмотр заказа</h3>
-
-                        <p>
-                            Заказ № @_viewOrder.Number
-                            от @_viewOrder.OrderDate.ToString("dd.MM.yyyy")
-                        </p>
-
-                        @if (_viewOrder.UpdatedAt.HasValue)
-                        {
-                            <span class="order-updated">
-                            Изменён: @_viewOrder.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm")
-                        </span>
-                        }
-                        else
-                        {
-                            <span class="order-updated">
-                            Не изменялся
-                        </span>
-                        }
-                    </div>
-
-                    <div class="modal-header-actions">
-
-                    <span class="@GetOrderStatusClass(_viewOrder.StatusName)">
-                        @_viewOrder.StatusName
-                    </span>
-
-                        <button type="button"
-                                @onclick="CloseViewModal">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-
-                    </div>
-                </div>
-
-                <div class="order-selected-grid">
-
-                    <button class="order-selected-card compact clickable"
-                            type="button"
-                            @onclick="OpenCustomerInfo">
-
-                        <div class="order-selected-icon customer">
-                            <i class="bi bi-person"></i>
-                        </div>
-
-                        <div class="order-selected-content">
-                            <span>Клиент</span>
-
-                            <strong>
-                                @_viewOrder.CustomerFullName
-                            </strong>
-
-                            <p>
-                                Нажмите для просмотра информации
-                            </p>
-                        </div>
-
-                    </button>
-
-                    <button class="order-selected-card compact clickable"
-                            type="button"
-                            @onclick="OpenManagerInfo">
-
-                        <div class="order-selected-icon customer">
-                            <i class="bi bi-person-badge"></i>
-                        </div>
-
-                        <div class="order-selected-content">
-                            <span>Менеджер</span>
-
-                            <strong>
-                                @_viewOrder.UserFullName
-                            </strong>
-
-                            <p>
-                                Нажмите для просмотра информации
-                            </p>
-                        </div>
-
-                    </button>
-
-                </div>
-
-                <div class="order-extra-grid">
-
-                    <div class="order-extra-card">
-
-                        <div class="order-extra-title">
-                            <div class="order-extra-icon green">
-                                <i class="bi bi-credit-card"></i>
-                            </div>
-
-                            <div>
-                                <span>Платежи</span>
-                            </div>
-                        </div>
-
-                        @if (_viewOrder.Payments.Count == 0)
-                        {
-                            <div class="table-empty">
-                                Платежи отсутствуют
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="order-payments-list">
-                                @foreach (var payment in _viewOrder.Payments)
-                                {
-                                    <div class="order-payment-row">
-                                        <div>
-                                            <strong>@payment.PaymentTypeName</strong>
-
-                                            <span class="table-subtitle">
-                                                @payment.PaymentMethodName · @payment.PaymentDate.ToString("dd.MM.yyyy HH:mm")
-                                            </span>
-
-                                            @if (!string.IsNullOrWhiteSpace(payment.Comment))
-                                            {
-                                                <span class="table-subtitle">
-                                                    @payment.Comment
-                                                </span>
-                                            }
-                                        </div>
-
-                                        <strong>
-                                            @payment.Amount.ToString("N0") ₽
-                                        </strong>
-                                    </div>
-                                }
-                            </div>
-                        }
-
-                    </div>
-
-                    <div class="order-extra-card">
-
-                        <div class="order-extra-title">
-                            <div class="order-extra-icon blue">
-                                <i class="bi bi-file-earmark-text"></i>
-                            </div>
-
-                            <div>
-                                <span>Документы</span>
-                            </div>
-                        </div>
-
-                        @if (_viewOrder.StatusName != "Отменен")
-                        {
-                            <div class="order-documents-list">
-
-                                @foreach (var document in _orderDocuments)
-                                {
-                                    <div class="order-document-row">
-                                        <div>
-                                            <strong>@document.Title</strong>
-                                        </div>
-
-                                        <div class="document-actions">
-
-                                            @if (document.Type == OrderDocumentType.Contract)
-                                            {
-                                                <button class="icon-button"
-                                                        type="button"
-                                                        title="Скачать PDF"
-                                                        @onclick="DownloadContractPdfAsync">
-                                                    <i class="bi bi-file-earmark-pdf"></i>
-                                                </button>
-
-                                                <button class="icon-button"
-                                                        type="button"
-                                                        title="Скачать DOCX"
-                                                        @onclick="DownloadContractAsync">
-                                                    <i class="bi bi-file-earmark-word"></i>
-                                                </button>
-                                            }
-
-                                            @if (document is { Type: OrderDocumentType.TransferAct, Date: not null })
-                                            {
-                                                <button class="icon-button"
-                                                        type="button"
-                                                        title="Скачать DOCX"
-                                                        @onclick="() => DownloadTransferActAsync(document.Date.Value)">
-                                                    <i class="bi bi-file-earmark-word"></i>
-                                                </button>
-                                            }
-
-                                            @if (document is { Type: OrderDocumentType.ReturnAct, Date: not null })
-                                            {
-                                                <button class="icon-button"
-                                                        type="button"
-                                                        title="Скачать DOCX"
-                                                        @onclick="() => DownloadReturnActAsync(document.Date.Value)">
-                                                    <i class="bi bi-file-earmark-word"></i>
-                                                </button>
-                                            }
-
-                                        </div>
-                                    </div>
-                                }
-
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="table-empty">
-                                Документы для отмененного заказа не формируются
-                            </div>
-                        }
-
-                    </div>
-
-                </div>
-                
-                @if (!string.IsNullOrWhiteSpace(_viewOrder.Comment))
-                {
-                    <div class="order-section">
-                        <div class="order-extra-card wide">
-
-                            <div class="order-extra-title">
-                                <div class="order-extra-icon blue">
-                                    <i class="bi bi-chat-left-text"></i>
-                                </div>
-
-                                <div>
-                                    <span>Комментарий</span>
-                                </div>
-                            </div>
-
-                            <p class="order-comment-text">
-                                @_viewOrder.Comment
-                            </p>
-
-                        </div>
-                    </div>
-                }
-
-                <div class="order-section order-tools-section">
-                    <OrderItemsTable Items="_viewOrder.Items"/>
-                </div>
-
-                <div class="order-summary-card compact">
-
-                    <div class="order-summary-row">
-
-                        <div class="order-summary-item">
-                            <div class="summary-icon compact blue">
-                                <i class="bi bi-calendar-range"></i>
-                            </div>
-
-                            <div>
-                                <span>Период</span>
-
-                                <strong>
-                                    @GetOrderPeriodText(_viewOrder)
-                                </strong>
-                            </div>
-                        </div>
-
-                        <div class="order-summary-item">
-                            <div class="summary-icon compact green">
-                                <i class="bi bi-tools"></i>
-                            </div>
-
-                            <div>
-                                <span>Инструментов</span>
-
-                                <strong>
-                                    @_viewOrder.Items.Count шт.
-                                </strong>
-                            </div>
-                        </div>
-
-                        <div class="order-summary-item">
-                            <div class="summary-icon compact yellow">
-                                <i class="bi bi-wallet2"></i>
-                            </div>
-
-                            <div>
-                                <span>Залог</span>
-
-                                <strong>
-                                    @_viewOrder.DepositTotal.ToString("N0") ₽
-                                </strong>
-                            </div>
-                        </div>
-
-                        <div class="order-summary-item">
-                            <div class="summary-icon compact green">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-
-                            <div>
-                                <span>Аренда</span>
-
-                                <strong>
-                                    @_viewOrder.TotalCost.ToString("N0") ₽
-                                </strong>
-                            </div>
-                        </div>
-
-                        <div class="order-summary-total">
-                            <span>К оплате</span>
-
-                            <strong>
-                                @((_viewOrder.TotalCost + _viewOrder.DepositTotal).ToString("N0"))₽
-                            </strong>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="tool-form-actions modal-footer">
-                    @if (_viewOrder.StatusName == "Выполняется")
-                    {
-                        <button class="primary-button"
-                                type="button"
-                                @onclick="OpenReturnModal">
-                            <i class="bi bi-arrow-return-left"></i>
-                            Оформить возврат
-                        </button>
-                    }
-
-                    @if (_viewOrder.StatusName == "Ожидает возврата залога" &&
-                         _viewOrder.RemainingDepositRefundAmount > 0)
-                    {
-                        <button class="primary-button"
-                                type="button"
-                                @onclick="OpenDepositRefundModal">
-                            <i class="bi bi-cash-coin"></i>
-                            Вернуть залог
-                        </button>
-                    }
-
-                    @if (_viewOrder.StatusName == "Готов к выдаче")
-                    {
-                        <button class="primary-button"
-                                type="button"
-                                @onclick="IssueToolsAsync">
-                            <i class="bi bi-box-seam"></i>
-                            Выдать инструменты
-                        </button>
-                    }
-
-                    @if (_viewOrder.TotalRemainingAmount > 0 &&
-                         _viewOrder.StatusName == "Подтвержден")
-                    {
-                        <button class="primary-button"
-                                type="button"
-                                @onclick="OpenPaymentModal">
-                            <i class="bi bi-credit-card"></i>
-                            Принять оплату
-                        </button>
-                    }
-
-                    <button class="secondary-button"
-                            type="button"
-                            @onclick="CloseViewModal">
-                        Закрыть
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    }
-    @if (_isReturnModalOpen && _viewOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="payment-modal" @onclick:stopPropagation="true">
-
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Оформить возврат</h3>
-                        <p>Заказ № @_viewOrder.Number</p>
-                    </div>
-
-                    <button type="button" @onclick="CloseReturnModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-                <div class="payment-summary">
-                    <div class="payment-summary-row">
-                        <span>Клиент</span>
-                        <strong>@_viewOrder.CustomerFullName</strong>
-                    </div>
-                </div>
-
-                <div class="return-items-list">
-                    @foreach (var item in _viewOrder.Items.Where(x => x.ActualReturnedDate is null))
-                    {
-                        <label class="return-item-row">
-                            <input type="checkbox"
-                                   checked="@_returnForm.SelectedOrderItemIds.Contains(item.Id)"
-                                   @onchange="e => ToggleReturnItem(item.Id, e)"/>
-
-                            <div class="return-item-content">
-                                <div class="return-item-name">
-                                    @item.ToolName
-                                </div>
-
-                                <div class="return-item-date">
-                                    Плановый возврат:
-                                    @item.PlannedReturnDate.ToString("dd.MM.yyyy")
-                                </div>
-                            </div>
-                        </label>
-                    }
-                </div>
-
-                <div class="payment-form-grid">
-                    <div class="tool-form-field">
-                        <label>Дата возврата <span>*</span></label>
-                        <input type="date"
-                               @bind="_returnForm.ActualReturnedDate"/>
-                    </div>
-
-                    <div class="tool-form-field">
-                        <label>Состояние</label>
-                        <select @bind="_returnForm.ReturnCondition">
-                            <option value="Исправно">Исправно</option>
-                            <option value="Требует обслуживания">Требует обслуживания</option>
-                        </select>
-                    </div>
-
-                    <div class="tool-form-field full">
-                        <label>Комментарий о повреждениях</label>
-                        <input placeholder="Например: повреждён корпус, отсутствует насадка"
-                               @bind="_returnForm.DamageComment"/>
-                    </div>
-                </div>
-
-                <div class="tool-form-actions modal-footer">
-                    <button class="secondary-button"
-                            type="button"
-                            @onclick="CloseReturnModal">
-                        Отмена
-                    </button>
-
-                    <button class="primary-button"
-                            type="button"
-                            @onclick="ReturnItemsAsync">
-                        <i class="bi bi-check2-circle"></i>
-                        Оформить возврат
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    }
-    @if (_isPaymentModalOpen && _viewOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="payment-modal" @onclick:stopPropagation="true">
-
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Принять оплату</h3>
-                        <p>Заказ № @_viewOrder.Number</p>
-                    </div>
-
-                    <button type="button" @onclick="ClosePaymentModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-                <div class="payment-summary">
-                    <div class="payment-summary-row">
-                        <span>Клиент</span>
-                        <strong>@_viewOrder.CustomerFullName</strong>
-                    </div>
-
-                    <div class="payment-summary-grid">
-                        <div>
-                            <span>Аренда</span>
-                            <strong>@_viewOrder.TotalCost.ToString("N0") ₽</strong>
-                            <small>Оплачено: @_viewOrder.PaidRentalAmount.ToString("N0") ₽</small>
-                            <small>Осталось: @_viewOrder.RemainingRentalAmount.ToString("N0") ₽</small>
-                        </div>
-
-                        <div>
-                            <span>Залог</span>
-                            <strong>@_viewOrder.DepositTotal.ToString("N0") ₽</strong>
-                            <small>Оплачено: @_viewOrder.PaidDepositAmount.ToString("N0") ₽</small>
-                            <small>Осталось: @_viewOrder.RemainingDepositAmount.ToString("N0") ₽</small>
-                        </div>
-
-                        <div class="total">
-                            <span>Итого</span>
-                            <strong>@((_viewOrder.TotalCost + _viewOrder.DepositTotal).ToString("N0")) ₽</strong>
-                            <small>Оплачено: @_viewOrder.TotalPaidAmount.ToString("N0") ₽</small>
-                            <small>Осталось: @_viewOrder.TotalRemainingAmount.ToString("N0") ₽</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="payment-form-grid">
-
-                    <div class="tool-form-field">
-                        <label>Тип оплаты <span>*</span></label>
-                        <select @bind="_paymentForm.PaymentTypeId"
-                                @bind:after="OnPaymentTypeChanged">
-                            <option value="">Выберите тип оплаты</option>
-
-                            @foreach (var type in _paymentTypes.Where(x => x.Name != "Возврат залога"))
-                            {
-                                <option value="@type.Id">@type.Name</option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="tool-form-field">
-                        <label>Способ оплаты <span>*</span></label>
-                        <select @bind="_paymentForm.PaymentMethodId">
-                            <option value="">Выберите способ оплаты</option>
-
-                            @foreach (var method in _paymentMethods)
-                            {
-                                <option value="@method.Id">@method.Name</option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="tool-form-field">
-                        <label>Сумма <span>*</span></label>
-                        <input type="number"
-                               min="1"
-                               step="0.01"
-                               @bind="_paymentForm.Amount"
-                               disabled="@(_paymentForm.PaymentTypeId == FullPaymentId)"/>
-                    </div>
-
-                    <div class="tool-form-field">
-                        <label>Дата оплаты <span>*</span></label>
-                        <input type="datetime-local"
-                               @bind="_paymentForm.PaymentDate"/>
-                    </div>
-
-                    <div class="tool-form-field full">
-                        <label>Комментарий</label>
-                        <input placeholder="Комментарий к оплате"
-                               @bind="_paymentForm.Comment"/>
-                    </div>
-
-                </div>
-
-                <div class="tool-form-actions modal-footer">
-                    <button class="secondary-button"
-                            type="button"
-                            @onclick="ClosePaymentModal">
-                        Отмена
-                    </button>
-
-                    <button class="primary-button"
-                            type="button"
-                            @onclick="CreatePaymentAsync">
-                        <i class="bi bi-credit-card"></i>
-                        Принять оплату
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    }
-
-    @if (_isDepositRefundModalOpen && _viewOrder is not null)
-    {
-        <div class="actions-backdrop">
-            <div class="payment-modal"
-                 @onclick:stopPropagation="true">
-
-                <div class="actions-modal-header">
-                    <div>
-                        <h3>Возврат залога</h3>
-                        <p>Заказ № @_viewOrder.Number</p>
-                    </div>
-
-                    <button type="button"
-                            @onclick="CloseDepositRefundModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-                <div class="payment-summary">
-                    <div class="payment-summary-row">
-                        <span>Клиент</span>
-                        <strong>@_viewOrder.CustomerFullName</strong>
-                    </div>
-
-                    <div class="payment-summary-row">
-                        <span>Осталось вернуть</span>
-                        <strong>
-                            @_viewOrder.RemainingDepositRefundAmount.ToString("N2") ₽
-                        </strong>
-                    </div>
-                </div>
-
-                <div class="payment-form-grid">
-
-                    <div class="tool-form-field">
-                        <label>Сумма возврата <span>*</span></label>
-
-                        <InputNumber @bind-Value="_depositRefundForm.Amount"
-                                     class="form-control"/>
-                    </div>
-
-                    <div class="tool-form-field">
-                        <label>Способ возврата <span>*</span></label>
-
-                        <InputSelect @bind-Value="_depositRefundForm.PaymentMethodId"
-                                     class="form-select">
-
-                            <option value="">Выберите способ</option>
-
-                            @foreach (var method in _paymentMethods)
-                            {
-                                <option value="@method.Id">
-                                    @method.Name
-                                </option>
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div class="tool-form-field">
-                        <label>Дата возврата</label>
-
-                        <InputDate @bind-Value="_depositRefundForm.PaymentDate"
-                                   class="form-control"/>
-                    </div>
-
-                    <div class="tool-form-field full">
-                        <label>Комментарий</label>
-
-                        <InputText @bind-Value="_depositRefundForm.Comment"
-                                   class="form-control"
-                                   placeholder="Комментарий"/>
-                    </div>
-
-                </div>
-
-                <div class="tool-form-actions modal-footer">
-
-                    <button class="secondary-button"
-                            type="button"
-                            @onclick="CloseDepositRefundModal">
-                        Отмена
-                    </button>
-
-                    <button class="primary-button"
-                            type="button"
-                            @onclick="ReturnDepositAsync">
-
-                        <i class="bi bi-cash-coin"></i>
-
-                        Вернуть залог
-
-                    </button>
-
                 </div>
 
             </div>
@@ -1744,29 +1000,10 @@
 
 @code
 {
-    private Guid? _depositRefundPaymentTypeId;
     private OrderDto? _cancellingOrder;
     private bool _isCancelOrderModalOpen;
-    private bool _isDepositRefundModalOpen;
-
-    private DepositRefundFormModel _depositRefundForm = new();
-
-    private bool _isReturnModalOpen;
-
-    private ReturnFormModel _returnForm = new();
-
-    private static readonly Guid FullPaymentId =
-        Guid.Parse("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF");
-
-    private bool _isPaymentModalOpen;
-
-    private PaymentFormModel _paymentForm = new();
-
-    private List<DictionaryItem> _paymentTypes = [];
-    private List<DictionaryItem> _paymentMethods = [];
 
     private Guid? _currentUserId;
-    private Guid? _openedActionsOrderId;
 
     private const int PageSize = 5;
     private const int CustomerPageSize = 3;
@@ -1785,14 +1022,10 @@
 
     private bool _isActionsMenuOpen;
     private bool _isCreateModalOpen;
-    private bool _isViewModalOpen;
-    private bool _isDeleteModalOpen;
     private bool _isCustomerSelectModalOpen;
     private bool _isToolSelectModalOpen;
 
     private OrderDto? _selectedOrder;
-    private OrderDetailsDto? _viewOrder;
-    private OrderDto? _deletingOrder;
 
     private CancellationTokenSource? _customerSearchCts;
     private List<CustomerDto> _customers = [];
@@ -1822,16 +1055,9 @@
     private decimal TotalToPay =>
         _newOrder.TotalAmount + _newOrder.DepositAmount;
 
-    private string RentalPeriodText =>
-        $"{_newOrder.StartDate:dd.MM.yyyy} — {_newOrder.EndDate:dd.MM.yyyy}";
-
     private const int OrderToolsPageSize = 3;
 
     private int _orderToolsCurrentPage = 1;
-
-    private bool _isLoadingViewOrder;
-
-    private IReadOnlyList<OrderDocumentDto> _orderDocuments = [];
 
     private IEnumerable<OrderToolFormModel> PagedOrderTools =>
         _newOrder.Tools
@@ -1913,6 +1139,13 @@
 
     private int _filteredTotalCount;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurrentUserAsync();
+        await LoadOrderStatusesAsync();
+        await LoadOrdersAsync();
+    }
+
     private async Task LoadOrdersAsync()
     {
         _isLoading = true;
@@ -1955,6 +1188,38 @@
         _isLoading = false;
     }
 
+    private async Task LoadOrderStatusesAsync()
+    {
+        var result = await OrderStatusesService.GetOrderStatusesAsync();
+
+        if (result.IsFailure)
+        {
+            NotificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _orderStatuses = result.Value;
+    }
+
+    private async Task LoadCurrentUserAsync()
+    {
+        var authState =
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var userId = authState.User
+            .FindFirst(ClaimTypes.NameIdentifier)?
+            .Value;
+
+        if (string.IsNullOrWhiteSpace(userId) ||
+            !Guid.TryParse(userId, out var id))
+        {
+            NotificationService.Error("Не удалось определить текущего пользователя");
+            return;
+        }
+
+        _currentUserId = id;
+    }
+
     private void GoToOrderToolsPage(int page)
     {
         if (page < 1 || page > OrderToolsTotalPages)
@@ -1963,10 +1228,11 @@
         _orderToolsCurrentPage = page;
     }
 
-    private void ApplyStatsFilter(string filter)
+    private async Task ApplyStatsFilter(string filter)
     {
         _activeStatsFilter = filter;
         _status = null;
+        _selectedStatusId = null;
 
         switch (filter)
         {
@@ -1975,7 +1241,7 @@
                 break;
 
             case "completed":
-                _status = "Завершён";
+                _status = "Завершен";
                 break;
 
             case "overdue":
@@ -1983,7 +1249,11 @@
                 break;
         }
 
+        ApplyStatusFilter();
+
         _currentPage = 1;
+
+        await LoadOrdersAsync();
     }
 
     private async Task OnSearchChanged(ChangeEventArgs e)
@@ -2029,53 +1299,21 @@
         _isActionsMenuOpen = false;
     }
 
-    private async Task OpenViewModal(Guid orderId)
+    private void OpenOrder(Guid orderId)
     {
-        var result = await OrdersService.GetByIdAsync(orderId);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        _viewOrder = result.Value;
-
-        await LoadOrderDocumentsAsync(orderId);
-
-        _isViewModalOpen = true;
+        Navigation.NavigateTo($"/orders/{orderId}");
     }
 
-    private async Task OpenViewModal(OrderDto order)
+    private void OpenSelectedOrderView()
     {
-        _isViewModalOpen = true;
-        _isLoadingViewOrder = true;
-
-        var result = await OrdersService.GetByIdAsync(order.Id);
-
-        _isLoadingViewOrder = false;
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(
-                result.Error.FirstOrDefault()?.Message
-                ?? "Не удалось загрузить заказ");
-
-            _isViewModalOpen = false;
+        if (_selectedOrder is null)
             return;
-        }
 
-        _viewOrder = result.Value;
+        var orderId = _selectedOrder.Id;
 
-        await LoadOrderDocumentsAsync(_viewOrder.Id);
-    }
+        CloseActionsMenu();
 
-    private void CloseViewModal()
-    {
-        _isViewModalOpen = false;
-        _isLoadingViewOrder = false;
-        _viewOrder = null;
-        _orderDocuments = [];
+        OpenOrder(orderId);
     }
 
     private void OpenCreateModal()
@@ -2087,12 +1325,14 @@
             EndDate = DateOnly.FromDateTime(DateTime.Today.AddDays(3))
         };
 
+        _orderToolsCurrentPage = 1;
         _isCreateModalOpen = true;
     }
 
     private void CloseCreateModal()
     {
         _newOrder = new OrderFormModel();
+        _selectedCustomer = null;
         _isCreateModalOpen = false;
     }
 
@@ -2209,7 +1449,7 @@
     {
         if (_selectedCustomer is null)
         {
-            NotificationService.Error("Выберите клиента");
+            NotificationService.Error("Выберите клиент");
             return;
         }
 
@@ -2440,54 +1680,9 @@
 
         CloseCreateModal();
 
-        await LoadOrdersAsync();
-
-        await OpenViewModal(createdOrderId);
-
         NotificationService.Success("Заказ успешно создан");
-    }
 
-    private void OpenDeleteModal()
-    {
-        if (_selectedOrder is null)
-            return;
-
-        _deletingOrder = _selectedOrder;
-
-        CloseActionsMenu();
-
-        _isDeleteModalOpen = true;
-    }
-
-    private void CloseDeleteModal()
-    {
-        _deletingOrder = null;
-        _isDeleteModalOpen = false;
-    }
-
-    private async Task DeleteOrderAsync()
-    {
-        if (_deletingOrder is null)
-            return;
-
-        var number = _deletingOrder.Number;
-
-        var result = await OrdersService.DeleteOrderAsync(_deletingOrder.Id);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(
-                result.Error.Message);
-
-            return;
-        }
-
-        CloseDeleteModal();
-
-        await LoadOrdersAsync();
-
-        NotificationService.Success(
-            $"Заказ «{number}» удалён");
+        Navigation.NavigateTo($"/orders/{createdOrderId}");
     }
 
     private void ExecuteOrderAction(string action)
@@ -2510,9 +1705,13 @@
         return status switch
         {
             "Активен" => "status-badge available",
-            "Завершён" => "status-badge info",
+            "Выполняется" => "status-badge available",
+            "Готов к выдаче" => "status-badge info",
+            "Подтвержден" => "status-badge info",
+            "Ожидает возврата залога" => "status-badge warning",
+            "Завершен" => "status-badge info",
             "Просрочен" => "status-badge danger",
-            "Отменён" => "status-badge neutral",
+            "Отменен" => "status-badge neutral",
             _ => "status-badge"
         };
     }
@@ -2666,7 +1865,8 @@
         {
             _availableToolStatusId ??= await GetAvailableToolStatusIdAsync();
 
-            await LoadToolsForSelectAsync();
+            if (_availableToolStatusId is not null)
+                await LoadToolsForSelectAsync();
         }
 
         FakeOrderGenerator.Fill(
@@ -2679,52 +1879,33 @@
         NotificationService.Success("Тестовые данные заказа заполнены");
     }
 
-    private void FillTestOrder()
-    {
-        FakeOrderGenerator.Fill(
-            _newOrder,
-            _customers,
-            _tools);
-
-        RecalculateOrder();
-
-        NotificationService.Success(
-            "Тестовые данные заказа заполнены");
-    }
-
-    private async Task LoadOrderStatusesAsync()
-    {
-        var result = await OrderStatusesService.GetOrderStatusesAsync();
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        _orderStatuses = result.Value;
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadCurrentUserAsync();
-
-        await LoadOrderStatusesAsync();
-
-        await LoadOrdersAsync();
-    }
-
     private async Task ApplyFilters()
     {
         _activeStatsFilter = "custom";
         _currentPage = 1;
 
+        ApplyStatusFilter();
+
         await LoadOrdersAsync();
+    }
+
+    private void ApplyStatusFilter()
+    {
+        if (string.IsNullOrWhiteSpace(_status))
+        {
+            _selectedStatusId = null;
+            return;
+        }
+
+        _selectedStatusId = _orderStatuses
+            .FirstOrDefault(x => x.Name == _status)
+            ?.Id;
     }
 
     private async Task ResetFilters()
     {
         _search = string.Empty;
+        _status = null;
         _selectedStatusId = null;
         _startFrom = null;
         _startTo = null;
@@ -2745,32 +1926,16 @@
         await LoadOrdersAsync();
     }
 
-    private async Task LoadCurrentUserAsync()
-    {
-        var authState =
-            await AuthenticationStateProvider.GetAuthenticationStateAsync();
-
-        var userId = authState.User
-            .FindFirst(ClaimTypes.NameIdentifier)?
-            .Value;
-
-        if (string.IsNullOrWhiteSpace(userId) ||
-            !Guid.TryParse(userId, out var id))
-        {
-            NotificationService.Error("Не удалось определить текущего пользователя");
-            return;
-        }
-
-        _currentUserId = id;
-    }
-
     private string GetReturnDateClass(OrderDto order)
     {
         if (!order.PlannedReturnDate.HasValue)
             return "return-date";
 
-        if (order.StatusName != "Активен")
+        if (order.StatusName != "Активен" &&
+            order.StatusName != "Выполняется")
+        {
             return "return-date";
+        }
 
         var today = DateOnly.FromDateTime(DateTime.Today);
 
@@ -2781,605 +1946,6 @@
             return "return-date warning";
 
         return "return-date";
-    }
-
-    private void ToggleActions(Guid orderId)
-    {
-        _openedActionsOrderId =
-            _openedActionsOrderId == orderId
-                ? null
-                : orderId;
-    }
-
-    private void OpenEditModal(OrderDto order)
-    {
-        NotificationService.Info(
-            "Редактирование заказа будет доступно в следующих версиях");
-    }
-
-    private static string GetOrderRentalDays(OrderDto order)
-    {
-        if (order.StartDate is null ||
-            order.PlannedReturnDate is null)
-        {
-            return "—";
-        }
-
-        var days = order.PlannedReturnDate.Value.DayNumber
-                   - order.StartDate.Value.DayNumber;
-
-        if (days <= 0)
-            days = 1;
-
-        return $"{days} дн.";
-    }
-
-    private void OpenCustomerInfo()
-    {
-        NotificationService.Info(
-            "Просмотр информации о клиенте будет добавлен позже");
-    }
-
-    private void OpenManagerInfo()
-    {
-        NotificationService.Info(
-            "Просмотр информации о сотруднике будет добавлен позже");
-    }
-
-    private static string GetItemRentalDays(OrderDetailsItemDto item)
-    {
-        var days = item.PlannedReturnDate.DayNumber - item.StartDate.DayNumber;
-
-        if (days <= 0)
-            days = 1;
-
-        return $"{days} дн.";
-    }
-
-    private static string GetOrderPeriodText(OrderDetailsDto order)
-    {
-        if (order.Items.Count == 0)
-            return "—";
-
-        var start = order.Items.Min(x => x.StartDate);
-        var end = order.Items.Max(x => x.PlannedReturnDate);
-
-        return $"{start:dd.MM} — {end:dd.MM}";
-    }
-
-    private async Task OpenSelectedOrderView()
-    {
-        if (_selectedOrder is null)
-            return;
-
-        var order = _selectedOrder;
-
-        CloseActionsMenu();
-
-        await OpenViewModal(order);
-    }
-
-    private async Task DownloadContractAsync()
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        var result = await OrdersService.ExportContractAsync(_viewOrder.Id);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Договор успешно сформирован");
-    }
-
-    private async Task DownloadContractPdfAsync()
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        var result = await OrdersService.ExportContractPdfAsync(_viewOrder.Id);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("PDF договора успешно сформирован");
-    }
-
-    private async Task DownloadTransferActAsync(DateOnly date)
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        var result = await OrdersService.ExportTransferActAsync(
-            _viewOrder.Id,
-            date);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Акт выдачи успешно сформирован");
-    }
-
-    private async Task LoadOrderDocumentsAsync(Guid orderId)
-    {
-        var result = await OrdersService.GetDocumentsAsync(orderId);
-
-        if (result.IsFailure)
-        {
-            _orderDocuments = [];
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        _orderDocuments = result.Value;
-    }
-
-    private async Task DownloadReturnActAsync(DateOnly date)
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        var result = await OrdersService.ExportReturnActAsync(
-            _viewOrder.Id,
-            date);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        NotificationService.Success("Акт возврата успешно сформирован");
-    }
-
-    private async Task OpenPaymentModal()
-    {
-        if (_viewOrder is null)
-            return;
-
-        await LoadPaymentDictionariesAsync();
-
-        _paymentForm = new PaymentFormModel
-        {
-            PaymentTypeId = FullPaymentId,
-            Amount = _viewOrder.TotalRemainingAmount,
-            PaymentDate = DateTime.Now
-        };
-
-        _isPaymentModalOpen = true;
-    }
-
-    private void ClosePaymentModal()
-    {
-        _isPaymentModalOpen = false;
-        _paymentForm = new PaymentFormModel();
-    }
-
-    private async Task CreatePaymentAsync()
-    {
-        if (!ValidatePaymentAmount())
-            return;
-
-        if (_paymentForm.PaymentTypeId == FullPaymentId)
-        {
-            await CreateFullPaymentAsync();
-            return;
-        }
-
-        await CreateSinglePaymentAsync();
-    }
-
-    private async Task CreateFullPaymentAsync()
-    {
-        if (_viewOrder is null)
-            return;
-
-        var rentalType = _paymentTypes
-            .FirstOrDefault(x => x.Name == "Аренда");
-
-        var depositType = _paymentTypes
-            .FirstOrDefault(x => x.Name == "Залог");
-
-        if (rentalType is null || depositType is null)
-        {
-            NotificationService.Error(
-                "Не найдены типы оплаты");
-
-            return;
-        }
-
-        if (_paymentForm.PaymentMethodId is null)
-        {
-            NotificationService.Error(
-                "Выберите способ оплаты");
-
-            return;
-        }
-
-        if (_viewOrder.RemainingRentalAmount > 0)
-        {
-            var rentalRequest = new CreatePaymentRequest(
-                _viewOrder.Id,
-                rentalType.Id,
-                _paymentForm.PaymentMethodId.Value,
-                _viewOrder.RemainingRentalAmount,
-                _paymentForm.PaymentDate,
-                _paymentForm.Comment);
-
-            var rentalResult =
-                await PaymentsService.CreatePaymentAsync(
-                    rentalRequest);
-
-            if (rentalResult.IsFailure)
-            {
-                NotificationService.Error(
-                    rentalResult.Error.Message);
-
-                return;
-            }
-        }
-
-        if (_viewOrder.RemainingDepositAmount > 0)
-        {
-            var depositRequest = new CreatePaymentRequest(
-                _viewOrder.Id,
-                depositType.Id,
-                _paymentForm.PaymentMethodId.Value,
-                _viewOrder.RemainingDepositAmount,
-                _paymentForm.PaymentDate,
-                _paymentForm.Comment);
-
-            var depositResult =
-                await PaymentsService.CreatePaymentAsync(
-                    depositRequest);
-
-            if (depositResult.IsFailure)
-            {
-                NotificationService.Error(
-                    depositResult.Error.Message);
-
-                return;
-            }
-        }
-
-        ClosePaymentModal();
-
-        await ReloadViewOrderAsync();
-
-        NotificationService.Success(
-            "Полная оплата успешно принята");
-    }
-
-    private async Task CreateSinglePaymentAsync()
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        if (_paymentForm.PaymentTypeId is null)
-        {
-            NotificationService.Error("Выберите тип оплаты");
-            return;
-        }
-
-        if (_paymentForm.PaymentMethodId is null)
-        {
-            NotificationService.Error("Выберите способ оплаты");
-            return;
-        }
-
-        if (_paymentForm.Amount <= 0)
-        {
-            NotificationService.Error("Сумма оплаты должна быть больше 0");
-            return;
-        }
-
-        var request = new CreatePaymentRequest(
-            OrderId: _viewOrder.Id,
-            PaymentTypeId: _paymentForm.PaymentTypeId.Value,
-            PaymentMethodId: _paymentForm.PaymentMethodId.Value,
-            Amount: _paymentForm.Amount,
-            PaymentDate: _paymentForm.PaymentDate,
-            Comment: _paymentForm.Comment);
-
-        var result = await PaymentsService.CreatePaymentAsync(request);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        ClosePaymentModal();
-
-        await ReloadViewOrderAsync();
-
-        NotificationService.Success("Оплата успешно принята");
-    }
-
-    private async Task LoadPaymentDictionariesAsync()
-    {
-        var typesResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
-            "api/payment-types",
-            "payment.types.load.failed",
-            "Не удалось загрузить типы оплаты");
-
-        if (typesResult.IsSuccess)
-        {
-            _paymentTypes =
-            [
-                new DictionaryItem(
-                    FullPaymentId,
-                    "Полная оплата",
-                    null,
-                    string.Empty,
-                    null),
-
-                ..typesResult.Value
-            ];
-
-            _depositRefundPaymentTypeId = typesResult.Value
-                .FirstOrDefault(x => x.Name == "Возврат залога")
-                ?.Id;
-        }
-
-        var methodsResult = await DictionaryCrudService.GetListAsync<DictionaryItem>(
-            "api/payment-methods",
-            "payment.methods.load.failed",
-            "Не удалось загрузить способы оплаты");
-
-        if (methodsResult.IsSuccess)
-            _paymentMethods = methodsResult.Value;
-    }
-
-    private void OnPaymentTypeChanged()
-    {
-        if (_viewOrder is null || _paymentForm.PaymentTypeId is null)
-            return;
-
-        if (_paymentForm.PaymentTypeId == FullPaymentId)
-        {
-            _paymentForm.Amount =
-                _viewOrder.TotalRemainingAmount;
-
-            return;
-        }
-
-        var selectedType = _paymentTypes
-            .FirstOrDefault(x => x.Id == _paymentForm.PaymentTypeId);
-
-        if (selectedType is null)
-            return;
-
-        _paymentForm.Amount = selectedType.Name switch
-        {
-            "Аренда" => _viewOrder.RemainingRentalAmount,
-            "Залог" => _viewOrder.RemainingDepositAmount,
-            _ => 0
-        };
-    }
-
-    private async Task ReloadViewOrderAsync()
-    {
-        if (_viewOrder is null)
-            return;
-
-        var orderId = _viewOrder.Id;
-
-        var result = await OrdersService.GetByIdAsync(orderId);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        _viewOrder = result.Value;
-
-        await LoadOrderDocumentsAsync(orderId);
-    }
-
-    private async Task IssueToolsAsync()
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        var result = await OrdersService.IssueAsync(_viewOrder.Id);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        await ReloadViewOrderAsync();
-        await LoadOrdersAsync();
-
-        NotificationService.Success("Инструменты успешно выданы");
-    }
-
-    private void OpenReturnModal()
-    {
-        if (_viewOrder is null)
-            return;
-
-        _returnForm = new ReturnFormModel
-        {
-            ActualReturnedDate = DateOnly.FromDateTime(DateTime.Today),
-            ReturnCondition = "Исправно",
-            SelectedOrderItemIds = []
-        };
-
-        _isReturnModalOpen = true;
-    }
-
-    private void CloseReturnModal()
-    {
-        _isReturnModalOpen = false;
-        _returnForm = new ReturnFormModel();
-    }
-
-    private async Task ReturnItemsAsync()
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        if (_returnForm.SelectedOrderItemIds.Count == 0)
-        {
-            NotificationService.Error("Выберите инструменты для возврата");
-            return;
-        }
-
-        var request = new ReturnOrderItemsRequest(
-            _returnForm.ActualReturnedDate,
-            _returnForm.ReturnCondition,
-            _returnForm.DamageComment,
-            _returnForm.SelectedOrderItemIds);
-
-        var result = await OrdersService.ReturnItemsAsync(
-            _viewOrder.Id,
-            request);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        CloseReturnModal();
-
-        await ReloadViewOrderAsync();
-        await LoadOrdersAsync();
-
-        NotificationService.Success("Возврат успешно оформлен");
-    }
-
-    private void ToggleReturnItem(Guid orderItemId, ChangeEventArgs e)
-    {
-        var isChecked = e.Value is bool value && value;
-
-        if (isChecked)
-        {
-            if (!_returnForm.SelectedOrderItemIds.Contains(orderItemId))
-                _returnForm.SelectedOrderItemIds.Add(orderItemId);
-
-            return;
-        }
-
-        _returnForm.SelectedOrderItemIds.Remove(orderItemId);
-    }
-
-    private async Task OpenDepositRefundModal()
-    {
-        if (_viewOrder is null)
-            return;
-
-        _depositRefundForm = new DepositRefundFormModel
-        {
-            Amount = _viewOrder.RemainingDepositRefundAmount,
-            PaymentDate = DateTime.Now
-        };
-
-        await LoadPaymentDictionariesAsync();
-
-        _isDepositRefundModalOpen = true;
-    }
-
-    private void CloseDepositRefundModal()
-    {
-        _isDepositRefundModalOpen = false;
-        _depositRefundForm = new DepositRefundFormModel();
-    }
-
-    private async Task ReturnDepositAsync()
-    {
-        if (_viewOrder is null)
-        {
-            NotificationService.Error("Заказ не выбран");
-            return;
-        }
-
-        if (!_viewOrder.AllItemsReturned)
-        {
-            NotificationService.Error("Залог можно вернуть только после возврата всех инструментов");
-            return;
-        }
-
-        if (_depositRefundForm.PaymentMethodId is null)
-        {
-            NotificationService.Error("Выберите способ возврата");
-            return;
-        }
-
-        if (_depositRefundForm.Amount <= 0)
-        {
-            NotificationService.Error("Сумма возврата должна быть больше 0");
-            return;
-        }
-
-        if (_depositRefundForm.Amount > _viewOrder.RemainingDepositRefundAmount)
-        {
-            NotificationService.Error("Сумма возврата не может быть больше остатка залога");
-            return;
-        }
-
-        if (_depositRefundPaymentTypeId is null)
-        {
-            NotificationService.Error("Тип оплаты «Возврат залога» не найден");
-            return;
-        }
-
-        var request = new CreatePaymentRequest(
-            _viewOrder.Id,
-            _depositRefundPaymentTypeId.Value,
-            _depositRefundForm.PaymentMethodId.Value,
-            _depositRefundForm.Amount,
-            _depositRefundForm.PaymentDate,
-            _depositRefundForm.Comment);
-
-        var result = await PaymentsService.CreatePaymentAsync(request);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(result.Error.Message);
-            return;
-        }
-
-        CloseDepositRefundModal();
-
-        await ReloadViewOrderAsync();
-        await LoadOrdersAsync();
-
-        NotificationService.Success("Залог успешно возвращён");
     }
 
     private void OpenCancelOrderModal()
@@ -3403,9 +1969,8 @@
         if (_cancellingOrder is null)
             return;
 
-        var orderId = _cancellingOrder.Id;
-
-        var result = await OrdersService.CancelOrderAsync(orderId);
+        var orderNumber = _cancellingOrder.Number;
+        var result = await OrdersService.CancelOrderAsync(_cancellingOrder.Id);
 
         if (result.IsFailure)
         {
@@ -3417,86 +1982,6 @@
 
         await LoadOrdersAsync();
 
-        NotificationService.Success("Заказ отменен");
-    }
-
-    private bool ValidatePaymentAmount()
-    {
-        if (_viewOrder is null)
-            return false;
-
-        if (_paymentForm.PaymentTypeId is null)
-        {
-            NotificationService.Error("Выберите тип оплаты");
-            return false;
-        }
-
-        if (_paymentForm.Amount <= 0)
-        {
-            NotificationService.Error("Сумма оплаты должна быть больше 0");
-            return false;
-        }
-
-        if (_paymentForm.PaymentTypeId == FullPaymentId)
-        {
-            if (_paymentForm.Amount != _viewOrder.TotalRemainingAmount)
-            {
-                NotificationService.Error("Полная оплата должна быть равна остатку к оплате");
-                return false;
-            }
-
-            return true;
-        }
-
-        var selectedType = _paymentTypes
-            .FirstOrDefault(x => x.Id == _paymentForm.PaymentTypeId);
-
-        if (selectedType is null)
-        {
-            NotificationService.Error("Тип оплаты не найден");
-            return false;
-        }
-
-        var maxAmount = selectedType.Name switch
-        {
-            "Аренда" => _viewOrder.RemainingRentalAmount,
-            "Залог" => _viewOrder.RemainingDepositAmount,
-            _ => 0
-        };
-
-        if (_paymentForm.Amount > maxAmount)
-        {
-            NotificationService.Error(
-                $"Сумма оплаты по типу «{selectedType.Name}» не может превышать {maxAmount:N2} ₽");
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private sealed class PaymentFormModel
-    {
-        public Guid? PaymentTypeId { get; set; }
-        public Guid? PaymentMethodId { get; set; }
-        public decimal Amount { get; set; }
-        public DateTime PaymentDate { get; set; } = DateTime.Now;
-        public string? Comment { get; set; }
-    }
-
-    private sealed class ReturnFormModel
-    {
-        public DateOnly ActualReturnedDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
-        public string? ReturnCondition { get; set; } = "Исправно";
-        public string? DamageComment { get; set; }
-        public List<Guid> SelectedOrderItemIds { get; set; } = [];
-    }
-
-    private sealed class DepositRefundFormModel
-    {
-        public Guid? PaymentMethodId { get; set; }
-        public decimal Amount { get; set; }
-        public DateTime PaymentDate { get; set; } = DateTime.Now;
-        public string? Comment { get; set; }
+        NotificationService.Success($"Заказ «{orderNumber}» отменен");
     }
 }
