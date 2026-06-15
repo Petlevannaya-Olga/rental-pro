@@ -32,4 +32,5 @@ public sealed record OrderDetailsDto(
     decimal RefundedDepositAmount,
     decimal RemainingDepositRefundAmount,
     bool AllItemsReturned,
+    IReadOnlyList<OrderDetailsPaymentDto> Payments,
     List<OrderDetailsItemDto> Items);

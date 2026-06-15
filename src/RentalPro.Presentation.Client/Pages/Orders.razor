@@ -1103,28 +1103,56 @@
 
                 <div class="order-extra-grid">
 
-                    @if (!string.IsNullOrWhiteSpace(_viewOrder.Comment))
-                    {
-                        <div class="order-extra-card">
+                    <div class="order-extra-card">
 
-                            <div class="order-extra-title">
-                                <div class="order-extra-icon blue">
-                                    <i class="bi bi-chat-left-text"></i>
-                                </div>
-
-                                <div>
-                                    <span>Комментарий</span>
-                                </div>
+                        <div class="order-extra-title">
+                            <div class="order-extra-icon green">
+                                <i class="bi bi-credit-card"></i>
                             </div>
 
-                            <p class="order-comment-text">
-                                @_viewOrder.Comment
-                            </p>
-
+                            <div>
+                                <span>Платежи</span>
+                            </div>
                         </div>
-                    }
 
-                    <div class="order-extra-card @(string.IsNullOrWhiteSpace(_viewOrder.Comment) ? "wide" : null)">
+                        @if (_viewOrder.Payments.Count == 0)
+                        {
+                            <div class="table-empty">
+                                Платежи отсутствуют
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="order-payments-list">
+                                @foreach (var payment in _viewOrder.Payments)
+                                {
+                                    <div class="order-payment-row">
+                                        <div>
+                                            <strong>@payment.PaymentTypeName</strong>
+
+                                            <span class="table-subtitle">
+                                                @payment.PaymentMethodName · @payment.PaymentDate.ToString("dd.MM.yyyy HH:mm")
+                                            </span>
+
+                                            @if (!string.IsNullOrWhiteSpace(payment.Comment))
+                                            {
+                                                <span class="table-subtitle">
+                                                    @payment.Comment
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <strong>
+                                            @payment.Amount.ToString("N0") ₽
+                                        </strong>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="order-extra-card">
 
                         <div class="order-extra-title">
                             <div class="order-extra-icon blue">
@@ -1135,6 +1163,7 @@
                                 <span>Документы</span>
                             </div>
                         </div>
+
                         @if (_viewOrder.StatusName != "Отменен")
                         {
                             <div class="order-documents-list">
@@ -1197,9 +1226,33 @@
                                 Документы для отмененного заказа не формируются
                             </div>
                         }
+
                     </div>
 
                 </div>
+                
+                @if (!string.IsNullOrWhiteSpace(_viewOrder.Comment))
+                {
+                    <div class="order-section">
+                        <div class="order-extra-card wide">
+
+                            <div class="order-extra-title">
+                                <div class="order-extra-icon blue">
+                                    <i class="bi bi-chat-left-text"></i>
+                                </div>
+
+                                <div>
+                                    <span>Комментарий</span>
+                                </div>
+                            </div>
+
+                            <p class="order-comment-text">
+                                @_viewOrder.Comment
+                            </p>
+
+                        </div>
+                    </div>
+                }
 
                 <div class="order-section order-tools-section">
                     <OrderItemsTable Items="_viewOrder.Items"/>

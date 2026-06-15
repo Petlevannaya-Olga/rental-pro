@@ -241,8 +241,16 @@ public sealed class OrdersReadRepository(
             if (itemsResult.IsFailure)
                 return itemsResult.Error;
 
+            var paymentsResult = await GetOrderDetailsPaymentsAsync(
+                orderId,
+                cancellationToken);
+
+            if (paymentsResult.IsFailure)
+                return paymentsResult.Error;
+
             var header = headerResult.Value;
             var items = itemsResult.Value;
+            var payments = paymentsResult.Value;
 
             return new OrderDetailsDto(
                 Id: header.Id,
@@ -268,6 +276,7 @@ public sealed class OrdersReadRepository(
                 RefundedDepositAmount: header.RefundedDepositAmount,
                 RemainingDepositRefundAmount: header.RemainingDepositRefundAmount,
                 AllItemsReturned: header.AllItemsReturned,
+                Payments: payments,
                 Items: items);
         }
         catch (OperationCanceledException)
@@ -286,6 +295,52 @@ public sealed class OrdersReadRepository(
             return CommonErrors.Db(
                     "get.order.by.id.from.db.exception",
                     "Failed to get order by id")
+                .ToErrors();
+        }
+    }
+    
+    private async Task<Result<IReadOnlyList<OrderDetailsPaymentDto>, Errors>> GetOrderDetailsPaymentsAsync(
+        OrderId orderId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var sql = """
+                      SELECT
+                          p.id AS Id,
+                          pt.name AS PaymentTypeName,
+                          pm.name AS PaymentMethodName,
+                          p.amount AS Amount,
+                          p.payment_date AS PaymentDate,
+                          p.comment AS Comment
+                      FROM payments p
+                      INNER JOIN payment_types pt ON pt.id = p.payment_type_id
+                      INNER JOIN payment_methods pm ON pm.id = p.payment_method_id
+                      WHERE p.order_id = @orderId
+                        AND p.deleted_at IS NULL
+                        AND pt.deleted_at IS NULL
+                        AND pm.deleted_at IS NULL
+                      ORDER BY p.payment_date, p.created_at
+                      """;
+
+            var payments = await dbContext.Database
+                .SqlQueryRaw<OrderDetailsPaymentDto>(
+                    sql,
+                    CreateParameter("@orderId", orderId.Value))
+                .ToListAsync(cancellationToken);
+
+            return payments;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to get payments for order {OrderId}",
+                orderId.Value);
+
+            return CommonErrors.Db(
+                    "get.order.payments.from.db.exception",
+                    "Failed to get order payments")
                 .ToErrors();
         }
     }

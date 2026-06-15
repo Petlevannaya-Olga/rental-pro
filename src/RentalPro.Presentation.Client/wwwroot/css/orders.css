@@ -1244,3 +1244,31 @@
 .order-tools-period-table td:nth-child(7) {
     width: 90px;
 }
+
+.order-payments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.order-payment-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf1f7;
+}
+
+.order-payment-row:last-child {
+    border-bottom: none;
+}
+
+.order-payment-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.order-payment-row > strong {
+    white-space: nowrap;
+}
