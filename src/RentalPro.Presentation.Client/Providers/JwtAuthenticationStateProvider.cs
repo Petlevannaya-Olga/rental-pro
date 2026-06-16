@@ -40,18 +40,19 @@ public sealed class JwtAuthenticationStateProvider(
             Task.FromResult(new AuthenticationState(user)));
     }
 
-    public void NotifyUserLogout()
-    {
-        NotifyAuthenticationStateChanged(
-            Task.FromResult(
-                new AuthenticationState(_anonymous)));
-    }
-
     private static IEnumerable<Claim> ParseClaims(string token)
     {
         var jwt = new JwtSecurityTokenHandler()
             .ReadJwtToken(token);
 
         return jwt.Claims;
+    }
+    
+    public void NotifyUserLogout()
+    {
+        var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
+
+        NotifyAuthenticationStateChanged(
+            Task.FromResult(new AuthenticationState(anonymousUser)));
     }
 }

@@ -1,8 +1,16 @@
-﻿@using RentalPro.Presentation.Client.Shared
+﻿@using System.Security.Claims
+@using RentalPro.Presentation.Client.Shared
 @using Microsoft.AspNetCore.Components.Authorization
+@using RentalPro.Presentation.Client.Providers
+@using RentalPro.Presentation.Client.Services
 
 @inherits LayoutComponentBase
+
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject  NotificationService NotificationService
+
 @implements IDisposable
 
 <div class="admin-layout @(isSidebarCollapsed ? "sidebar-collapsed" : "")">
@@ -94,8 +102,8 @@
                         </div>
 
                         <div class="topbar-user">
-                            <strong>Иванов И.И.</strong>
-                            <span>Администратор</span>
+                            <strong>@_shortName</strong>
+                            <span>@_roleName</span>
                         </div>
 
                         <i class="bi bi-chevron-down"></i>
@@ -105,8 +113,8 @@
                     {
                         <div class="profile-dropdown">
                             <div class="profile-dropdown-header">
-                                <strong>Иванов И.И.</strong>
-                                <span>Администратор</span>
+                                <strong>@_shortName</strong>
+                                <span>@_roleName</span>
                             </div>
 
                             <div class="dropdown-divider"></div>
@@ -123,9 +131,11 @@
 
                             <div class="dropdown-divider"></div>
 
-                            <button class="dropdown-item danger">
+                            <button type="button"
+                                    class="dropdown-item dropdown-item-danger"
+                                    @onclick="LogoutAsync">
                                 <i class="bi bi-box-arrow-right"></i>
-                                Выйти
+                                <span>Выйти</span>
                             </button>
                         </div>
                     }
@@ -162,17 +172,16 @@
                     <div class="profile-info-grid">
                         <div class="profile-info-item">
                             <span>ФИО</span>
-                            <strong>Иванов Иван Иванович</strong>
+                            <strong>@_fullName</strong>
                         </div>
 
                         <div class="profile-info-item">
                             <span>Логин</span>
-                            <strong>ivanov</strong>
+                            <strong>@_login</strong>
                         </div>
 
                         <div class="profile-info-item">
                             <span>Email</span>
-                            <strong>ivanov@rentalpro.ru</strong>
                         </div>
 
                         <div class="profile-info-item">
@@ -182,7 +191,7 @@
 
                         <div class="profile-info-item">
                             <span>Роль</span>
-                            <strong>Администратор</strong>
+                            <strong>@_roleName</strong>
                         </div>
 
                         <div class="profile-info-item">
@@ -193,7 +202,7 @@
                 </div>
 
                 <div class="profile-modal-footer">
-                    <button class="secondary-button" type="button">
+                    <button class="dropdown-item" @onclick="ShowChangePasswordInfo">
                         <i class="bi bi-key"></i>
                         Сменить пароль
                     </button>
@@ -208,6 +217,10 @@
 </div>
 
 @code {
+    private string _fullName = "";
+    private string _roleName = "";
+    private string _shortName = "";
+    private string _login = "";
     private bool isSidebarCollapsed;
 
     private string PageTitle => NavigationManager.Uri switch
@@ -271,13 +284,47 @@
         isSidebarCollapsed = !isSidebarCollapsed;
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        _fullName = user.Identity?.Name ?? "";
+
+        _login = user.Claims
+            .FirstOrDefault(x => x.Type == "login")
+            ?.Value ?? "";
+
+        _roleName = user.Claims
+            .FirstOrDefault(x => x.Type == ClaimTypes.Role)
+            ?.Value ?? "";
+
+        _shortName = BuildShortName(_fullName);
+
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 
-    private async void OnLocationChanged(object? sender,
-        Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    private static string BuildShortName(string fullName)
+    {
+        var parts = fullName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length < 2)
+            return fullName;
+
+        var lastName = parts[0];
+        var firstInitial = parts[1][0];
+
+        if (parts.Length >= 3)
+        {
+            var middleInitial = parts[2][0];
+            return $"{lastName} {firstInitial}.{middleInitial}.";
+        }
+
+        return $"{lastName} {firstInitial}.";
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         await InvokeAsync(StateHasChanged);
     }
@@ -287,4 +334,19 @@
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
+    private async Task LogoutAsync()
+    {
+        await LocalStorage.RemoveItemAsync("authToken");
+
+        if (AuthenticationStateProvider is JwtAuthenticationStateProvider jwtProvider)
+            jwtProvider.NotifyUserLogout();
+
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+    
+    private void ShowChangePasswordInfo()
+    {
+        NotificationService.Info(
+            "Функционал смены пароля будет реализован в следующих версиях системы.");
+    }
 }
