@@ -6,36 +6,181 @@
 
     <UserControl.Resources>
 
-        <Style x:Key="StatCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="20"/>
-            <Setter Property="Padding" Value="22"/>
-            <Setter Property="Margin" Value="0 0 16 16"/>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Padding" Value="22" />
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect BlurRadius="18"
                                       ShadowDepth="2"
-                                      Opacity="0.08"/>
+                                      Opacity="0.08" />
                 </Setter.Value>
             </Setter>
         </Style>
 
+        <Style x:Key="StatCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+            <Setter Property="Margin" Value="0 0 16 16" />
+        </Style>
+
         <Style x:Key="StatTitleStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#6B7890"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="10 0 0 0"/>
+            <Setter Property="Foreground" Value="#6B7890" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="8 0 0 0" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
 
         <Style x:Key="StatValueStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#071B39"/>
-            <Setter Property="FontSize" Value="30"/>
-            <Setter Property="FontWeight" Value="Black"/>
+            <Setter Property="Foreground" Value="#071B39" />
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="FontWeight" Value="Black" />
         </Style>
 
-        <Style x:Key="MoneyValueStyle" TargetType="TextBlock"
-               BasedOn="{StaticResource StatValueStyle}">
-            <Setter Property="FontSize" Value="24"/>
+        <Style x:Key="MoneyValueStyle" TargetType="TextBlock" BasedOn="{StaticResource StatValueStyle}">
+            <Setter Property="FontSize" Value="24" />
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="16 0" />
+            <Setter Property="Background" Value="#EEF4FF" />
+            <Setter Property="Foreground" Value="#1E73FF" />
+            <Setter Property="BorderBrush" Value="#EEF4FF" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="DashboardDataGridStyle" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowHeight" Value="44" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#071B39" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F7FAFF" />
+            <Setter Property="Foreground" Value="#6B7890" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="12 0" />
+            <Setter Property="BorderBrush" Value="#E7EDF7" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#EEF2F8" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F7FAFF" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EEF4FF" />
+                    <Setter Property="Foreground" Value="#071B39" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        </Style>
+
+        <Style x:Key="StatusBadgeStyle"
+               TargetType="Border">
+
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="8 2" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="#EEF4FF" />
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding StatusName}" Value="Подтвержден">
+                    <Setter Property="Background" Value="#EEF4FF" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Готов к выдаче">
+                    <Setter Property="Background" Value="#ECFDF5" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Выполняется">
+                    <Setter Property="Background" Value="#ECFDF5" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Просрочен">
+                    <Setter Property="Background" Value="#FEF2F2" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Ожидает закрытия аренды">
+                    <Setter Property="Background" Value="#FFF7ED" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Завершен">
+                    <Setter Property="Background" Value="#F3F4F6" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Отменен">
+                    <Setter Property="Background" Value="#FEE2E2" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StatusBadgeTextStyle"
+               TargetType="TextBlock">
+
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding StatusName}" Value="Подтвержден">
+                    <Setter Property="Foreground" Value="#1E73FF" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Готов к выдаче">
+                    <Setter Property="Foreground" Value="#15803D" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Выполняется">
+                    <Setter Property="Foreground" Value="#15803D" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Просрочен">
+                    <Setter Property="Foreground" Value="#DC2626" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Ожидает закрытия аренды">
+                    <Setter Property="Foreground" Value="#C2410C" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Завершен">
+                    <Setter Property="Foreground" Value="#4B5563" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding StatusName}" Value="Отменен">
+                    <Setter Property="Foreground" Value="#B91C1C" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
     </UserControl.Resources>
@@ -45,10 +190,10 @@
         <Grid>
             <Grid.Style>
                 <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Visible"/>
+                    <Setter Property="Visibility" Value="Visible" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -57,205 +202,225 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
 
-                    <UniformGrid Columns="5"
-                                 Margin="0 0 0 8">
+                    <UniformGrid Columns="5" Margin="0 0 0 8">
 
-                        <!-- Инструментов -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="Tools"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#1E73FF"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Инструментов"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="Tools" Width="22" Height="22" Foreground="#1E73FF" />
+                                    <TextBlock Text="Инструменты" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.TotalTools}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- В аренде -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="CalendarCheck"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#16A34A"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="В аренде"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="CalendarCheck" Width="22" Height="22"
+                                                             Foreground="#16A34A" />
+                                    <TextBlock Text="В аренде" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.RentedTools}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Забронировано -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="BookmarkCheck"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#F59E0B"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Забронировано"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="BookmarkCheck" Width="22" Height="22"
+                                                             Foreground="#F59E0B" />
+                                    <TextBlock Text="Бронь" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.BookedTools}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- На ремонте -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="Wrench"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#F97316"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="На ремонте"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="Wrench" Width="22" Height="22" Foreground="#F97316" />
+                                    <TextBlock Text="Ремонт" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.ToolsInRepair}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Клиенты -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="AccountGroupOutline"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#7C3AED"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Клиенты"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="AccountGroupOutline" Width="22" Height="22"
+                                                             Foreground="#7C3AED" />
+                                    <TextBlock Text="Клиенты" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.TotalCustomers}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Активные заказы -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="ClipboardTextOutline"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#1E73FF"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Активные заказы"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="ClipboardTextOutline" Width="22" Height="22"
+                                                             Foreground="#1E73FF" />
+                                    <TextBlock Text="Активные" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.ActiveOrders}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Новых заказов -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="PlusBox"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#16A34A"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Новых заказов"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="PlusBox" Width="22" Height="22" Foreground="#16A34A" />
+                                    <TextBlock Text="Новые" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.NewOrdersThisMonth}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Просрочено -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="Alert"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#F97316"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Просрочено"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="Alert" Width="22" Height="22" Foreground="#F97316" />
+                                    <TextBlock Text="Просрочено" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.OverdueReturnsCount}"
-                                           Style="{StaticResource StatValueStyle}"/>
+                                           Style="{StaticResource StatValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Получено залогов -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="ShieldLock"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#7C3AED"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Получено залогов"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="ShieldLock" Width="22" Height="22"
+                                                             Foreground="#7C3AED" />
+                                    <TextBlock Text="Залоги" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.DepositsReceived, StringFormat={}{0:N0} ₽}"
-                                           Style="{StaticResource MoneyValueStyle}"/>
+                                           Style="{StaticResource MoneyValueStyle}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Выручка за месяц -->
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
                                 <DockPanel Margin="0 0 0 14">
-                                    <materialDesign:PackIcon Kind="Wallet"
-                                                             Width="24"
-                                                             Height="24"
-                                                             Foreground="#0891B2"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Выручка за месяц"
-                                               Style="{StaticResource StatTitleStyle}"/>
+                                    <materialDesign:PackIcon Kind="Wallet" Width="22" Height="22" Foreground="#0891B2" />
+                                    <TextBlock Text="Выручка" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
-
                                 <TextBlock Text="{Binding Dashboard.Stats.MonthlyRevenue, StringFormat={}{0:N0} ₽}"
-                                           Style="{StaticResource MoneyValueStyle}"/>
+                                           Style="{StaticResource MoneyValueStyle}" />
                             </StackPanel>
                         </Border>
 
                     </UniformGrid>
 
-                    <Border Background="White"
-                            CornerRadius="20"
-                            Padding="22"
-                            Margin="0 8 16 0">
+                    <Border Style="{StaticResource CardStyle}" Margin="0 8 16 0">
+                        <StackPanel>
 
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="18"
-                                              ShadowDepth="2"
-                                              Opacity="0.08"/>
-                        </Border.Effect>
+                            <Grid Margin="0 0 0 18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Следующим шагом добавим последние заказы и возвраты"
-                                   Foreground="#6B7890"
-                                   FontSize="15"/>
+                                <TextBlock Text="Последние заказы"
+                                           FontSize="20"
+                                           FontWeight="Black"
+                                           Foreground="#071B39" />
+
+                                <Button Grid.Column="1"
+                                        Content="Все заказы"
+                                        Style="{StaticResource SecondaryButtonStyle}" />
+                            </Grid>
+
+                            <DataGrid ItemsSource="{Binding Dashboard.RecentOrders}"
+                                      Style="{StaticResource DashboardDataGridStyle}"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      MinHeight="230">
+
+                                <DataGrid.Columns>
+
+                                    <DataGridTemplateColumn Header="№ заказа" Width="155">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Number}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="Клиент" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CustomerFullName}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="Инстр." Width="70">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ToolsCount}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="Выдача" Width="105">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                                           VerticalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="Статус" Width="125">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource StatusBadgeStyle}">
+                                                    <TextBlock Text="{Binding StatusName}"
+                                                               Style="{StaticResource StatusBadgeTextStyle}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="Аренда" Width="105">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding TotalCost, StringFormat={}{0:N0} ₽}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="Залог" Width="105">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding DepositTotal, StringFormat={}{0:N0} ₽}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                        </StackPanel>
                     </Border>
 
                 </StackPanel>
@@ -264,15 +429,14 @@
 
         <TextBlock Text="Загрузка дашборда..."
                    FontSize="18"
-                   Foreground="#6B7890"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
-                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                            <Setter Property="Visibility" Value="Visible"/>
+                            <Setter Property="Visibility" Value="Visible" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -284,6 +448,6 @@
                    FontSize="15"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Bottom"
-                   Margin="0 0 0 20"/>
+                   Margin="0 0 0 20" />
     </Grid>
 </UserControl>
