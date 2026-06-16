@@ -23,4 +23,11 @@
       <ProjectReference Include="..\RentalPro.Infrastructure\RentalPro.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Remove="wwwroot\uploads\tools\4d6b91b8-a661-42b5-94e2-968f071442dd.png" />
+      <Content Remove="wwwroot\uploads\tools\955d3f39-01f3-4e60-8bc9-c4c76ea85907.png" />
+      <Content Remove="wwwroot\uploads\tools\af5caa84-d84c-4b1a-917c-edec8deb5f5f.png" />
+      <Content Remove="wwwroot\uploads\tools\eb51363f-c384-48a9-8078-3da0a5cf46e4.png" />
+    </ItemGroup>
+
 </Project>
