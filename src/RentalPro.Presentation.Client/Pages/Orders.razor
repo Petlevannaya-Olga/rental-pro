@@ -28,33 +28,33 @@
         <div class="stats-filter-card @GetStatsCardClass("all")"
              @onclick='() => ApplyStatsFilter("all")'>
             <StatCard Title="Всего заказов"
-                      Value="@FilteredTotalCount.ToString()"
-                      Icon="bi bi-receipt"
+                      Value="@_allOrdersCount.ToString()"
+                      Icon="bi bi-clipboard-data"
                       Color="blue"/>
+        </div>
+
+        <div class="stats-filter-card @GetStatsCardClass("ready")"
+             @onclick='() => ApplyStatsFilter("ready")'>
+            <StatCard Title="Готовы к выдаче"
+                      Value="@_readyOrdersCount.ToString()"
+                      Icon="bi bi-box-seam"
+                      Color="cyan"/>
         </div>
 
         <div class="stats-filter-card @GetStatsCardClass("active")"
              @onclick='() => ApplyStatsFilter("active")'>
-            <StatCard Title="Активные"
-                      Value="@_orders.Count(x => x.StatusName == "Активен").ToString()"
-                      Icon="bi bi-play-circle"
+            <StatCard Title="Выполняются"
+                      Value="@_activeOrdersCount.ToString()"
+                      Icon="bi bi-arrow-repeat"
                       Color="green"/>
         </div>
 
-        <div class="stats-filter-card @GetStatsCardClass("completed")"
-             @onclick='() => ApplyStatsFilter("completed")'>
-            <StatCard Title="Завершенные"
-                      Value="@_orders.Count(x => x.StatusName == "Завершен").ToString()"
-                      Icon="bi bi-check-circle"
-                      Color="cyan"/>
-        </div>
-
-        <div class="stats-filter-card @GetStatsCardClass("overdue")"
-             @onclick='() => ApplyStatsFilter("overdue")'>
-            <StatCard Title="Просроченные"
-                      Value="@_orders.Count(x => x.StatusName == "Просрочен").ToString()"
-                      Icon="bi bi-exclamation-circle"
-                      Color="red"/>
+        <div class="stats-filter-card @GetStatsCardClass("closing")"
+             @onclick='() => ApplyStatsFilter("closing")'>
+            <StatCard Title="Ожидают закрытия"
+                      Value="@_closingOrdersCount.ToString()"
+                      Icon="bi bi-check2-circle"
+                      Color="yellow"/>
         </div>
 
         <button class="users-add-card"
@@ -69,62 +69,92 @@
 
         <div class="orders-inline-filters">
 
-            <div class="filter-group search-filter">
-                <label>Поиск</label>
+    <div class="orders-filters-row">
 
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
+        <div class="filter-group search-filter">
+            <label>Поиск</label>
 
-                    <input placeholder="Номер заказа, клиент или инструмент..."
-                           value="@_search"
-                           @oninput="OnSearchChanged"/>
-                </div>
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+
+                <input placeholder="Номер заказа, клиент или инструмент..."
+                       value="@_search"
+                       @oninput="OnSearchChanged" />
             </div>
+        </div>
 
-            <div class="filter-group">
-                <label>Статус</label>
+        <div class="filter-group">
+            <label>Статус</label>
 
-                <select class="filter-select"
-                        @bind="_status"
-                        @bind:after="ApplyFilters">
-                    <option value="">Все статусы</option>
+            <select class="filter-select"
+                    @bind="_selectedStatusId"
+                    @bind:after="ApplyFilters">
+                <option value="">Все статусы</option>
 
-                    @foreach (var status in _orderStatuses)
-                    {
-                        <option value="@status.Name">@status.Name</option>
-                    }
-                </select>
-            </div>
+                @foreach (var status in _orderStatuses)
+                {
+                    <option value="@status.Id">
+                        @status.Name
+                    </option>
+                }
+            </select>
+        </div>
 
-            <div class="filter-group">
-                <label>Начало с</label>
-                <input type="date"
-                       class="filter-select date-input"
-                       @bind="_startFrom"
-                       @bind:after="ApplyFilters"/>
-            </div>
+        <div class="filter-group">
+            <label>Начало с</label>
 
-            <div class="filter-group">
-                <label>Начало по</label>
-                <input type="date"
-                       class="filter-select date-input"
-                       @bind="_startTo"
-                       @bind:after="ApplyFilters"/>
-            </div>
+            <InputDate @bind-Value="_startFrom"
+                       @bind-Value:after="ApplyFilters"
+                       class="filter-select" />
+        </div>
 
-            <button class="secondary-button"
-                    @onclick="ResetFilters">
-                <i class="bi bi-arrow-counterclockwise"></i>
-                Сбросить
-            </button>
+        <div class="filter-group">
+            <label>Начало по</label>
 
+            <InputDate @bind-Value="_startTo"
+                       @bind-Value:after="ApplyFilters"
+                       class="filter-select" />
+        </div>
+
+        <div class="filter-actions-top">
             <button class="secondary-button"
                     @onclick="ExportOrders">
                 <i class="bi bi-download"></i>
                 Экспорт
             </button>
-
         </div>
+
+    </div>
+
+    <div class="orders-filters-row">
+
+        <div class="filter-group">
+            <label>Окончание с</label>
+
+            <InputDate @bind-Value="_endFrom"
+                       @bind-Value:after="ApplyFilters"
+                       class="filter-select" />
+        </div>
+
+        <div class="filter-group">
+            <label>Окончание по</label>
+
+            <InputDate @bind-Value="_endTo"
+                       @bind-Value:after="ApplyFilters"
+                       class="filter-select" />
+        </div>
+
+        <div class="filter-actions-bottom">
+            <button class="secondary-button"
+                    @onclick="ResetFilters">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                Сбросить
+            </button>
+        </div>
+
+    </div>
+
+</div>
 
         @if (_isLoading)
         {
@@ -1053,6 +1083,16 @@
 
 @code
 {
+    private int _readyOrdersCount;
+    private int _closingOrdersCount;
+    private int _allOrdersCount;
+    private int _activeOrdersCount;
+    private int _completedOrdersCount;
+    private int _overdueOrdersCount;
+    
+    private DateOnly? _endFrom;
+    private DateOnly? _endTo;
+
     private OrderDto? _cancellingOrder;
     private bool _isCancelOrderModalOpen;
 
@@ -1065,7 +1105,7 @@
     private int _currentPage = 1;
 
     private string? _search;
-    private string? _status;
+  
     private DateOnly? _startFrom;
     private DateOnly? _startTo;
 
@@ -1196,6 +1236,7 @@
     {
         await LoadCurrentUserAsync();
         await LoadOrderStatusesAsync();
+        await LoadStatsAsync();
         await LoadOrdersAsync();
     }
 
@@ -1209,8 +1250,8 @@
             StatusId: _selectedStatusId,
             StartFrom: _startFrom,
             StartTo: _startTo,
-            EndFrom: null,
-            EndTo: null,
+            EndFrom: _endFrom,
+            EndTo: _endTo,
             SortBy: _sortBy,
             Descending: _descending,
             Page: _currentPage,
@@ -1284,35 +1325,23 @@
     private async Task ApplyStatsFilter(string filter)
     {
         _activeStatsFilter = filter;
-        _status = null;
         _selectedStatusId = null;
 
-        switch (filter)
+        var statusName = filter switch
         {
-            case "active":
-                _status = "Активен";
-                break;
+            "ready" => "Готов к выдаче",
+            "active" => "Выполняется",
+            "closing" => "Ожидает закрытия аренды",
+            _ => null
+        };
 
-            case "completed":
-                _status = "Завершен";
-                break;
-
-            case "overdue":
-                _status = "Просрочен";
-                break;
+        if (!string.IsNullOrWhiteSpace(statusName))
+        {
+            _selectedStatusId = _orderStatuses
+                .FirstOrDefault(x => x.Name == statusName)
+                ?.Id;
         }
 
-        ApplyStatusFilter();
-
-        _currentPage = 1;
-
-        await LoadOrdersAsync();
-    }
-
-    private async Task OnSearchChanged(ChangeEventArgs e)
-    {
-        _search = e.Value?.ToString();
-        _activeStatsFilter = "custom";
         _currentPage = 1;
 
         await LoadOrdersAsync();
@@ -1731,6 +1760,9 @@
 
         var createdOrderId = result.Value.Id;
 
+        await LoadStatsAsync();
+        await LoadOrdersAsync();
+        
         CloseCreateModal();
 
         NotificationService.Success("Заказ успешно создан");
@@ -1932,43 +1964,6 @@
         NotificationService.Success("Тестовые данные заказа заполнены");
     }
 
-    private async Task ApplyFilters()
-    {
-        _activeStatsFilter = "custom";
-        _currentPage = 1;
-
-        ApplyStatusFilter();
-
-        await LoadOrdersAsync();
-    }
-
-    private void ApplyStatusFilter()
-    {
-        if (string.IsNullOrWhiteSpace(_status))
-        {
-            _selectedStatusId = null;
-            return;
-        }
-
-        _selectedStatusId = _orderStatuses
-            .FirstOrDefault(x => x.Name == _status)
-            ?.Id;
-    }
-
-    private async Task ResetFilters()
-    {
-        _search = string.Empty;
-        _status = null;
-        _selectedStatusId = null;
-        _startFrom = null;
-        _startTo = null;
-
-        _activeStatsFilter = "all";
-        _currentPage = 1;
-
-        await LoadOrdersAsync();
-    }
-
     private async Task GoToPage(int page)
     {
         if (page < 1 || page > TotalPages)
@@ -2034,7 +2029,79 @@
         CloseCancelOrderModal();
 
         await LoadOrdersAsync();
+        await LoadStatsAsync();
 
         NotificationService.Success($"Заказ «{orderNumber}» отменен");
+    }
+    
+    private async Task ResetFilters()
+    {
+        _search = null;
+
+        _selectedStatusId = null;
+
+        _startFrom = null;
+        _startTo = null;
+
+        _endFrom = null;
+        _endTo = null;
+
+        _currentPage = 1;
+
+        await LoadOrdersAsync();
+    }
+    
+    private async Task ApplyFilters()
+    {
+        _currentPage = 1;
+
+        await LoadOrdersAsync();
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString();
+
+        _currentPage = 1;
+
+        await LoadOrdersAsync();
+    }
+    
+    private async Task LoadStatsAsync()
+    {
+        _allOrdersCount = await GetOrdersCountByStatusAsync(null);
+        _readyOrdersCount = await GetOrdersCountByStatusAsync("Готов к выдаче");
+        _activeOrdersCount = await GetOrdersCountByStatusAsync("Выполняется");
+        _closingOrdersCount = await GetOrdersCountByStatusAsync("Ожидает закрытия аренды");
+    }
+
+    private async Task<int> GetOrdersCountByStatusAsync(string? statusName)
+    {
+        Guid? statusId = null;
+
+        if (!string.IsNullOrWhiteSpace(statusName))
+        {
+            statusId = _orderStatuses
+                .FirstOrDefault(x => x.Name == statusName)
+                ?.Id;
+        }
+
+        var request = new GetOrdersRequest(
+            Search: null,
+            StatusId: statusId,
+            StartFrom: null,
+            StartTo: null,
+            EndFrom: null,
+            EndTo: null,
+            SortBy: "createdat",
+            Descending: true,
+            Page: 1,
+            PageSize: 1);
+
+        var result = await OrdersService.GetOrdersAsync(request);
+
+        return result.IsSuccess
+            ? result.Value.TotalCount
+            : 0;
     }
 }

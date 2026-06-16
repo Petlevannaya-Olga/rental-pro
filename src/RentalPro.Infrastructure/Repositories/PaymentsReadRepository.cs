@@ -147,15 +147,17 @@ public sealed class PaymentsReadRepository(
                           ISNULL(SUM(CASE WHEN pt.name = N'Возврат залога' THEN 1 ELSE 0 END), 0) AS DepositRefundCount,
 
                           ISNULL(
-                          SUM(
-                              CASE
-                                  WHEN pt.name = N'Возврат залога'
-                                      THEN -p.amount
-                                  ELSE p.amount
-                              END
-                          ),
-                          0
-                      ) AS TotalAmount
+                              SUM(
+                                  CASE
+                                      WHEN pt.name = N'Аренда'
+                                          THEN p.amount
+                                      WHEN pt.name = N'Возврат аренды'
+                                          THEN -p.amount
+                                      ELSE 0
+                                  END
+                              ),
+                              0
+                          ) AS TotalAmount
 
                       FROM payments p
                       INNER JOIN payment_types pt ON pt.id = p.payment_type_id

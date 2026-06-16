@@ -112,14 +112,23 @@ public sealed class DashboardReadRepository(
                            ), 0) AS TotalCustomers,
 
                            CAST(ISNULL((
-                               SELECT SUM(p.amount)
-                               FROM payments p
-                               INNER JOIN payment_types pt
-                                   ON pt.id = p.payment_type_id
-                               WHERE p.deleted_at IS NULL
-                                 AND pt.name = @rentPaymentType
-                                 AND p.payment_date >= @startOfMonth
-                           ), 0) AS decimal(18, 2)) AS MonthlyRevenue,
+                           SELECT SUM(
+                               CASE
+                                   WHEN pt.name = @rentPaymentType
+                                       THEN p.amount
+                                   WHEN pt.name = @rentRefundPaymentType
+                                       THEN -p.amount
+                                   ELSE 0
+                               END
+                           )
+                           FROM payments p
+                           INNER JOIN payment_types pt
+                               ON pt.id = p.payment_type_id
+                           WHERE p.deleted_at IS NULL
+                             AND pt.deleted_at IS NULL
+                             AND pt.name IN (@rentPaymentType, @rentRefundPaymentType)
+                             AND p.payment_date >= @startOfMonth
+                       ), 0) AS decimal(18, 2)) AS MonthlyRevenue,
 
                            ISNULL((
                                SELECT COUNT(*)
@@ -177,6 +186,7 @@ public sealed class DashboardReadRepository(
             CreateParameter("@repairStatus", RepairStatus),
             CreateParameter("@rentPaymentType", RentPaymentType),
             CreateParameter("@depositPaymentType", DepositPaymentType),
+            CreateParameter("@rentRefundPaymentType", "Возврат аренды"),
             CreateParameter("@completedStatus", CompletedOrderStatus),
             CreateParameter("@waitingDepositRefundStatus", WaitingDepositRefundStatus),
             CreateParameter("@startOfMonth", startOfMonth),

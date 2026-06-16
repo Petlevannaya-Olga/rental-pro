@@ -1425,3 +1425,37 @@
 .skeleton-line.tiny {
     width: 40px;
 }
+
+.orders-inline-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.orders-filters-row {
+    display: grid;
+    align-items: end;
+    gap: 14px;
+}
+
+.orders-filters-row:first-child {
+    grid-template-columns: 1.6fr 1fr 0.9fr 0.9fr auto;
+}
+
+.orders-filters-row:last-child {
+    grid-template-columns: 0.9fr 0.9fr auto 1fr;
+}
+
+.filter-actions-top,
+.filter-actions-bottom {
+    display: flex;
+    align-items: flex-end;
+}
+
+.filter-actions-top {
+    justify-content: flex-end;
+}
+
+.filter-actions-bottom {
+    justify-content: flex-start;
+}
