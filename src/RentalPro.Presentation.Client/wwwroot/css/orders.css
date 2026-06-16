@@ -1354,3 +1354,74 @@
 .back-link i {
     font-size: 13px;
 }
+
+.orders-list-table {
+    table-layout: fixed;
+}
+
+.orders-list-table th,
+.orders-list-table td {
+    padding: 16px 14px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.orders-list-table th {
+    font-size: 13px;
+    font-weight: 800;
+    color: #334155;
+}
+
+.orders-list-table td {
+    font-size: 14px;
+    color: #111827;
+}
+
+.orders-list-table td:first-child,
+.orders-list-table th:first-child {
+    width: 18%;
+}
+
+.orders-list-table td:nth-child(2),
+.orders-list-table th:nth-child(2) {
+    width: 22%;
+}
+
+.orders-list-table td:nth-child(3),
+.orders-list-table th:nth-child(3) {
+    width: 14%;
+}
+
+.orders-list-table td:nth-child(4),
+.orders-list-table th:nth-child(4) {
+    width: 10%;
+}
+
+.orders-list-table td:nth-child(5),
+.orders-list-table th:nth-child(5) {
+    width: 14%;
+}
+
+.orders-list-table td:nth-child(6),
+.orders-list-table th:nth-child(6),
+.orders-list-table td:nth-child(7),
+.orders-list-table th:nth-child(7) {
+    width: 10%;
+}
+
+.orders-list-table td:last-child,
+.orders-list-table th:last-child {
+    width: 48px;
+}
+
+.orders-list-row {
+    cursor: pointer;
+}
+
+.orders-list-row:hover {
+    background: #f8fbff;
+}
+
+.skeleton-line.tiny {
+    width: 40px;
+}

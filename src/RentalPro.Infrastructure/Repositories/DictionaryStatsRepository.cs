@@ -24,8 +24,7 @@ public sealed class DictionaryStatsRepository(
                 ToolCategories: await dbContext.ToolCategories.CountAsync(cancellationToken),
                 ToolStatuses: await dbContext.ToolStatuses.CountAsync(cancellationToken),
                 Roles: await dbContext.Roles.CountAsync(cancellationToken),
-                Manufacturers: await dbContext.Manufacturers.CountAsync(cancellationToken),
-                Suppliers: await dbContext.Suppliers.CountAsync(cancellationToken));
+                Manufacturers: await dbContext.Manufacturers.CountAsync(cancellationToken));
         }
         catch (Exception e)
         {

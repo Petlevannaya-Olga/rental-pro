@@ -4,7 +4,6 @@ using RentalPro.Domain.Manufacturers;
 using RentalPro.Domain.Orders;
 using RentalPro.Domain.Payments;
 using RentalPro.Domain.Roles;
-using RentalPro.Domain.Suppliers;
 using RentalPro.Domain.Tools;
 using RentalPro.Domain.Users;
 
@@ -24,19 +23,13 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<ToolStatus> ToolStatuses { get; set; }
 
-    public DbSet<ToolStatusHistory> ToolStatusHistories { get; set; }
-
     public DbSet<Manufacturer> Manufacturers { get; set; }
-
-    public DbSet<Supplier> Suppliers { get; set; }
 
     public DbSet<Order> Orders { get; set; }
 
     public DbSet<OrderItem> OrderItems { get; set; }
 
     public DbSet<OrderStatus> OrderStatuses { get; set; }
-
-    public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 
     public DbSet<Payment> Payments { get; set; }
 

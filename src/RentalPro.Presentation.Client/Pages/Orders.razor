@@ -133,10 +133,12 @@
                 <tr>
                     <th>Заказ</th>
                     <th>Клиент</th>
+                    <th>Начало</th>
+                    <th>Окончание</th>
+                    <th>Дней</th>
+                    <th>Инстр.</th>
+                    <th>Аренда</th>
                     <th>Статус</th>
-                    <th>Инструменты</th>
-                    <th>Ближайший возврат</th>
-                    <th>Сумма</th>
                     <th>Залог</th>
                     <th></th>
                 </tr>
@@ -153,13 +155,41 @@
                             </div>
                         </td>
 
-                        <td><div class="skeleton skeleton-line medium"></div></td>
-                        <td><div class="skeleton skeleton-badge"></div></td>
-                        <td><div class="skeleton skeleton-line small"></div></td>
-                        <td><div class="skeleton skeleton-line small"></div></td>
-                        <td><div class="skeleton skeleton-line small"></div></td>
-                        <td><div class="skeleton skeleton-line small"></div></td>
-                        <td><div class="skeleton skeleton-dot"></div></td>
+                        <td>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line tiny"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line tiny"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-badge"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-line small"></div>
+                        </td>
+
+                        <td>
+                            <div class="skeleton skeleton-dot"></div>
+                        </td>
                     </tr>
                 }
                 </tbody>
@@ -182,20 +212,28 @@
                         Клиент <i class="bi bi-arrow-down-up"></i>
                     </th>
 
-                    <th class="sortable-column" @onclick='() => ChangeSort("status")'>
-                        Статус <i class="bi bi-arrow-down-up"></i>
-                    </th>
-
-                    <th class="sortable-column" @onclick='() => ChangeSort("itemscount")'>
-                        Инструменты <i class="bi bi-arrow-down-up"></i>
+                    <th class="sortable-column" @onclick='() => ChangeSort("startdate")'>
+                        Начало <i class="bi bi-arrow-down-up"></i>
                     </th>
 
                     <th class="sortable-column" @onclick='() => ChangeSort("plannedreturndate")'>
-                        Ближайший возврат <i class="bi bi-arrow-down-up"></i>
+                        Окончание <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th>
+                        Дней
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("itemscount")'>
+                        Инстр. <i class="bi bi-arrow-down-up"></i>
                     </th>
 
                     <th class="sortable-column" @onclick='() => ChangeSort("totalcost")'>
-                        Сумма <i class="bi bi-arrow-down-up"></i>
+                        Аренда <i class="bi bi-arrow-down-up"></i>
+                    </th>
+
+                    <th class="sortable-column" @onclick='() => ChangeSort("status")'>
+                        Статус <i class="bi bi-arrow-down-up"></i>
                     </th>
 
                     <th class="sortable-column" @onclick='() => ChangeSort("deposittotal")'>
@@ -212,36 +250,45 @@
                     <tr @ondblclick="() => OpenOrder(order.Id)">
                         <td>
                             <strong>@order.Number</strong>
+
                             <span class="table-subtitle">
-                                @order.OrderDate.ToString("dd.MM.yyyy")
-                            </span>
+                        @order.OrderDate.ToString("dd.MM.yyyy")
+                    </span>
                         </td>
-
-                        <td>@order.CustomerFullName</td>
 
                         <td>
-                            <span class="@GetOrderStatusClass(order.StatusName)">
-                                @order.StatusName
-                            </span>
+                            @order.CustomerFullName
                         </td>
-
-                        <td>@order.ItemsCount шт.</td>
 
                         <td>
-                            @if (order.PlannedReturnDate.HasValue)
-                            {
-                                <span class="@GetReturnDateClass(order)">
-                                    @order.PlannedReturnDate.Value.ToString("dd.MM.yyyy")
-                                </span>
-                            }
-                            else
-                            {
-                                <span>—</span>
-                            }
+                            @(order.StartDate?.ToString("dd.MM.yyyy") ?? "—")
                         </td>
 
-                        <td>@order.TotalCost.ToString("N0") ₽</td>
-                        <td>@order.DepositTotal.ToString("N0") ₽</td>
+                        <td>
+                            @(order.PlannedReturnDate?.ToString("dd.MM.yyyy") ?? "—")
+                        </td>
+
+                        <td>
+                            @order.RentalDays дн.
+                        </td>
+
+                        <td>
+                            @order.ItemsCount шт.
+                        </td>
+
+                        <td>
+                            @order.TotalCost.ToString("N0") ₽
+                        </td>
+
+                        <td>
+                    <span class="@GetOrderStatusClass(order.StatusName)">
+                        @order.StatusName
+                    </span>
+                        </td>
+
+                        <td>
+                            @order.DepositTotal.ToString("N0") ₽
+                        </td>
 
                         <td class="actions-cell">
                             <button class="icon-button"
@@ -626,8 +673,12 @@
                                     </div>
                                 </td>
 
-                                <td><div class="skeleton skeleton-line medium"></div></td>
-                                <td><div class="skeleton skeleton-line small"></div></td>
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </td>
                             </tr>
                         }
                         </tbody>
@@ -800,12 +851,24 @@
                                     </div>
                                 </td>
 
-                                <td><div class="skeleton skeleton-line medium"></div></td>
-                                <td><div class="skeleton skeleton-line medium"></div></td>
-                                <td><div class="skeleton skeleton-line medium"></div></td>
-                                <td><div class="skeleton skeleton-line small"></div></td>
-                                <td><div class="skeleton skeleton-line small"></div></td>
-                                <td><div class="skeleton skeleton-badge"></div></td>
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-line small"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-badge"></div>
+                                </td>
                             </tr>
                         }
                         </tbody>

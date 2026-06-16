@@ -14,6 +14,7 @@ public sealed record OrderDto(
     DateTime OrderDate,
     DateOnly? StartDate,
     DateOnly? PlannedReturnDate,
+    int RentalDays,
     decimal TotalCost,
     decimal DepositTotal,
     string? Comment,

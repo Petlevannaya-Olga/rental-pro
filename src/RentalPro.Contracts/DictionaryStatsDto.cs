@@ -7,5 +7,4 @@ public sealed record DictionaryStatsDto(
     int ToolCategories,
     int ToolStatuses,
     int Roles,
-    int Manufacturers,
-    int Suppliers);
+    int Manufacturers);
