@@ -43,6 +43,10 @@ public partial class App : Application
             })
             .AddHttpMessageHandler<AuthHeaderHandler>();
 
+        services.AddTransient<DashboardApiClient>();
+        services.AddTransient<DashboardViewModel>();
+        services.AddTransient<DashboardView>();
+        
         services.AddTransient<LoginWindow>();
         services.AddTransient<LoginViewModel>();
 

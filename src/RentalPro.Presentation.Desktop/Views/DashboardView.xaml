@@ -1,0 +1,289 @@
+<UserControl x:Class="RentalPro.Presentation.Desktop.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="Transparent">
+
+    <UserControl.Resources>
+
+        <Style x:Key="StatCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="Padding" Value="22"/>
+            <Setter Property="Margin" Value="0 0 16 16"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="18"
+                                      ShadowDepth="2"
+                                      Opacity="0.08"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="StatTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#6B7890"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="10 0 0 0"/>
+        </Style>
+
+        <Style x:Key="StatValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#071B39"/>
+            <Setter Property="FontSize" Value="30"/>
+            <Setter Property="FontWeight" Value="Black"/>
+        </Style>
+
+        <Style x:Key="MoneyValueStyle" TargetType="TextBlock"
+               BasedOn="{StaticResource StatValueStyle}">
+            <Setter Property="FontSize" Value="24"/>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid>
+
+        <Grid>
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+
+                    <UniformGrid Columns="5"
+                                 Margin="0 0 0 8">
+
+                        <!-- Инструментов -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="Tools"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#1E73FF"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Инструментов"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.TotalTools}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- В аренде -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="CalendarCheck"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#16A34A"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="В аренде"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.RentedTools}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Забронировано -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="BookmarkCheck"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#F59E0B"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Забронировано"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.BookedTools}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- На ремонте -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="Wrench"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#F97316"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="На ремонте"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.ToolsInRepair}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Клиенты -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="AccountGroupOutline"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#7C3AED"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Клиенты"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.TotalCustomers}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Активные заказы -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="ClipboardTextOutline"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#1E73FF"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Активные заказы"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.ActiveOrders}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Новых заказов -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="PlusBox"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#16A34A"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Новых заказов"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.NewOrdersThisMonth}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Просрочено -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="Alert"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#F97316"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Просрочено"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.OverdueReturnsCount}"
+                                           Style="{StaticResource StatValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Получено залогов -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="ShieldLock"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#7C3AED"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Получено залогов"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.DepositsReceived, StringFormat={}{0:N0} ₽}"
+                                           Style="{StaticResource MoneyValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Выручка за месяц -->
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel>
+                                <DockPanel Margin="0 0 0 14">
+                                    <materialDesign:PackIcon Kind="Wallet"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#0891B2"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Выручка за месяц"
+                                               Style="{StaticResource StatTitleStyle}"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding Dashboard.Stats.MonthlyRevenue, StringFormat={}{0:N0} ₽}"
+                                           Style="{StaticResource MoneyValueStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                    </UniformGrid>
+
+                    <Border Background="White"
+                            CornerRadius="20"
+                            Padding="22"
+                            Margin="0 8 16 0">
+
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="18"
+                                              ShadowDepth="2"
+                                              Opacity="0.08"/>
+                        </Border.Effect>
+
+                        <TextBlock Text="Следующим шагом добавим последние заказы и возвраты"
+                                   Foreground="#6B7890"
+                                   FontSize="15"/>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <TextBlock Text="Загрузка дашборда..."
+                   FontSize="18"
+                   Foreground="#6B7890"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <TextBlock Text="{Binding ErrorMessage}"
+                   Foreground="#DC2626"
+                   FontSize="15"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Bottom"
+                   Margin="0 0 0 20"/>
+    </Grid>
+</UserControl>

@@ -8,8 +8,21 @@
         Height="760"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7FC">
+
     <Window.Resources>
+        <common:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter"/>
         <common:StringEqualsConverter x:Key="StringEqualsConverter" />
+
+        <Style x:Key="MenuTextStyle"
+               TargetType="TextBlock">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="MenuIconStyle"
                TargetType="materialDesign:PackIcon">
             <Setter Property="Width" Value="22" />
@@ -17,6 +30,12 @@
             <Setter Property="Foreground" Value="#D7E7FF" />
             <Setter Property="Margin" Value="0 0 12 0" />
             <Setter Property="VerticalAlignment" Value="Center" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="MenuRadioButtonStyle"
@@ -29,6 +48,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="GroupName" Value="MainMenu" />
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -36,6 +56,7 @@
                                 Background="Transparent"
                                 CornerRadius="13">
                             <ContentPresenter VerticalAlignment="Center"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               Margin="{TemplateBinding Padding}" />
                         </Border>
 
@@ -55,12 +76,20 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
     </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="270" />
+            <ColumnDefinition Width="{Binding IsMenuCollapsed, Converter={StaticResource BoolToGridLengthConverter}}" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -70,42 +99,91 @@
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="110" />
+                    <RowDefinition Height="132" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="90" />
                 </Grid.RowDefinitions>
 
-                <!-- Логотип -->
-                <StackPanel Grid.Row="0"
-                            Orientation="Horizontal"
-                            Margin="24 24 20 20">
+                <!-- Верхняя часть меню -->
+                <Grid Grid.Row="0"
+                      Margin="18 18 18 14">
 
-                    <Border Width="52"
-                            Height="52"
-                            CornerRadius="15"
-                            Background="#1E73FF"
-                            Margin="0 0 14 0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                        <materialDesign:PackIcon Kind="Tools"
-                                                 Width="28"
-                                                 Height="28"
-                                                 Foreground="White"
+                    <!-- Кнопка свернуть/развернуть меню -->
+                    <Button Command="{Binding ToggleMenuCommand}"
+                            Width="42"
+                            Height="36"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            HorizontalAlignment="Right"
+                            Cursor="Hand">
+
+                        <materialDesign:PackIcon Width="25"
+                                                 Height="25"
+                                                 Foreground="#D7E7FF"
                                                  HorizontalAlignment="Center"
-                                                 VerticalAlignment="Center" />
-                    </Border>
+                                                 VerticalAlignment="Center">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="materialDesign:PackIcon">
+                                    <Setter Property="Kind" Value="ChevronLeft"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                                            <Setter Property="Kind" Value="ChevronRight"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                    </Button>
 
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock FontSize="24"
-                                   FontWeight="Black">
-                            <Run Text="Rental" Foreground="White" />
-                            <Run Text="PRO" Foreground="#1E73FF" />
-                        </TextBlock>
+                    <!-- Логотип -->
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                Margin="0 14 0 0"
+                                HorizontalAlignment="Left">
 
-                        <TextBlock Text="Desktop client"
-                                   Foreground="#AFC8EE"
-                                   FontSize="12" />
+                        <Border Width="52"
+                                Height="52"
+                                CornerRadius="15"
+                                Background="#1E73FF"
+                                Margin="0 0 14 0">
+
+                            <materialDesign:PackIcon Kind="Tools"
+                                                     Width="28"
+                                                     Height="28"
+                                                     Foreground="White"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center" />
+                        </Border>
+
+                        <StackPanel VerticalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock FontSize="24"
+                                       FontWeight="Black">
+                                <Run Text="Rental" Foreground="White" />
+                                <Run Text="PRO" Foreground="#1E73FF" />
+                            </TextBlock>
+
+                            <TextBlock Text="Desktop client"
+                                       Foreground="#AFC8EE"
+                                       FontSize="12" />
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Grid>
 
                 <!-- Навигация -->
                 <StackPanel Grid.Row="1"
@@ -116,7 +194,7 @@
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewDashboardOutline" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Дашборд" />
+                            <TextBlock Text="Дашборд" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -125,7 +203,7 @@
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="AccountGroupOutline" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Клиенты" />
+                            <TextBlock Text="Клиенты" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -134,7 +212,7 @@
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Tools" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Инструменты" />
+                            <TextBlock Text="Инструменты" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -143,7 +221,7 @@
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ClipboardTextOutline" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Заказы" />
+                            <TextBlock Text="Заказы" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -152,7 +230,7 @@
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="CreditCardOutline" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Оплаты" />
+                            <TextBlock Text="Оплаты" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -161,7 +239,7 @@
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ChartBar" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Отчеты" />
+                            <TextBlock Text="Отчеты" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -170,7 +248,7 @@
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="BookOpenVariant" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Справочники" />
+                            <TextBlock Text="Справочники" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -185,7 +263,7 @@
                                  Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="AccountCircleOutline" Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Профиль"/>
+                            <TextBlock Text="Профиль" Style="{StaticResource MenuTextStyle}"/>
                         </StackPanel>
                     </RadioButton>
 
@@ -252,40 +330,7 @@
             <!-- Контент -->
             <Grid Grid.Row="1"
                   Margin="34">
-
-                <Border Background="White"
-                        CornerRadius="24"
-                        Padding="36">
-
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="22"
-                                          ShadowDepth="3"
-                                          Opacity="0.08" />
-                    </Border.Effect>
-
-                    <StackPanel VerticalAlignment="Center"
-                                HorizontalAlignment="Center">
-
-                        <materialDesign:PackIcon Kind="ApplicationCogOutline"
-                                                 Width="68"
-                                                 Height="68"
-                                                 Foreground="#1E73FF"
-                                                 HorizontalAlignment="Center"
-                                                 Margin="0 0 0 18" />
-
-                        <TextBlock Text="{Binding CurrentPageTitle}"
-                                   FontSize="30"
-                                   FontWeight="Black"
-                                   Foreground="#071B39"
-                                   HorizontalAlignment="Center" />
-
-                        <TextBlock Text="Раздел будет подключен к API следующим шагом"
-                                   FontSize="15"
-                                   Foreground="#6B7890"
-                                   HorizontalAlignment="Center"
-                                   Margin="0 10 0 0" />
-                    </StackPanel>
-                </Border>
+                <ContentControl Content="{Binding CurrentView}"/>
             </Grid>
         </Grid>
     </Grid>
