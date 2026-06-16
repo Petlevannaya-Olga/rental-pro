@@ -5,15 +5,30 @@ namespace RentalPro.Presentation.Desktop.Views;
 
 public partial class CustomersView : UserControl
 {
+    private readonly CustomersViewModel _viewModel;
+
     public CustomersView(CustomersViewModel viewModel)
     {
         InitializeComponent();
 
-        DataContext = viewModel;
+        _viewModel = viewModel;
+        DataContext = _viewModel;
 
         Loaded += async (_, _) =>
         {
-            await viewModel.LoadCommand.ExecuteAsync(null);
+            await _viewModel.LoadCommand.ExecuteAsync(null);
         };
+    }
+
+    private async void CustomersDataGrid_OnSorting(
+        object sender,
+        DataGridSortingEventArgs e)
+    {
+        e.Handled = true;
+
+        if (e.Column.SortMemberPath is null)
+            return;
+
+        await _viewModel.SortCommand.ExecuteAsync(e.Column.SortMemberPath.ToLowerInvariant());
     }
 }

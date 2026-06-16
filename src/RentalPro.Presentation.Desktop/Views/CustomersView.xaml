@@ -38,49 +38,29 @@
             <Setter Property="FontWeight" Value="Black" />
         </Style>
 
-        <Style x:Key="DashboardDataGridStyle" TargetType="DataGrid">
+        <Style x:Key="DashboardDataGridStyle"
+               TargetType="DataGrid"
+               BasedOn="{StaticResource MaterialDesignDataGrid}">
+
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="RowBackground" Value="White" />
+            <Setter Property="AlternatingRowBackground" Value="White" />
+
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7" />
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
+
             <Setter Property="AutoGenerateColumns" Value="False" />
-            <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="CanUserAddRows" Value="False" />
             <Setter Property="CanUserDeleteRows" Value="False" />
             <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="CanUserSortColumns" Value="True" />
             <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="GridLinesVisibility" Value="None" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="RowHeight" Value="48" />
+            <Setter Property="RowHeight" Value="58" />
             <Setter Property="FontSize" Value="13" />
-            <Setter Property="Foreground" Value="#071B39" />
             <Setter Property="SelectionMode" Value="Single" />
             <Setter Property="SelectionUnit" Value="FullRow" />
-        </Style>
-
-        <Style x:Key="PrimaryButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource MaterialDesignRaisedButton}">
-
-            <Setter Property="Background" Value="#071B39" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Padding" Value="18 10" />
-            <Setter Property="Margin" Value="0" />
-        </Style>
-
-        <Style x:Key="SecondaryButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource MaterialDesignFlatButton}">
-
-            <Setter Property="Background" Value="#EEF4FF" />
-            <Setter Property="Foreground" Value="#1E73FF" />
-            <Setter Property="Padding" Value="18 10" />
-        </Style>
-
-        <Style x:Key="TertiaryButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource MaterialDesignFlatButton}">
-
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#6B7890" />
-            <Setter Property="Padding" Value="18 10" />
         </Style>
 
     </UserControl.Resources>
@@ -257,80 +237,94 @@
 
                         <DataGrid ItemsSource="{Binding Customers}"
                                   Style="{StaticResource DashboardDataGridStyle}"
-                                  MinHeight="280">
+                                  MinHeight="280"
+                                  CanUserSortColumns="True"
+                                  materialDesign:DataGridAssist.ApplyMaterialDesignColumnStyles="True">
 
                             <DataGrid.Columns>
 
-                                <DataGridTemplateColumn Header="Клиент" Width="*">
+                                <DataGridTemplateColumn Header="Клиент"
+                                                        Width="3*"
+                                                        MinWidth="360"
+                                                        SortMemberPath="FullName">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel>
+                                            <StackPanel VerticalAlignment="Center"
+                                                        Margin="4 0">
                                                 <TextBlock Text="{Binding FullName}"
                                                            FontWeight="SemiBold"
+                                                           FontSize="14"
                                                            Foreground="#071B39"
                                                            TextTrimming="CharacterEllipsis" />
 
                                                 <TextBlock Text="{Binding Address}"
                                                            FontSize="12"
                                                            Foreground="#6B7890"
-                                                           Margin="0 3 0 0"
+                                                           Margin="0 4 0 0"
                                                            TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="Телефон" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding PhoneNumber}"
-                                                       VerticalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Телефон"
+                                                    Binding="{Binding PhoneNumber}"
+                                                    Width="170"
+                                                    SortMemberPath="PhoneNumber" />
 
-                                <DataGridTemplateColumn Header="Email" Width="190">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Email}"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       VerticalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Email"
+                                                    Binding="{Binding Email}"
+                                                    Width="220"
+                                                    SortMemberPath="Email" />
 
-                                <DataGridTemplateColumn Header="Паспорт" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Passport}"
-                                                       VerticalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Паспорт"
+                                                    Binding="{Binding Passport}"
+                                                    Width="150"
+                                                    SortMemberPath="Passport" />
 
-                                <DataGridTemplateColumn Header="Заказов" Width="80">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding OrdersCount}"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Заказов"
+                                                    Binding="{Binding OrdersCount}"
+                                                    Width="105"
+                                                    SortMemberPath="OrdersCount" />
 
-                                <DataGridTemplateColumn Header="Активных" Width="90">
+                                <DataGridTemplateColumn Header="Активных"
+                                                        Width="120"
+                                                        SortMemberPath="ActiveOrdersCount">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="8"
-                                                    Padding="8 2"
-                                                    Height="24"
+                                            <Border CornerRadius="10"
+                                                    Padding="10 2"
+                                                    Height="28"
+                                                    MinWidth="38"
                                                     HorizontalAlignment="Center"
-                                                    Background="#ECFDF5">
+                                                    Background="#DCFCE7">
                                                 <TextBlock Text="{Binding ActiveOrdersCount}"
-                                                           FontSize="11"
+                                                           FontSize="13"
                                                            FontWeight="SemiBold"
-                                                           Foreground="#15803D" />
+                                                           Foreground="#15803D"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
                                             </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Width="76"
+                                                        MinWidth="76"
+                                                        CanUserSort="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Width="40"
+                                                    Height="40"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Действия">
+                                                <materialDesign:PackIcon Kind="DotsVertical"
+                                                                         Width="22"
+                                                                         Height="22"
+                                                                         Foreground="#1E73FF" />
+                                            </Button>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -338,45 +332,82 @@
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Right"
-                                    Margin="24 0 0 0">
+                        <Grid Margin="0 20 0 0">
 
-                            <Button Width="36"
-                                    Height="36"
-                                    Command="{Binding PreviousPageCommand}"
-                                    Style="{StaticResource MaterialDesignIconButton}"
-                                    ToolTip="Предыдущая страница">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                                <materialDesign:PackIcon Kind="ChevronLeft"
-                                                         Width="20"
-                                                         Height="20"/>
+                            <!-- Экспорт -->
+                            <Button Grid.Column="0"
+                                    Height="40"
+                                    Padding="16 0"
+                                    Command="{Binding ExportCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}">
+
+                                <StackPanel Orientation="Horizontal">
+
+                                    <materialDesign:PackIcon Kind="FileExcelOutline"
+                                                             Width="18"
+                                                             Height="18"
+                                                             Margin="0 0 8 0" />
+
+                                    <TextBlock Text="Экспорт" />
+                                </StackPanel>
                             </Button>
 
-                            <TextBlock VerticalAlignment="Center"
-                                       FontSize="13"
-                                       FontWeight="SemiBold"
-                                       Foreground="#6B7890"
-                                       Margin="12 0">
-                                <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
-                                <Run Text=" из "/>
-                                <Run Text="{Binding TotalPages, Mode=OneWay}"/>
-                            </TextBlock>
+                            <!-- Пагинация -->
+                            <StackPanel Grid.Column="2"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
 
-                            <Button Width="36"
-                                    Height="36"
-                                    Command="{Binding NextPageCommand}"
-                                    Style="{StaticResource MaterialDesignIconButton}"
-                                    ToolTip="Следующая страница">
+                                <Button Width="36"
+                                        Height="36"
+                                        Command="{Binding PreviousPageCommand}"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        ToolTip="Предыдущая страница">
 
-                                <materialDesign:PackIcon Kind="ChevronRight"
-                                                         Width="20"
-                                                         Height="20"/>
-                            </Button>
+                                    <materialDesign:PackIcon Kind="ChevronLeft"
+                                                             Width="20"
+                                                             Height="20" />
+                                </Button>
 
-                        </StackPanel>
+                                <TextBlock VerticalAlignment="Center"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="#6B7890"
+                                           Margin="12 0">
+
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="#6B7890"
+                                               Margin="12 0">
+
+                                        <Run Text="{Binding CurrentPage, Mode=OneWay}" />
+                                        <Run Text=" из " />
+                                        <Run Text="{Binding TotalPages, Mode=OneWay}" />
+
+                                    </TextBlock>
+
+                                </TextBlock>
+
+                                <Button Width="36"
+                                        Height="36"
+                                        Command="{Binding NextPageCommand}"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        ToolTip="Следующая страница">
+
+                                    <materialDesign:PackIcon Kind="ChevronRight"
+                                                             Width="20"
+                                                             Height="20" />
+                                </Button>
+
+                            </StackPanel>
+
+                        </Grid>
 
                     </StackPanel>
                 </Border>
