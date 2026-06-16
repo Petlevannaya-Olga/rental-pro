@@ -9,8 +9,8 @@
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White" />
-            <Setter Property="CornerRadius" Value="20" />
-            <Setter Property="Padding" Value="22" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.08" />
@@ -18,26 +18,28 @@
             </Setter>
         </Style>
 
-        <Style x:Key="StatCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+        <Style x:Key="StatCardStyle"
+               TargetType="Border"
+               BasedOn="{StaticResource CardStyle}">
             <Setter Property="Margin" Value="0 0 16 16" />
         </Style>
 
         <Style x:Key="StatTitleStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#6B7890" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="6 0 0 0" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="8 0 0 0" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
 
         <Style x:Key="StatValueStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#071B39" />
-            <Setter Property="FontSize" Value="30" />
-            <Setter Property="FontWeight" Value="Black" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
         <Style x:Key="MoneyValueStyle" TargetType="TextBlock" BasedOn="{StaticResource StatValueStyle}">
-            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontSize" Value="18" />
         </Style>
 
         <Style x:Key="SecondaryButtonStyle" TargetType="Button">
@@ -202,7 +204,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="Tools" Width="22" Height="22" Foreground="#1E73FF" />
                                     <TextBlock Text="Инструменты" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
@@ -213,7 +215,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="CalendarCheck" Width="22" Height="22"
                                                              Foreground="#16A34A" />
                                     <TextBlock Text="В аренде" Style="{StaticResource StatTitleStyle}" />
@@ -225,7 +227,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="BookmarkCheck" Width="22" Height="22"
                                                              Foreground="#F59E0B" />
                                     <TextBlock Text="Бронь" Style="{StaticResource StatTitleStyle}" />
@@ -237,7 +239,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="Wrench" Width="22" Height="22" Foreground="#F97316" />
                                     <TextBlock Text="Ремонт" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
@@ -248,7 +250,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="AccountGroupOutline" Width="22" Height="22"
                                                              Foreground="#7C3AED" />
                                     <TextBlock Text="Клиенты" Style="{StaticResource StatTitleStyle}" />
@@ -260,7 +262,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="ClipboardTextOutline" Width="22" Height="22"
                                                              Foreground="#1E73FF" />
                                     <TextBlock Text="Активные" Style="{StaticResource StatTitleStyle}" />
@@ -272,7 +274,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="PlusBox" Width="22" Height="22" Foreground="#16A34A" />
                                     <TextBlock Text="Новые" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
@@ -283,7 +285,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="Alert" Width="22" Height="22" Foreground="#F97316" />
                                     <TextBlock Text="Просрочено" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
@@ -294,7 +296,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="ShieldLock" Width="22" Height="22"
                                                              Foreground="#7C3AED" />
                                     <TextBlock Text="Залоги" Style="{StaticResource StatTitleStyle}" />
@@ -306,7 +308,7 @@
 
                         <Border Style="{StaticResource StatCardStyle}">
                             <StackPanel>
-                                <DockPanel Margin="0 0 0 14">
+                                <DockPanel Margin="0 0 0 4">
                                     <materialDesign:PackIcon Kind="Wallet" Width="22" Height="22" Foreground="#0891B2" />
                                     <TextBlock Text="Выручка" Style="{StaticResource StatTitleStyle}" />
                                 </DockPanel>
