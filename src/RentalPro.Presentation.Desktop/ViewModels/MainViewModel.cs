@@ -5,7 +5,8 @@ using RentalPro.Presentation.Desktop.Views;
 namespace RentalPro.Presentation.Desktop.ViewModels;
 
 public partial class MainViewModel(
-    DashboardView dashboardView)
+    DashboardView dashboardView,
+    CustomersView customersView)
     : ObservableObject
 {
     [ObservableProperty]
@@ -30,9 +31,11 @@ public partial class MainViewModel(
     {
         CurrentPageTitle = value;
 
-        if (value == "Дашборд")
+        CurrentView = value switch
         {
-            CurrentView = dashboardView;
-        }
+            "Дашборд" => dashboardView,
+            "Клиенты" => customersView,
+            _ => CurrentView
+        };
     }
 }

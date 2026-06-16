@@ -52,5 +52,9 @@ public partial class App : Application
 
         services.AddTransient<MainWindow>();
         services.AddTransient<MainViewModel>();
+        
+        services.AddTransient<CustomersApiClient>();
+        services.AddTransient<CustomersView>();
+        services.AddTransient<CustomersViewModel>();
     }
 }
