@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application;
 using RentalPro.Application.Repositories;
 using RentalPro.Application.Services;
@@ -16,6 +17,7 @@ using GetUsersQuery = RentalPro.Application.Users.GetUsersQuery.GetUsersQuery;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize(Roles = "Администратор")]
 [ApiController]
 [Route("api/users")]
 public sealed class UsersController(

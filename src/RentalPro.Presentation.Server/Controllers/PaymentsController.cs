@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Payments;
 using RentalPro.Application.Payments.CreatePaymentCommand;
@@ -9,6 +10,7 @@ using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize(Roles = "Администратор")]
 [ApiController]
 [Route("api/payments")]
 public sealed class PaymentsController(

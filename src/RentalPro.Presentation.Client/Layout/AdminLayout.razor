@@ -1,4 +1,6 @@
 ﻿@using RentalPro.Presentation.Client.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @implements IDisposable
@@ -12,7 +14,7 @@
 
             <div>
                 <div class="sidebar-title">Rental<span>Pro</span></div>
-                <div class="sidebar-subtitle">Система проката<br />инструментов</div>
+                <div class="sidebar-subtitle">Система проката<br/>инструментов</div>
             </div>
         </div>
 
@@ -36,26 +38,29 @@
                 <i class="bi bi-receipt"></i>
                 <span>Заказы</span>
             </NavLink>
+            <AuthorizeView Roles="Администратор">
+                <Authorized>
+                    <NavLink href="/payments" class="sidebar-link">
+                        <i class="bi bi-credit-card"></i>
+                        <span>Оплаты</span>
+                    </NavLink>
 
-            <NavLink href="/payments" class="sidebar-link">
-                <i class="bi bi-credit-card"></i>
-                <span>Оплаты</span>
-            </NavLink>
+                    <NavLink href="/reports" class="sidebar-link">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Отчеты</span>
+                    </NavLink>
 
-            <NavLink href="/reports" class="sidebar-link">
-                <i class="bi bi-bar-chart"></i>
-                <span>Отчеты</span>
-            </NavLink>
+                    <NavLink href="/dictionaries" class="sidebar-link">
+                        <i class="bi bi-book"></i>
+                        <span>Справочники</span>
+                    </NavLink>
 
-            <NavLink href="/dictionaries" class="sidebar-link">
-                <i class="bi bi-book"></i>
-                <span>Справочники</span>
-            </NavLink>
-
-            <NavLink href="/users" class="sidebar-link">
-                <i class="bi bi-person-gear"></i>
-                <span>Пользователи</span>
-            </NavLink>
+                    <NavLink href="/users" class="sidebar-link">
+                        <i class="bi bi-person-gear"></i>
+                        <span>Пользователи</span>
+                    </NavLink>
+                </Authorized>
+            </AuthorizeView>
         </nav>
     </aside>
 
@@ -132,74 +137,74 @@
             @Body
         </main>
     </section>
-    <NotificationContainer />
-    
+    <NotificationContainer/>
+
     @if (_isProfileModalOpen)
-{
-    <div class="actions-backdrop" @onclick="CloseProfileModal">
-        <div class="profile-modal" @onclick:stopPropagation="true">
-            <div class="profile-modal-header">
-                <div>
-                    <h3>Мой профиль</h3>
-                    <p>Данные текущего пользователя</p>
+    {
+        <div class="actions-backdrop" @onclick="CloseProfileModal">
+            <div class="profile-modal" @onclick:stopPropagation="true">
+                <div class="profile-modal-header">
+                    <div>
+                        <h3>Мой профиль</h3>
+                        <p>Данные текущего пользователя</p>
+                    </div>
+
+                    <button type="button" @onclick="CloseProfileModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
 
-                <button type="button" @onclick="CloseProfileModal">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-
-            <div class="profile-modal-body">
-                <div class="profile-modal-avatar">
-                    <i class="bi bi-person-circle"></i>
-                </div>
-
-                <div class="profile-info-grid">
-                    <div class="profile-info-item">
-                        <span>ФИО</span>
-                        <strong>Иванов Иван Иванович</strong>
+                <div class="profile-modal-body">
+                    <div class="profile-modal-avatar">
+                        <i class="bi bi-person-circle"></i>
                     </div>
 
-                    <div class="profile-info-item">
-                        <span>Логин</span>
-                        <strong>ivanov</strong>
-                    </div>
+                    <div class="profile-info-grid">
+                        <div class="profile-info-item">
+                            <span>ФИО</span>
+                            <strong>Иванов Иван Иванович</strong>
+                        </div>
 
-                    <div class="profile-info-item">
-                        <span>Email</span>
-                        <strong>ivanov@rentalpro.ru</strong>
-                    </div>
+                        <div class="profile-info-item">
+                            <span>Логин</span>
+                            <strong>ivanov</strong>
+                        </div>
 
-                    <div class="profile-info-item">
-                        <span>Телефон</span>
-                        <strong>+7 900 111-22-33</strong>
-                    </div>
+                        <div class="profile-info-item">
+                            <span>Email</span>
+                            <strong>ivanov@rentalpro.ru</strong>
+                        </div>
 
-                    <div class="profile-info-item">
-                        <span>Роль</span>
-                        <strong>Администратор</strong>
-                    </div>
+                        <div class="profile-info-item">
+                            <span>Телефон</span>
+                            <strong>+7 900 111-22-33</strong>
+                        </div>
 
-                    <div class="profile-info-item">
-                        <span>Статус</span>
-                        <strong>Активен</strong>
+                        <div class="profile-info-item">
+                            <span>Роль</span>
+                            <strong>Администратор</strong>
+                        </div>
+
+                        <div class="profile-info-item">
+                            <span>Статус</span>
+                            <strong>Активен</strong>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="profile-modal-footer">
-                <button class="secondary-button" type="button">
-                    <i class="bi bi-key"></i>
-                    Сменить пароль
-                </button>
+                <div class="profile-modal-footer">
+                    <button class="secondary-button" type="button">
+                        <i class="bi bi-key"></i>
+                        Сменить пароль
+                    </button>
 
-                <button class="primary-button" type="button" @onclick="CloseProfileModal">
-                    Закрыть
-                </button>
+                    <button class="primary-button" type="button" @onclick="CloseProfileModal">
+                        Закрыть
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-}
+    }
 </div>
 
 @code {
@@ -240,7 +245,7 @@
         var uri when uri.Contains("/settings") => "Настройки системы",
         _ => ""
     };
-    
+
     private bool _isProfileMenuOpen;
 
     private bool _isProfileModalOpen;
@@ -260,12 +265,12 @@
     {
         _isProfileModalOpen = false;
     }
-    
+
     private void ToggleSidebar()
     {
         isSidebarCollapsed = !isSidebarCollapsed;
     }
-    
+
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
@@ -281,4 +286,5 @@
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
+
 }

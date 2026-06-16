@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.ToolStatuses.CreateToolStatusCommand;
 using RentalPro.Application.ToolStatuses.DeleteToolStatusCommand;
@@ -7,6 +8,7 @@ using RentalPro.Contracts.ToolStatuses;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/tool-statuses")]
 public sealed class ToolStatusesController(

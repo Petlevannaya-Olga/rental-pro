@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Manufactures.CreateManufactureCommand;
 using RentalPro.Application.Manufactures.DeleteManufactureCommand;
@@ -7,6 +8,7 @@ using RentalPro.Contracts.Manufacturers;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/manufacturers")]
 public sealed class ManufacturersController(

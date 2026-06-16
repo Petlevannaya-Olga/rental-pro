@@ -1,7 +1,9 @@
-﻿@page "/reports"
+﻿@attribute [Authorize(Roles = "Администратор")]
+@page "/reports"
 @layout AdminLayout
 
 @using CSharpFunctionalExtensions
+@using Microsoft.AspNetCore.Authorization
 @using RentalPro.Contracts.Reports
 @using RentalPro.Contracts.Dashboard
 @using RentalPro.Presentation.Client.Services

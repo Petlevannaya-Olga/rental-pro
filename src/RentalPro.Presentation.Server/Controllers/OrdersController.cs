@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Orders.CancelOrderCommand;
 using RentalPro.Application.Orders.CloseRentalCommand;
@@ -24,6 +25,7 @@ using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/orders")]
 public sealed class OrdersController(

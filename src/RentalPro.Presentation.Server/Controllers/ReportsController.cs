@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Repositories;
 using RentalPro.Application.Services;
@@ -5,6 +6,7 @@ using RentalPro.Contracts.Reports;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize(Roles = "Администратор")]
 [ApiController]
 [Route("api/reports")]
 public sealed class ReportsController(

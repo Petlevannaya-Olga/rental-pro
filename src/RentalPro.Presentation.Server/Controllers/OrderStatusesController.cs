@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.OrderStatuses.CreateOrderStatusCommand;
 using RentalPro.Application.OrderStatuses.DeleteOrderStatusCommand;
@@ -7,6 +8,7 @@ using RentalPro.Contracts.OrderStatuses;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/order-statuses")]
 public sealed class OrderStatusesController(

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Roles.CreateRoleCommand;
 using RentalPro.Application.Roles.DeleteRoleCommand;
 using RentalPro.Application.Roles.GetRolesQuery;
@@ -8,6 +9,7 @@ using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/roles")]
 public sealed class RolesController(

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Dashboard.GetDashboardQuery;
 using RentalPro.Contracts.Dashboard;
@@ -5,6 +6,7 @@ using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/dashboard")]
 public sealed class DashboardController(

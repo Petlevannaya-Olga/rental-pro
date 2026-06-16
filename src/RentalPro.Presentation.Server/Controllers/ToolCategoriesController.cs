@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.ToolCategories.CreateToolCategoriesCommand;
 using RentalPro.Application.ToolCategories.DeleteToolCategoriesCommand;
@@ -7,6 +8,7 @@ using RentalPro.Contracts.ToolCategories;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/tool-categories")]
 public sealed class ToolCategoriesController(

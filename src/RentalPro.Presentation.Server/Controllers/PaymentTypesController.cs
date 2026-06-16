@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.PaymentTypes.CreatePaymentTypeCommand;
 using RentalPro.Application.PaymentTypes.DeletePaymentTypeCommand;
@@ -7,6 +8,7 @@ using RentalPro.Contracts.PaymentTypes;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/payment-types")]
 public sealed class PaymentTypesController(

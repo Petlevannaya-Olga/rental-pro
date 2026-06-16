@@ -1,6 +1,8 @@
-﻿@page "/users"
+﻿@attribute [Authorize(Roles = "Администратор")]
+@page "/users"
 @layout AdminLayout
 
+@using Microsoft.AspNetCore.Authorization
 @using RentalPro.Contracts.Users
 @using RentalPro.Presentation.Client.Services
 

@@ -1,6 +1,8 @@
-﻿@page "/payments"
+﻿@attribute [Authorize(Roles = "Администратор")]
+@page "/payments"
 @layout AdminLayout
 
+@using Microsoft.AspNetCore.Authorization
 @using RentalPro.Contracts.Payments
 @using RentalPro.Contracts.PaymentTypes
 @using RentalPro.Contracts.PaymentMethods

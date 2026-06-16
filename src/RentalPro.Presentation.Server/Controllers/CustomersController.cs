@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Customers.CreateCustomerCommand;
 using RentalPro.Application.Customers.DeleteCustomerCommand;
@@ -12,6 +13,7 @@ using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/customers")]
 public sealed class CustomersController(

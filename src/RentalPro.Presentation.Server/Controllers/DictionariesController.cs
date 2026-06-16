@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Dictionaries.GetDictionaryStatsQuery;
 using RentalPro.Contracts;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize(Roles = "Администратор")]
 [ApiController]
 [Route("api/dictionaries")]
 public sealed class DictionariesController(

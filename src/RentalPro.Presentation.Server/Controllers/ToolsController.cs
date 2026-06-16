@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPro.Application.Tools.ChangeToolStatusCommand;
 using RentalPro.Application.Tools.CreateToolCommand;
@@ -14,6 +15,7 @@ using RentalPro.Shared.Abstractions;
 
 namespace RentalPro.Presentation.Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/tools")]
 public sealed class ToolsController(
