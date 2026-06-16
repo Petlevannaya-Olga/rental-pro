@@ -17,6 +17,9 @@ public partial class DashboardViewModel(
 
     [ObservableProperty]
     private string _errorMessage = string.Empty;
+    
+    [ObservableProperty]
+    private List<DashboardReturnItemViewModel> _returns = [];
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -31,7 +34,17 @@ public partial class DashboardViewModel(
             if (Dashboard is null)
             {
                 ErrorMessage = "Не удалось загрузить данные дашборда";
+                return;
             }
+
+            Returns =
+            [
+                ..Dashboard.OverdueReturns
+                    .Select(x => DashboardReturnItemViewModel.FromDto(x, true)),
+
+                ..Dashboard.UpcomingReturns
+                    .Select(x => DashboardReturnItemViewModel.FromDto(x, false))
+            ];
         }
         catch
         {
