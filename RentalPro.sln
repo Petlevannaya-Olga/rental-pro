@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentalPro.Presentation.Clie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentalPro.Shared", "shared\RentalPro.Shared\RentalPro.Shared.csproj", "{33126607-2079-494E-AAAD-FA76E54268FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentalPro.Presentation.Desktop", "src\RentalPro.Presentation.Desktop\RentalPro.Presentation.Desktop.csproj", "{6EBF42E3-BD54-4E96-876E-58C963269F10}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{33126607-2079-494E-AAAD-FA76E54268FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33126607-2079-494E-AAAD-FA76E54268FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33126607-2079-494E-AAAD-FA76E54268FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EBF42E3-BD54-4E96-876E-58C963269F10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EBF42E3-BD54-4E96-876E-58C963269F10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EBF42E3-BD54-4E96-876E-58C963269F10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EBF42E3-BD54-4E96-876E-58C963269F10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{675A61C3-8CC6-4C7A-8A48-86C47CCFE256} = {E0F3CA11-0FF3-4067-810B-22ECF29E4398}
@@ -63,5 +69,6 @@ Global
 		{A63E36F3-EF5E-4315-8887-CA2B2E8FC80E} = {E0F3CA11-0FF3-4067-810B-22ECF29E4398}
 		{2887C136-FEC5-46EC-9F43-E0FEBD11CEEA} = {E0F3CA11-0FF3-4067-810B-22ECF29E4398}
 		{33126607-2079-494E-AAAD-FA76E54268FC} = {6236A7F4-04E3-411D-A0A7-899BB1A8E375}
+		{6EBF42E3-BD54-4E96-876E-58C963269F10} = {E0F3CA11-0FF3-4067-810B-22ECF29E4398}
 	EndGlobalSection
 EndGlobal
