@@ -8,85 +8,60 @@
         Height="760"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7FC">
-<Window.Resources>
-    <common:SelectedMenuItemConverter x:Key="SelectedMenuItemConverter"/>
-    <Style x:Key="MenuIconStyle"
-           TargetType="materialDesign:PackIcon">
-        <Setter Property="Width" Value="22"/>
-        <Setter Property="Height" Value="22"/>
-        <Setter Property="Foreground" Value="#D7E7FF"/>
-        <Setter Property="Margin" Value="0 0 12 0"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
+    <Window.Resources>
+        <common:StringEqualsConverter x:Key="StringEqualsConverter" />
+        <Style x:Key="MenuIconStyle"
+               TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Foreground" Value="#D7E7FF" />
+            <Setter Property="Margin" Value="0 0 12 0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
 
-    <Style x:Key="MenuButtonStyle"
-       TargetType="Button">
-    <Setter Property="Height" Value="46"/>
-    <Setter Property="Margin" Value="0 0 0 8"/>
-    <Setter Property="Padding" Value="16 0"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderBrush" Value="Transparent"/>
-    <Setter Property="Foreground" Value="#EAF2FF"/>
-    <Setter Property="FontSize" Value="15"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="HorizontalContentAlignment" Value="Left"/>
-    <Setter Property="Cursor" Value="Hand"/>
-    <Setter Property="Template">
-        <Setter.Value>
-            <ControlTemplate TargetType="Button">
-                <Grid>
-                    <Border x:Name="SelectedBackground"
-                            Background="#1E73FF"
-                            CornerRadius="13"
-                            Visibility="Collapsed"/>
+        <Style x:Key="MenuRadioButtonStyle"
+               TargetType="RadioButton">
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Margin" Value="0 0 0 8" />
+            <Setter Property="Padding" Value="16 0" />
+            <Setter Property="Foreground" Value="#EAF2FF" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="GroupName" Value="MainMenu" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Root"
+                                Background="Transparent"
+                                CornerRadius="13">
+                            <ContentPresenter VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
 
-                    <Border x:Name="HoverBackground"
-                            Background="Transparent"
-                            CornerRadius="13"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#112F5E" />
+                            </Trigger>
 
-                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalAlignment="Center"
-                                      Margin="{TemplateBinding Padding}"/>
-                </Grid>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#1E73FF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                <ControlTemplate.Triggers>
-                    <DataTrigger Value="True">
-                        <DataTrigger.Binding>
-                            <MultiBinding Converter="{StaticResource SelectedMenuItemConverter}">
-                                <Binding RelativeSource="{RelativeSource TemplatedParent}"
-                                         Path="Tag"/>
-                                <Binding RelativeSource="{RelativeSource TemplatedParent}"
-                                         Path="CommandParameter"/>
-                            </MultiBinding>
-                        </DataTrigger.Binding>
-
-                        <Setter TargetName="SelectedBackground"
-                                Property="Visibility"
-                                Value="Visible"/>
-                    </DataTrigger>
-
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="HoverBackground"
-                                Property="Background"
-                                Value="#112F5E"/>
-                    </Trigger>
-
-                    <Trigger Property="IsPressed" Value="True">
-                        <Setter TargetName="HoverBackground"
-                                Property="Background"
-                                Value="#1E73FF"/>
-                    </Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate>
-        </Setter.Value>
-    </Setter>
-</Style>
-
-</Window.Resources>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="270"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="270" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- Левое меню -->
@@ -95,9 +70,9 @@
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="110"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="90"/>
+                    <RowDefinition Height="110" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="90" />
                 </Grid.RowDefinitions>
 
                 <!-- Логотип -->
@@ -116,19 +91,19 @@
                                                  Height="28"
                                                  Foreground="White"
                                                  HorizontalAlignment="Center"
-                                                 VerticalAlignment="Center"/>
+                                                 VerticalAlignment="Center" />
                     </Border>
 
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock FontSize="24"
                                    FontWeight="Black">
-                            <Run Text="Rental" Foreground="White"/>
-                            <Run Text="PRO" Foreground="#1E73FF"/>
+                            <Run Text="Rental" Foreground="White" />
+                            <Run Text="PRO" Foreground="#1E73FF" />
                         </TextBlock>
 
                         <TextBlock Text="Desktop client"
                                    Foreground="#AFC8EE"
-                                   FontSize="12"/>
+                                   FontSize="12" />
                     </StackPanel>
                 </StackPanel>
 
@@ -136,82 +111,68 @@
                 <StackPanel Grid.Row="1"
                             Margin="18 10 18 0">
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Дашборд"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Дашборд, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ViewDashboardOutline"
-                                                     Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Дашборд"/>
+                            <materialDesign:PackIcon Kind="ViewDashboardOutline" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Дашборд" />
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Клиенты"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Клиенты, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountGroupOutline"
-                                                     Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Клиенты"/>
+                            <materialDesign:PackIcon Kind="AccountGroupOutline" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Клиенты" />
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Инструменты"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Инструменты, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Tools"
-                                                     Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Инструменты"/>
+                            <materialDesign:PackIcon Kind="Tools" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Инструменты" />
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Заказы"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Заказы, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ClipboardTextOutline"
-                                                     Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Заказы"/>
+                            <materialDesign:PackIcon Kind="ClipboardTextOutline" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Заказы" />
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Оплаты"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Оплаты, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CreditCardOutline"
-                                                     Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Оплаты"/>
+                            <materialDesign:PackIcon Kind="CreditCardOutline" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Оплаты" />
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Отчеты"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Отчеты, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ChartBar"
-                                                     Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Отчеты"/>
+                            <materialDesign:PackIcon Kind="ChartBar" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Отчеты" />
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Справочники"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Справочники, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="BookOpenVariant"
-                                                     Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Справочники"/>
+                            <materialDesign:PackIcon Kind="BookOpenVariant" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Справочники" />
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
                 </StackPanel>
 
@@ -220,16 +181,13 @@
                             Margin="18 0 18 22"
                             VerticalAlignment="Bottom">
 
-                    <Button Command="{Binding NavigateCommand}"
-                            CommandParameter="Профиль"
-                            Tag="{Binding CurrentPageTitle}"
-                            Style="{StaticResource MenuButtonStyle}">
+                    <RadioButton IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Профиль, Mode=TwoWay}"
+                                 Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountCircleOutline"
-                                                     Style="{StaticResource MenuIconStyle}"/>
+                            <materialDesign:PackIcon Kind="AccountCircleOutline" Style="{StaticResource MenuIconStyle}"/>
                             <TextBlock Text="Профиль"/>
                         </StackPanel>
-                    </Button>
+                    </RadioButton>
 
                 </StackPanel>
             </Grid>
@@ -240,8 +198,8 @@
               Background="#F4F7FC">
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="86"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="86" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <!-- Верхняя панель -->
@@ -252,20 +210,20 @@
 
                 <Grid Margin="34 0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{Binding CurrentPageTitle}"
                                    FontSize="28"
                                    FontWeight="Black"
-                                   Foreground="#071B39"/>
+                                   Foreground="#071B39" />
 
                         <TextBlock Text="RentalPRO desktop-клиент"
                                    FontSize="13"
                                    Foreground="#6B7890"
-                                   Margin="0 4 0 0"/>
+                                   Margin="0 4 0 0" />
                     </StackPanel>
 
                     <Border Grid.Column="1"
@@ -279,13 +237,13 @@
                                                      Width="24"
                                                      Height="24"
                                                      Foreground="#1E73FF"
-                                                     Margin="0 0 8 0"/>
+                                                     Margin="0 0 8 0" />
 
                             <TextBlock Text="Пользователь"
                                        Foreground="#071B39"
                                        FontSize="14"
                                        FontWeight="SemiBold"
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -302,7 +260,7 @@
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="22"
                                           ShadowDepth="3"
-                                          Opacity="0.08"/>
+                                          Opacity="0.08" />
                     </Border.Effect>
 
                     <StackPanel VerticalAlignment="Center"
@@ -313,19 +271,19 @@
                                                  Height="68"
                                                  Foreground="#1E73FF"
                                                  HorizontalAlignment="Center"
-                                                 Margin="0 0 0 18"/>
+                                                 Margin="0 0 0 18" />
 
                         <TextBlock Text="{Binding CurrentPageTitle}"
                                    FontSize="30"
                                    FontWeight="Black"
                                    Foreground="#071B39"
-                                   HorizontalAlignment="Center"/>
+                                   HorizontalAlignment="Center" />
 
                         <TextBlock Text="Раздел будет подключен к API следующим шагом"
                                    FontSize="15"
                                    Foreground="#6B7890"
                                    HorizontalAlignment="Center"
-                                   Margin="0 10 0 0"/>
+                                   Margin="0 10 0 0" />
                     </StackPanel>
                 </Border>
             </Grid>
