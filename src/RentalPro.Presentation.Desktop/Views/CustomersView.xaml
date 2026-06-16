@@ -7,8 +7,8 @@
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White" />
-            <Setter Property="CornerRadius" Value="20" />
-            <Setter Property="Padding" Value="22" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect BlurRadius="18"
@@ -21,7 +21,8 @@
         <Style x:Key="StatCardStyle"
                TargetType="Border"
                BasedOn="{StaticResource CardStyle}">
-            <Setter Property="Margin" Value="0 0 16 16" />
+            <Setter Property="Height" Value="80" />
+            <Setter Property="Margin" Value="0 0 12 12" />
         </Style>
 
         <Style x:Key="StatTitleStyle" TargetType="TextBlock">
@@ -34,8 +35,8 @@
 
         <Style x:Key="StatValueStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#071B39" />
-            <Setter Property="FontSize" Value="30" />
-            <Setter Property="FontWeight" Value="Black" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
         <Style x:Key="DashboardDataGridStyle"
@@ -75,7 +76,7 @@
 
                     <Border Style="{StaticResource StatCardStyle}">
                         <StackPanel>
-                            <DockPanel Margin="0 0 0 14">
+                            <DockPanel Margin="0 0 0 4">
                                 <materialDesign:PackIcon Kind="AccountGroupOutline"
                                                          Width="22"
                                                          Height="22"
@@ -91,7 +92,7 @@
 
                     <Border Style="{StaticResource StatCardStyle}">
                         <StackPanel>
-                            <DockPanel Margin="0 0 0 14">
+                            <DockPanel Margin="0 0 0 4">
                                 <materialDesign:PackIcon Kind="ReceiptTextOutline"
                                                          Width="22"
                                                          Height="22"
@@ -107,7 +108,7 @@
 
                     <Border Style="{StaticResource StatCardStyle}">
                         <StackPanel>
-                            <DockPanel Margin="0 0 0 14">
+                            <DockPanel Margin="0 0 0 4">
                                 <materialDesign:PackIcon Kind="StarOutline"
                                                          Width="22"
                                                          Height="22"
@@ -123,7 +124,7 @@
 
                     <Border Style="{StaticResource StatCardStyle}">
                         <StackPanel>
-                            <DockPanel Margin="0 0 0 14">
+                            <DockPanel Margin="0 0 0 4">
                                 <materialDesign:PackIcon Kind="Tools"
                                                          Width="22"
                                                          Height="22"
@@ -181,8 +182,7 @@
                                 <TextBox Grid.Column="0"
                                          Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
                                          Height="48"
-                                         materialDesign:HintAssist.Hint="Поиск"
-                                         materialDesign:HintAssist.HelperText="ФИО, телефон, email или адрес"
+                                         materialDesign:HintAssist.Hint="Поиск по ФИО, телефону, email или адресу"
                                          Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
 
                                 <ComboBox Grid.Column="2"
