@@ -190,20 +190,11 @@
                             Margin="18 10 18 0">
 
                     <RadioButton
-                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Дашборд, Mode=TwoWay}"
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Обзор, Mode=TwoWay}"
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewDashboardOutline" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Дашборд" Style="{StaticResource MenuTextStyle}" />
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton
-                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Клиенты, Mode=TwoWay}"
-                        Style="{StaticResource MenuRadioButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountGroupOutline" Style="{StaticResource MenuIconStyle}" />
-                            <TextBlock Text="Клиенты" Style="{StaticResource MenuTextStyle}" />
+                            <TextBlock Text="Обзор" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -213,6 +204,15 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Tools" Style="{StaticResource MenuIconStyle}" />
                             <TextBlock Text="Инструменты" Style="{StaticResource MenuTextStyle}" />
+                        </StackPanel>
+                    </RadioButton>
+                    
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Клиенты, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountGroupOutline" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Клиенты" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -249,6 +249,15 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="BookOpenVariant" Style="{StaticResource MenuIconStyle}" />
                             <TextBlock Text="Справочники" Style="{StaticResource MenuTextStyle}" />
+                        </StackPanel>
+                    </RadioButton>
+                    
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Пользователи, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Users" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Пользователи" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 

@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RentalPro.Contracts.Customers;
@@ -55,6 +56,23 @@ public partial class CustomersViewModel(
 
     [ObservableProperty]
     private bool _descending = true;
+    
+    [ObservableProperty]
+    private CustomerDto? selectedCustomer;
+
+    [RelayCommand(CanExecute = nameof(CanOpenCustomerDetails))]
+    private void OpenCustomerDetails(CustomerDto? customer)
+    {
+        if (customer is null)
+            return;
+
+        // здесь открыть карточку клиента
+    }
+
+    private bool CanOpenCustomerDetails(CustomerDto? customer)
+    {
+        return customer is not null;
+    }
 
     public int TotalPages =>
         TotalCount <= 0
@@ -243,5 +261,10 @@ public partial class CustomersViewModel(
     partial void OnSearchChanged(string? value)
     {
         _ = SearchAsync();
+    }
+    
+    partial void OnSelectedCustomerChanged(CustomerDto? value)
+    {
+        OpenCustomerDetailsCommand.NotifyCanExecuteChanged();
     }
 }

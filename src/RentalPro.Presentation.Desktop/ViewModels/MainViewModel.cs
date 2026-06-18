@@ -10,10 +10,10 @@ public partial class MainViewModel(
     : ObservableObject
 {
     [ObservableProperty]
-    private string _currentPageTitle = "Дашборд";
+    private string _currentPageTitle = "Обзор";
 
     [ObservableProperty]
-    private string _selectedMenuItem = "Дашборд";
+    private string _selectedMenuItem = "Обзор";
 
     [ObservableProperty]
     private object _currentView = dashboardView;
@@ -33,7 +33,7 @@ public partial class MainViewModel(
 
         CurrentView = value switch
         {
-            "Дашборд" => dashboardView,
+            "Обзор" => dashboardView,
             "Клиенты" => customersView,
             _ => CurrentView
         };

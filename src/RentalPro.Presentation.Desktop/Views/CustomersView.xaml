@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Background="Transparent">
+
     <UserControl.Resources>
 
         <Style x:Key="CardStyle" TargetType="Border">
@@ -21,7 +22,7 @@
         <Style x:Key="StatCardStyle"
                TargetType="Border"
                BasedOn="{StaticResource CardStyle}">
-            <Setter Property="Height" Value="80" />
+            <Setter Property="Height" Value="72" />
             <Setter Property="Margin" Value="0 0 12 12" />
         </Style>
 
@@ -58,13 +59,36 @@
             <Setter Property="CanUserResizeRows" Value="False" />
             <Setter Property="CanUserSortColumns" Value="True" />
             <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="RowHeight" Value="58" />
+
+            <Setter Property="MinRowHeight" Value="58" />
+
             <Setter Property="FontSize" Value="13" />
             <Setter Property="SelectionMode" Value="Single" />
             <Setter Property="SelectionUnit" Value="FullRow" />
+
+            <Setter Property="CellStyle">
+                <Setter.Value>
+                    <Style TargetType="DataGridCell"
+                           BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                        <Setter Property="VerticalContentAlignment"
+                                Value="Center" />
+                    </Style>
+                </Setter.Value>
+            </Setter>
+
+            <Setter Property="ColumnHeaderStyle">
+                <Setter.Value>
+                    <Style TargetType="DataGridColumnHeader"
+                           BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                        <Setter Property="VerticalContentAlignment"
+                                Value="Center" />
+                    </Style>
+                </Setter.Value>
+            </Setter>
         </Style>
 
     </UserControl.Resources>
+
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
@@ -138,22 +162,31 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource StatCardStyle}"
-                            Background="#1E73FF">
+                    <Button Command="{Binding OpenCreateCustomerCommand}"
+                            Background="#1E73FF"
+                            BorderThickness="0"
+                            Margin="0 0 12 12"
+                            Height="72"
+                            materialDesign:ButtonAssist.CornerRadius="12"
+                            Style="{StaticResource MaterialDesignFlatButton}">
+
                         <StackPanel HorizontalAlignment="Center"
                                     VerticalAlignment="Center">
+
                             <materialDesign:PackIcon Kind="Plus"
                                                      Width="28"
                                                      Height="28"
                                                      Foreground="White"
                                                      HorizontalAlignment="Center" />
+
                             <TextBlock Text="Добавить клиента"
                                        Foreground="White"
                                        FontSize="14"
                                        FontWeight="SemiBold"
-                                       Margin="0 10 0 0" />
+                                       Margin="0 8 0 0" />
+
                         </StackPanel>
-                    </Border>
+                    </Button>
 
                 </UniformGrid>
 
@@ -191,6 +224,7 @@
                                           SelectedValuePath="Tag"
                                           materialDesign:HintAssist.Hint="Заказы"
                                           Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+
                                     <ComboBoxItem Content="Все" Tag="{x:Null}" />
                                     <ComboBoxItem Content="С заказами" Tag="withOrders" />
                                     <ComboBoxItem Content="Без заказов" Tag="withoutOrders" />
@@ -202,6 +236,7 @@
                                           SelectedValuePath="Tag"
                                           materialDesign:HintAssist.Hint="Постоянные"
                                           Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+
                                     <ComboBoxItem Content="Все" Tag="{x:Null}" />
                                     <ComboBoxItem Content="Постоянные" Tag="regular" />
                                     <ComboBoxItem Content="Не постоянные" Tag="notRegular" />
@@ -213,6 +248,7 @@
                                           SelectedValuePath="Tag"
                                           materialDesign:HintAssist.Hint="Активная аренда"
                                           Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+
                                     <ComboBoxItem Content="Все" Tag="{x:Null}" />
                                     <ComboBoxItem Content="С активной арендой" Tag="withActiveOrders" />
                                     <ComboBoxItem Content="Без активной аренды" Tag="withoutActiveOrders" />
@@ -236,10 +272,18 @@
                         </Border>
 
                         <DataGrid ItemsSource="{Binding Customers}"
+                                  SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}"
                                   Style="{StaticResource DashboardDataGridStyle}"
                                   MinHeight="280"
+                                  MaxHeight="550"
                                   CanUserSortColumns="True"
                                   materialDesign:DataGridAssist.ApplyMaterialDesignColumnStyles="True">
+
+                            <DataGrid.InputBindings>
+                                <MouseBinding MouseAction="LeftDoubleClick"
+                                              Command="{Binding OpenCustomerDetailsCommand}"
+                                              CommandParameter="{Binding SelectedCustomer}" />
+                            </DataGrid.InputBindings>
 
                             <DataGrid.Columns>
 
@@ -250,7 +294,8 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel VerticalAlignment="Center"
-                                                        Margin="4 0">
+                                                        Margin="4 6">
+
                                                 <TextBlock Text="{Binding FullName}"
                                                            FontWeight="SemiBold"
                                                            FontSize="14"
@@ -261,50 +306,84 @@
                                                            FontSize="12"
                                                            Foreground="#6B7890"
                                                            Margin="0 4 0 0"
-                                                           TextTrimming="CharacterEllipsis" />
+                                                           TextWrapping="Wrap"
+                                                           MaxWidth="340" />
+
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Телефон"
-                                                    Binding="{Binding PhoneNumber}"
-                                                    Width="170"
-                                                    SortMemberPath="PhoneNumber" />
+                                <DataGridTemplateColumn Header="Телефон"
+                                                        Width="170"
+                                                        SortMemberPath="PhoneNumber">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding PhoneNumber}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Email"
-                                                    Binding="{Binding Email}"
-                                                    Width="220"
-                                                    SortMemberPath="Email" />
+                                <DataGridTemplateColumn Header="Email"
+                                                        Width="220"
+                                                        SortMemberPath="Email">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Email}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Паспорт"
-                                                    Binding="{Binding Passport}"
-                                                    Width="150"
-                                                    SortMemberPath="Passport" />
+                                <DataGridTemplateColumn Header="Паспорт"
+                                                        Width="170"
+                                                        SortMemberPath="Passport">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Passport}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Заказов"
-                                                    Binding="{Binding OrdersCount}"
-                                                    Width="105"
-                                                    SortMemberPath="OrdersCount" />
+                                <DataGridTemplateColumn Header="Заказов"
+                                                        Width="105"
+                                                        SortMemberPath="OrdersCount">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding OrdersCount}"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       FontWeight="SemiBold" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
                                 <DataGridTemplateColumn Header="Активных"
                                                         Width="120"
                                                         SortMemberPath="ActiveOrdersCount">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="10"
-                                                    Padding="10 2"
-                                                    Height="28"
-                                                    MinWidth="38"
-                                                    HorizontalAlignment="Center"
-                                                    Background="#DCFCE7">
-                                                <TextBlock Text="{Binding ActiveOrdersCount}"
-                                                           FontSize="13"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#15803D"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center" />
-                                            </Border>
+                                            <Grid VerticalAlignment="Center">
+                                                <Border CornerRadius="10"
+                                                        Padding="10 2"
+                                                        Height="28"
+                                                        MinWidth="38"
+                                                        HorizontalAlignment="Center"
+                                                        Background="#DCFCE7">
+
+                                                    <TextBlock Text="{Binding ActiveOrdersCount}"
+                                                               FontSize="13"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="#15803D"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                                </Border>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -314,17 +393,22 @@
                                                         CanUserSort="False">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Width="40"
-                                                    Height="40"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Style="{StaticResource MaterialDesignIconButton}"
-                                                    ToolTip="Действия">
-                                                <materialDesign:PackIcon Kind="DotsVertical"
-                                                                         Width="22"
-                                                                         Height="22"
-                                                                         Foreground="#1E73FF" />
-                                            </Button>
+                                            <Grid VerticalAlignment="Center">
+                                                <Button Width="40"
+                                                        Height="40"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Command="{Binding DataContext.OpenCustomerActionsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Действия">
+
+                                                    <materialDesign:PackIcon Kind="DotsVertical"
+                                                                             Width="22"
+                                                                             Height="22"
+                                                                             Foreground="#1E73FF" />
+                                                </Button>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -340,7 +424,6 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- Экспорт -->
                             <Button Grid.Column="0"
                                     Height="40"
                                     Padding="16 0"
@@ -358,7 +441,6 @@
                                 </StackPanel>
                             </Button>
 
-                            <!-- Пагинация -->
                             <StackPanel Grid.Column="2"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Center">
@@ -380,17 +462,9 @@
                                            Foreground="#6B7890"
                                            Margin="12 0">
 
-                                    <TextBlock VerticalAlignment="Center"
-                                               FontSize="13"
-                                               FontWeight="SemiBold"
-                                               Foreground="#6B7890"
-                                               Margin="12 0">
-
-                                        <Run Text="{Binding CurrentPage, Mode=OneWay}" />
-                                        <Run Text=" из " />
-                                        <Run Text="{Binding TotalPages, Mode=OneWay}" />
-
-                                    </TextBlock>
+                                    <Run Text="{Binding CurrentPage, Mode=OneWay}" />
+                                    <Run Text=" из " />
+                                    <Run Text="{Binding TotalPages, Mode=OneWay}" />
 
                                 </TextBlock>
 
