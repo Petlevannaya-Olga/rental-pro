@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Auth;
+using RentalPro.Presentation.Desktop.Services;
 using RentalPro.Presentation.Desktop.ViewModels;
 using RentalPro.Presentation.Desktop.Views;
 
@@ -43,6 +44,7 @@ public partial class App : Application
             })
             .AddHttpMessageHandler<AuthHeaderHandler>();
 
+        services.AddSingleton<NavigationService>();
         services.AddTransient<DashboardApiClient>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<DashboardView>();
@@ -56,5 +58,8 @@ public partial class App : Application
         services.AddTransient<CustomersApiClient>();
         services.AddTransient<CustomersView>();
         services.AddTransient<CustomersViewModel>();
+        
+        services.AddTransient<CustomerEditView>();
+        services.AddTransient<CustomerEditViewModel>();
     }
 }

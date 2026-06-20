@@ -54,6 +54,37 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
                    cancellationToken)
                ?? throw new Exception("Сервер вернул пустую статистику клиентов");
     }
+    
+    public async Task CreateCustomerAsync(
+        CreateCustomerRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        var response = await httpClient.PostAsJsonAsync(
+            "api/customers",
+            request,
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(await response.Content.ReadAsStringAsync(cancellationToken));
+    }
+    
+    public async Task UpdateCustomerAsync(
+        Guid id,
+        UpdateCustomerRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/customers/{id}",
+            request,
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(await response.Content.ReadAsStringAsync(cancellationToken));
+    }
 
     private static string BuildUrl(
         string path,

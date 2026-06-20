@@ -1,13 +1,16 @@
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RentalPro.Contracts.Customers;
 using RentalPro.Presentation.Desktop.Api;
+using RentalPro.Presentation.Desktop.Services;
+using RentalPro.Presentation.Desktop.Views;
 
 namespace RentalPro.Presentation.Desktop.ViewModels;
 
 public partial class CustomersViewModel(
-    CustomersApiClient customersApiClient)
+    CustomersApiClient customersApiClient,
+    NavigationService navigationService,
+    CustomerEditViewModel customerEditViewModel)
     : ObservableObject
 {
     private const int PageSize = 5;
@@ -56,23 +59,9 @@ public partial class CustomersViewModel(
 
     [ObservableProperty]
     private bool _descending = true;
-    
+
     [ObservableProperty]
-    private CustomerDto? selectedCustomer;
-
-    [RelayCommand(CanExecute = nameof(CanOpenCustomerDetails))]
-    private void OpenCustomerDetails(CustomerDto? customer)
-    {
-        if (customer is null)
-            return;
-
-        // здесь открыть карточку клиента
-    }
-
-    private bool CanOpenCustomerDetails(CustomerDto? customer)
-    {
-        return customer is not null;
-    }
+    private CustomerDto? _selectedCustomer;
 
     public int TotalPages =>
         TotalCount <= 0
@@ -120,6 +109,39 @@ public partial class CustomersViewModel(
     {
         await LoadStatsAsync();
         await LoadCustomersAsync();
+    }
+
+    [RelayCommand]
+    private void OpenCreateCustomer()
+    {
+        customerEditViewModel.OpenCreate();
+
+        navigationService.NavigateTo<CustomerEditView>("Добавление клиента");
+    }
+
+    [RelayCommand]
+    private void OpenEditCustomer(CustomerDto? customer)
+    {
+        if (customer is null)
+            return;
+
+        customerEditViewModel.OpenEdit(customer);
+
+        navigationService.NavigateTo<CustomerEditView>("Редактирование клиента");
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenCustomerDetails))]
+    private void OpenCustomerDetails(CustomerDto? customer)
+    {
+        if (customer is null)
+            return;
+
+        OpenEditCustomer(customer);
+    }
+
+    private bool CanOpenCustomerDetails(CustomerDto? customer)
+    {
+        return customer is not null;
     }
 
     [RelayCommand]
@@ -242,7 +264,7 @@ public partial class CustomersViewModel(
             ErrorMessage = ex.Message;
         }
     }
-    
+
     partial void OnOrdersFilterChanged(string? value)
     {
         _ = ApplyFiltersAsync();
@@ -257,12 +279,12 @@ public partial class CustomersViewModel(
     {
         _ = ApplyFiltersAsync();
     }
-    
+
     partial void OnSearchChanged(string? value)
     {
         _ = SearchAsync();
     }
-    
+
     partial void OnSelectedCustomerChanged(CustomerDto? value)
     {
         OpenCustomerDetailsCommand.NotifyCanExecuteChanged();

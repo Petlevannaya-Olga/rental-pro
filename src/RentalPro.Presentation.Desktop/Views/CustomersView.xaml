@@ -122,6 +122,8 @@
             <Setter Property="VerticalContentAlignment"
                     Value="Center" />
         </Style>
+
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </UserControl.Resources>
 
     <Grid>
