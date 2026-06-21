@@ -63,5 +63,7 @@ public partial class App : Application
         services.AddTransient<CustomerEditView>();
         
         services.AddSingleton<FakeCustomerGeneratorService>();
+        
+        services.AddSingleton<NotificationService>();
     }
 }

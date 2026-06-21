@@ -96,4 +96,38 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
         return $"{path}?{string.Join("&", query)}";
     }
+    
+    public async Task<byte[]> ExportCustomersAsync(
+        ExportCustomersRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        var parameters = new Dictionary<string, string?>
+        {
+            ["sortBy"] = request.SortBy,
+            ["descending"] = request.Descending.ToString()
+        };
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+            parameters["search"] = request.Search.Trim();
+
+        if (request.HasOrders.HasValue)
+            parameters["hasOrders"] = request.HasOrders.Value.ToString();
+
+        if (request.HasActiveOrders.HasValue)
+            parameters["hasActiveOrders"] = request.HasActiveOrders.Value.ToString();
+
+        if (request.IsRegular.HasValue)
+            parameters["isRegular"] = request.IsRegular.Value.ToString();
+
+        var url = BuildUrl("api/customers/export", parameters);
+
+        var response = await httpClient.GetAsync(url, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(await response.Content.ReadAsStringAsync(cancellationToken));
+
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
 }

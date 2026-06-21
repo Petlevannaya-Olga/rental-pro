@@ -9,8 +9,10 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly NavigationService _navigationService;
 
-    public MainViewModel(NavigationService navigationService)
+    public MainViewModel(NavigationService navigationService, NotificationService notificationService)
     {
+        Notifications = notificationService;
+
         _navigationService = navigationService;
 
         _navigationService.PropertyChanged += (_, args) =>
@@ -34,6 +36,8 @@ public partial class MainViewModel : ObservableObject
     public object? CurrentView => _navigationService.CurrentView;
 
     public string CurrentPageTitle => _navigationService.CurrentPageTitle;
+    
+    public NotificationService Notifications { get; }
 
     [RelayCommand]
     private void ToggleMenu()

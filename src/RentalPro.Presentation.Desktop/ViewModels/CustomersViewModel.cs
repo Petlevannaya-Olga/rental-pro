@@ -1,5 +1,7 @@
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using RentalPro.Contracts.Customers;
 using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Services;
@@ -10,7 +12,8 @@ namespace RentalPro.Presentation.Desktop.ViewModels;
 public partial class CustomersViewModel(
     CustomersApiClient customersApiClient,
     NavigationService navigationService,
-    CustomerEditViewModel customerEditViewModel)
+    CustomerEditViewModel customerEditViewModel,
+    NotificationService notificationService)
     : ObservableObject
 {
     private const int PageSize = 5;
@@ -63,6 +66,8 @@ public partial class CustomersViewModel(
     [ObservableProperty]
     private CustomerDto? _selectedCustomer;
 
+    public NotificationService Notifications { get; } = notificationService;
+    
     public int TotalPages =>
         TotalCount <= 0
             ? 1
@@ -203,6 +208,44 @@ public partial class CustomersViewModel(
 
         CurrentPage++;
         await LoadCustomersAsync();
+    }
+    
+    [RelayCommand]
+    private async Task ExportAsync()
+    {
+        try
+        {
+            notificationService.Info("Началась выгрузка в Excel");
+            ErrorMessage = string.Empty;
+
+            var request = new ExportCustomersRequest(
+                Search,
+                HasOrders,
+                IsRegular,
+                HasActiveOrders,
+                SortBy,
+                Descending);
+
+            var bytes = await customersApiClient.ExportCustomersAsync(request);
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Сохранить список клиентов",
+                FileName = "customers.xlsx",
+                Filter = "Excel файл (*.xlsx)|*.xlsx"
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            await File.WriteAllBytesAsync(dialog.FileName, bytes);
+            notificationService.Success("Клиенты выгружены в Excel");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            notificationService.Error("Не удалось выгрузить клиентов в Excel");
+        }
     }
 
     private async Task LoadCustomersAsync()

@@ -11,7 +11,8 @@ namespace RentalPro.Presentation.Desktop.ViewModels;
 public partial class CustomerEditViewModel(
     CustomersApiClient customersApiClient,
     NavigationService navigationService,
-    FakeCustomerGeneratorService fakeCustomerGeneratorService)
+    FakeCustomerGeneratorService fakeCustomerGeneratorService,
+    NotificationService notificationService)
     : ObservableObject
 {
     [ObservableProperty]
@@ -116,6 +117,11 @@ public partial class CustomerEditViewModel(
             else
                 await CreateAsync();
 
+            notificationService.Success(
+                IsEditMode
+                    ? "Данные клиента обновлены"
+                    : "Клиент добавлен");
+            
             navigationService.NavigateTo<CustomersView>("Клиенты");
         }
         catch (Exception ex)
@@ -133,6 +139,7 @@ public partial class CustomerEditViewModel(
     {
         SetCustomer(fakeCustomerGeneratorService.Generate());
         ErrorMessage = string.Empty;
+        notificationService.Success("Сгенерированы тестовые данные");
     }
 
     private void SetCustomer(CustomerEditModel newCustomer)

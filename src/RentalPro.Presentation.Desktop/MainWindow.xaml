@@ -13,6 +13,26 @@
         <common:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter"/>
         <common:StringEqualsConverter x:Key="StringEqualsConverter" />
 
+        <Style x:Key="RentalProSnackbarStyle"
+               TargetType="materialDesign:Snackbar">
+
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#071B39" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="MinWidth" Value="320" />
+            <Setter Property="MaxWidth" Value="460" />
+            <Setter Property="Padding" Value="18 14" />
+
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="20"
+                                      ShadowDepth="4"
+                                      Opacity="0.18" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
         <Style x:Key="MenuTextStyle"
                TargetType="TextBlock">
             <Setter Property="Visibility" Value="Visible"/>
@@ -92,8 +112,8 @@
             <ColumnDefinition Width="{Binding IsMenuCollapsed, Converter={StaticResource BoolToGridLengthConverter}}" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-
-        <!-- Левое меню -->
+        
+       <!-- Левое меню -->
         <Border Grid.Column="0"
                 Background="#071B39">
 
@@ -342,5 +362,13 @@
                 <ContentControl Content="{Binding CurrentView}"/>
             </Grid>
         </Grid>
+       <materialDesign:Snackbar
+           Grid.Column="1"
+           Panel.ZIndex="999"
+           Style="{StaticResource RentalProSnackbarStyle}"
+           MessageQueue="{Binding Notifications.MessageQueue}"
+           HorizontalAlignment="Right"
+           VerticalAlignment="Bottom"
+           Margin="0 0 24 24" />
     </Grid>
 </Window>
