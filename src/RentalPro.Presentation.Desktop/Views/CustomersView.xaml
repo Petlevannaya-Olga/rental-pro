@@ -6,6 +6,50 @@
 
     <UserControl.Resources>
 
+        <Style x:Key="PrimaryCardButton"
+               TargetType="Button">
+
+            <Setter Property="Background" Value="#1E73FF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="72" />
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="12">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#1664E8" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#0F56C9" />
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root"
+                                        Property="Opacity"
+                                        Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
         <Style x:Key="PrimaryActionButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource MaterialDesignFlatButton}">
@@ -203,12 +247,8 @@
             </Border>
 
             <Button Command="{Binding OpenCreateCustomerCommand}"
-                    Background="#1E73FF"
-                    BorderThickness="0"
-                    Margin="0 0 12 12"
-                    Height="72"
-                    materialDesign:ButtonAssist.CornerRadius="12"
-                    Style="{StaticResource MaterialDesignFlatButton}">
+                    Style="{StaticResource PrimaryCardButton}"
+                    Margin="0 0 12 12">
 
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center">

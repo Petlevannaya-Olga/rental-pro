@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RentalPro.Contracts.Customers;
@@ -38,18 +39,34 @@ public partial class CustomerEditViewModel(
             ? "Сохранить изменения"
             : "Сохранить клиента";
 
+    private bool IsFormFilled =>
+        !string.IsNullOrWhiteSpace(Customer.LastName)
+        && !string.IsNullOrWhiteSpace(Customer.FirstName)
+        && !string.IsNullOrWhiteSpace(Customer.MiddleName)
+        && !string.IsNullOrWhiteSpace(Customer.PhoneNumber)
+        && !string.IsNullOrWhiteSpace(Customer.Email)
+        && !string.IsNullOrWhiteSpace(Customer.PassportSeries)
+        && !string.IsNullOrWhiteSpace(Customer.PassportNumber)
+        && !string.IsNullOrWhiteSpace(Customer.PostalCode)
+        && !string.IsNullOrWhiteSpace(Customer.Region)
+        && !string.IsNullOrWhiteSpace(Customer.City)
+        && !string.IsNullOrWhiteSpace(Customer.Street)
+        && !string.IsNullOrWhiteSpace(Customer.House);
+
+    private bool CanSave()
+    {
+        return !IsSaving && IsFormFilled;
+    }
+
     public void OpenCreate()
     {
         IsEditMode = false;
         CustomerId = null;
-        Customer = new CustomerEditModel();
         ErrorMessage = string.Empty;
         IsSaving = false;
 
-        OnPropertyChanged(nameof(Title));
-        OnPropertyChanged(nameof(SaveButtonText));
-
-        SaveCommand.NotifyCanExecuteChanged();
+        SetCustomer(new CustomerEditModel());
+        RefreshHeader();
     }
 
     public void OpenEdit(CustomerDto dto)
@@ -59,7 +76,7 @@ public partial class CustomerEditViewModel(
         ErrorMessage = string.Empty;
         IsSaving = false;
 
-        Customer = new CustomerEditModel
+        SetCustomer(new CustomerEditModel
         {
             LastName = dto.LastName,
             FirstName = dto.FirstName,
@@ -75,12 +92,9 @@ public partial class CustomerEditViewModel(
             House = dto.House,
             Building = dto.Building,
             Apartment = dto.Apartment
-        };
+        });
 
-        OnPropertyChanged(nameof(Title));
-        OnPropertyChanged(nameof(SaveButtonText));
-
-        SaveCommand.NotifyCanExecuteChanged();
+        RefreshHeader();
     }
 
     [RelayCommand]
@@ -111,39 +125,62 @@ public partial class CustomerEditViewModel(
         finally
         {
             IsSaving = false;
-            SaveCommand.NotifyCanExecuteChanged();
         }
     }
-    
+
     [RelayCommand]
     private void FillTestData()
     {
-        Customer = fakeCustomerGeneratorService.Generate();
+        SetCustomer(fakeCustomerGeneratorService.Generate());
         ErrorMessage = string.Empty;
     }
 
-    private bool CanSave()
+    private void SetCustomer(CustomerEditModel newCustomer)
     {
-        return !IsSaving;
+        Customer.PropertyChanged -= CustomerOnPropertyChanged;
+
+        Customer = newCustomer;
+
+        Customer.PropertyChanged += CustomerOnPropertyChanged;
+
+        RefreshSaveState();
+    }
+
+    private void CustomerOnPropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        RefreshSaveState();
+    }
+
+    private void RefreshHeader()
+    {
+        OnPropertyChanged(nameof(Title));
+        OnPropertyChanged(nameof(SaveButtonText));
+    }
+
+    private void RefreshSaveState()
+    {
+        SaveCommand.NotifyCanExecuteChanged();
     }
 
     private async Task CreateAsync()
     {
         var request = new CreateCustomerRequest(
-            Customer.LastName,
-            Customer.FirstName,
-            Customer.MiddleName,
-            Customer.PhoneNumber,
-            Customer.Email,
-            Customer.PassportSeries,
-            Customer.PassportNumber,
-            Customer.PostalCode,
-            Customer.Region,
-            Customer.City,
-            Customer.Street,
-            Customer.House,
-            Customer.Building,
-            Customer.Apartment);
+            Customer.LastName.Trim(),
+            Customer.FirstName.Trim(),
+            Customer.MiddleName.Trim(),
+            Customer.PhoneNumber.Trim(),
+            Customer.Email.Trim(),
+            Customer.PassportSeries.Trim(),
+            Customer.PassportNumber.Trim(),
+            Customer.PostalCode.Trim(),
+            Customer.Region.Trim(),
+            Customer.City.Trim(),
+            Customer.Street.Trim(),
+            Customer.House.Trim(),
+            NormalizeOptional(Customer.Building),
+            NormalizeOptional(Customer.Apartment));
 
         await customersApiClient.CreateCustomerAsync(request);
     }
@@ -154,26 +191,33 @@ public partial class CustomerEditViewModel(
             throw new InvalidOperationException("Не выбран клиент для редактирования");
 
         var request = new UpdateCustomerRequest(
-            Customer.LastName,
-            Customer.FirstName,
-            Customer.MiddleName,
-            Customer.PhoneNumber,
-            Customer.Email,
-            Customer.PassportSeries,
-            Customer.PassportNumber,
-            Customer.PostalCode,
-            Customer.Region,
-            Customer.City,
-            Customer.Street,
-            Customer.House,
-            Customer.Building,
-            Customer.Apartment);
+            Customer.LastName.Trim(),
+            Customer.FirstName.Trim(),
+            Customer.MiddleName.Trim(),
+            Customer.PhoneNumber.Trim(),
+            Customer.Email.Trim(),
+            Customer.PassportSeries.Trim(),
+            Customer.PassportNumber.Trim(),
+            Customer.PostalCode.Trim(),
+            Customer.Region.Trim(),
+            Customer.City.Trim(),
+            Customer.Street.Trim(),
+            Customer.House.Trim(),
+            NormalizeOptional(Customer.Building),
+            NormalizeOptional(Customer.Apartment));
 
         await customersApiClient.UpdateCustomerAsync(CustomerId.Value, request);
     }
 
+    private static string? NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
+    }
+
     partial void OnIsSavingChanged(bool value)
     {
-        SaveCommand.NotifyCanExecuteChanged();
+        RefreshSaveState();
     }
 }

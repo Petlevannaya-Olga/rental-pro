@@ -24,15 +24,64 @@
         </Style>
 
         <Style x:Key="PrimaryActionButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource MaterialDesignFlatButton}">
+               TargetType="Button">
 
             <Setter Property="Background" Value="#1E73FF" />
             <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Height" Value="48" />
-            <Setter Property="Padding" Value="22 0" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="24 0" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="12">
+
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#1664E8" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#0F56C9" />
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#AFC9FF" />
+
+                                <Setter Property="Foreground"
+                                        Value="White" />
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
 
         </Style>
 
@@ -359,6 +408,9 @@
                 </Button>
 
                 <Button Height="48"
+                        MinWidth="180"
+                        FontSize="14"
+                        FontWeight="SemiBold"
                         Padding="24 0"
                         Command="{Binding SaveCommand}"
                         Style="{StaticResource PrimaryActionButtonStyle}">
@@ -368,8 +420,7 @@
                         <materialDesign:PackIcon Kind="Check"
                                                  Width="20"
                                                  Height="20"
-                                                 Margin="0 0 8 0"
-                                                 Foreground="White" />
+                                                 Margin="0 0 8 0" />
 
                         <TextBlock Text="{Binding SaveButtonText}" />
 
