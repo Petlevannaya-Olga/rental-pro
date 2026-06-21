@@ -80,5 +80,8 @@ public partial class App : Application
         
         services.AddSingleton<ToolEditViewModel>();
         services.AddSingleton<ToolEditView>();
+        
+        services.AddSingleton<ToolRentalHistoryViewModel>();
+        services.AddSingleton<ToolRentalHistoryView>();
     }
 }

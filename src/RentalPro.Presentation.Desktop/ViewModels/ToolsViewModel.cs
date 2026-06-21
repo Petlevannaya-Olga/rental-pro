@@ -16,6 +16,7 @@ public partial class ToolsViewModel(
     FakeToolGeneratorService fakeToolGeneratorService,
     ToolEditViewModel toolEditViewModel,
     NavigationService navigationService,
+    ToolRentalHistoryViewModel toolRentalHistoryViewModel,
     NotificationService notificationService)
     : ObservableObject
 {
@@ -112,6 +113,18 @@ public partial class ToolsViewModel(
 
     public bool CanGoNext => CurrentPage < TotalPages;
 
+    [RelayCommand]
+    private async Task OpenRentalHistoryAsync(ToolDto? tool)
+    {
+        if (tool is null)
+            return;
+
+        await toolRentalHistoryViewModel.OpenAsync(tool);
+
+        navigationService.NavigateTo<ToolRentalHistoryView>(
+            "История аренды");
+    }
+    
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -371,15 +384,6 @@ public partial class ToolsViewModel(
 
         navigationService.NavigateTo<ToolEditView>(
             "Редактирование инструмента");
-    }
-
-    [RelayCommand]
-    private void OpenRentalHistory(ToolDto? tool)
-    {
-        if (tool is null)
-            return;
-
-        notificationService.Info("История аренды инструмента будет добавлена позже");
     }
 
     [RelayCommand]

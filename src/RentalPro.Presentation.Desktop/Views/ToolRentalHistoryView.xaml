@@ -1,0 +1,282 @@
+<UserControl x:Class="RentalPro.Presentation.Desktop.Views.ToolRentalHistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="Transparent">
+
+    <Border Background="White"
+            CornerRadius="16"
+            Padding="24"
+            Margin="0 0 16 0">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="16" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Шапка -->
+            <StackPanel Grid.Row="0">
+
+                <Button HorizontalAlignment="Left"
+                        Command="{Binding BackCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="0"
+                        Cursor="Hand">
+
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent">
+                                <ContentPresenter />
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <materialDesign:PackIcon Grid.Column="0"
+                                                 Kind="ArrowLeft"
+                                                 Width="24"
+                                                 Height="24"
+                                                 Margin="0 0 10 0"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="#1E73FF" />
+
+                        <TextBlock Grid.Column="1"
+                                   Text="Назад к списку инструментов"
+                                   VerticalAlignment="Center"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#6B7890" />
+                    </Grid>
+                </Button>
+
+                <TextBlock Text="{Binding ToolName}"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="#071B39"
+                           Margin="0 24 0 0" />
+
+                <StackPanel Orientation="Horizontal"
+                            Margin="0 8 0 0">
+
+                    <TextBlock Text="Инв. № "
+                               Foreground="#94A3B8"
+                               FontSize="14" />
+
+                    <TextBlock Text="{Binding InventoryNumber}"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="#6B7890" />
+
+                    <TextBlock Text="   Сер. № "
+                               Margin="12 0 0 0"
+                               Foreground="#94A3B8"
+                               FontSize="14" />
+
+                    <TextBlock Text="{Binding SerialNumber}"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="#6B7890" />
+
+                </StackPanel>
+
+            </StackPanel>
+
+            <!-- Таблица -->
+            <DataGrid Grid.Row="2"
+                      ItemsSource="{Binding Items}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#EEF2F7"
+                      BorderThickness="0"
+                      RowHeight="68"
+                      Background="White"
+                      RowBackground="White"
+                      AlternatingRowBackground="White"
+                      Style="{StaticResource MaterialDesignDataGrid}">
+
+                <DataGrid.Columns>
+
+                    <DataGridTemplateColumn Header="Заказ"
+                                            Width="1.4*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding OrderNumber}"
+                                               FontWeight="SemiBold"
+                                               Foreground="#071B39" />
+
+                                    <TextBlock Text="{Binding OrderDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                               FontSize="12"
+                                               Foreground="#6B7890"
+                                               Margin="0 4 0 0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Клиент"
+                                            Width="2*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding CustomerFullName}"
+                                           VerticalAlignment="Center"
+                                           FontWeight="SemiBold"
+                                           Foreground="#071B39"
+                                           TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Начало"
+                                            Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="План"
+                                            Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding PlannedReturnDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Факт"
+                                            Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ActualReturnedDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Аренда"
+                                            Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding RentalAmount, StringFormat={}{0:N0} ₽}"
+                                           VerticalAlignment="Center"
+                                           FontWeight="SemiBold" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Статус"
+                                            Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="14"
+                                        Padding="12 6"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center">
+
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+
+                                            <Setter Property="Background"
+                                                    Value="#F1F5F9" />
+
+                                            <Style.Triggers>
+
+                                                <DataTrigger Binding="{Binding OrderStatusName}"
+                                                             Value="Подтвержден">
+                                                    <Setter Property="Background"
+                                                            Value="#DBEAFE" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding OrderStatusName}"
+                                                             Value="Готов к выдаче">
+                                                    <Setter Property="Background"
+                                                            Value="#DCFCE7" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding OrderStatusName}"
+                                                             Value="Выполняется">
+                                                    <Setter Property="Background"
+                                                            Value="#FEF3C7" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding OrderStatusName}"
+                                                             Value="Ожидает закрытия аренды">
+                                                    <Setter Property="Background"
+                                                            Value="#EDE9FE" />
+                                                </DataTrigger>
+
+                                            </Style.Triggers>
+
+                                        </Style>
+                                    </Border.Style>
+
+                                    <TextBlock Text="{Binding OrderStatusName}"
+                                               FontWeight="SemiBold"
+                                               FontSize="13">
+
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+
+                                                <Setter Property="Foreground"
+                                                        Value="#475569" />
+
+                                                <Style.Triggers>
+
+                                                    <DataTrigger Binding="{Binding OrderStatusName}"
+                                                                 Value="Подтвержден">
+                                                        <Setter Property="Foreground"
+                                                                Value="#2563EB" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding OrderStatusName}"
+                                                                 Value="Готов к выдаче">
+                                                        <Setter Property="Foreground"
+                                                                Value="#16A34A" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding OrderStatusName}"
+                                                                 Value="Выполняется">
+                                                        <Setter Property="Foreground"
+                                                                Value="#D97706" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding OrderStatusName}"
+                                                                 Value="Ожидает закрытия аренды">
+                                                        <Setter Property="Foreground"
+                                                                Value="#7C3AED" />
+                                                    </DataTrigger>
+
+                                                </Style.Triggers>
+
+                                            </Style>
+                                        </TextBlock.Style>
+
+                                    </TextBlock>
+
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+            </DataGrid>
+
+        </Grid>
+    </Border>
+</UserControl>
