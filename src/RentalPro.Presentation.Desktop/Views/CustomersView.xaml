@@ -5,7 +5,6 @@
              Background="Transparent">
 
     <UserControl.Resources>
-
         <Style x:Key="PrimaryCardButton"
                TargetType="Button">
 
@@ -247,8 +246,23 @@
                      Columns="5"
                      Margin="0 0 0 8">
 
-            <Border Style="{StaticResource StatCardStyle}"
-                    Cursor="Hand">
+            <!-- Всего клиентов -->
+            <Border Cursor="Hand">
+
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAllStatsSelected}"
+                                         Value="True">
+                                <Setter Property="Background"
+                                        Value="#F3F8FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </Border.Style>
 
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
@@ -257,9 +271,7 @@
                 </Border.InputBindings>
 
                 <StackPanel>
-
                     <DockPanel Margin="0 0 0 4">
-
                         <materialDesign:PackIcon Kind="AccountGroupOutline"
                                                  Width="22"
                                                  Height="22"
@@ -267,18 +279,30 @@
 
                         <TextBlock Text="Всего клиентов"
                                    Style="{StaticResource StatTitleStyle}" />
-
                     </DockPanel>
 
                     <TextBlock Text="{Binding TotalCustomers}"
                                Style="{StaticResource StatValueStyle}" />
-
                 </StackPanel>
-
             </Border>
 
-            <Border Style="{StaticResource StatCardStyle}"
-                    Cursor="Hand">
+            <!-- С заказами -->
+            <Border Cursor="Hand">
+
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsWithOrdersStatsSelected}"
+                                         Value="True">
+                                <Setter Property="Background"
+                                        Value="#F3F8FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </Border.Style>
 
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
@@ -287,9 +311,7 @@
                 </Border.InputBindings>
 
                 <StackPanel>
-
                     <DockPanel Margin="0 0 0 4">
-
                         <materialDesign:PackIcon Kind="ReceiptTextOutline"
                                                  Width="22"
                                                  Height="22"
@@ -297,18 +319,30 @@
 
                         <TextBlock Text="С заказами"
                                    Style="{StaticResource StatTitleStyle}" />
-
                     </DockPanel>
 
                     <TextBlock Text="{Binding WithOrdersCount}"
                                Style="{StaticResource StatValueStyle}" />
-
                 </StackPanel>
-
             </Border>
 
-            <Border Style="{StaticResource StatCardStyle}"
-                    Cursor="Hand">
+            <!-- Постоянные -->
+            <Border Cursor="Hand">
+
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRegularStatsSelected}"
+                                         Value="True">
+                                <Setter Property="Background"
+                                        Value="#F3F8FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </Border.Style>
 
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
@@ -317,9 +351,7 @@
                 </Border.InputBindings>
 
                 <StackPanel>
-
                     <DockPanel Margin="0 0 0 4">
-
                         <materialDesign:PackIcon Kind="StarOutline"
                                                  Width="22"
                                                  Height="22"
@@ -327,18 +359,30 @@
 
                         <TextBlock Text="Постоянные"
                                    Style="{StaticResource StatTitleStyle}" />
-
                     </DockPanel>
 
                     <TextBlock Text="{Binding RegularCustomersCount}"
                                Style="{StaticResource StatValueStyle}" />
-
                 </StackPanel>
-
             </Border>
 
-            <Border Style="{StaticResource StatCardStyle}"
-                    Cursor="Hand">
+            <!-- Активная аренда -->
+            <Border Cursor="Hand">
+
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsActiveStatsSelected}"
+                                         Value="True">
+                                <Setter Property="Background"
+                                        Value="#F3F8FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </Border.Style>
 
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
@@ -347,9 +391,7 @@
                 </Border.InputBindings>
 
                 <StackPanel>
-
                     <DockPanel Margin="0 0 0 4">
-
                         <materialDesign:PackIcon Kind="Tools"
                                                  Width="22"
                                                  Height="22"
@@ -357,16 +399,14 @@
 
                         <TextBlock Text="Активная аренда"
                                    Style="{StaticResource StatTitleStyle}" />
-
                     </DockPanel>
 
                     <TextBlock Text="{Binding WithActiveOrdersCount}"
                                Style="{StaticResource StatValueStyle}" />
-
                 </StackPanel>
-
             </Border>
 
+            <!-- Добавить клиента -->
             <Button Command="{Binding OpenCreateCustomerCommand}"
                     Style="{StaticResource PrimaryCardButton}"
                     Margin="0 0 12 12">

@@ -17,6 +17,16 @@ public partial class CustomersViewModel(
     NotificationService notificationService)
     : ObservableObject
 {
+    public bool IsAllStatsSelected => SelectedStatsFilter == "all";
+
+    public bool IsWithOrdersStatsSelected => SelectedStatsFilter == "withOrders";
+
+    public bool IsRegularStatsSelected => SelectedStatsFilter == "regular";
+
+    public bool IsActiveStatsSelected => SelectedStatsFilter == "active";
+    
+    private bool _isSelectingStatsFilter;
+    
     private const int PageSize = 5;
 
     [ObservableProperty]
@@ -123,7 +133,7 @@ public partial class CustomersViewModel(
     [RelayCommand]
     private async Task SelectStatsFilterAsync(string filter)
     {
-        SelectedStatsFilter = filter;
+        _isSelectingStatsFilter = true;
 
         switch (filter)
         {
@@ -152,6 +162,9 @@ public partial class CustomersViewModel(
                 break;
         }
 
+        _isSelectingStatsFilter = false;
+
+        SelectedStatsFilter = filter;
         CurrentPage = 1;
 
         await LoadCustomersAsync();
@@ -477,6 +490,14 @@ public partial class CustomersViewModel(
         }
     }
 
+    partial void OnSelectedStatsFilterChanged(string? value)
+    {
+        OnPropertyChanged(nameof(IsAllStatsSelected));
+        OnPropertyChanged(nameof(IsWithOrdersStatsSelected));
+        OnPropertyChanged(nameof(IsRegularStatsSelected));
+        OnPropertyChanged(nameof(IsActiveStatsSelected));
+    }
+    
     private void RefreshPaging()
     {
         OnPropertyChanged(nameof(TotalPages));
@@ -496,24 +517,6 @@ public partial class CustomersViewModel(
             : value.Trim();
     }
 
-    partial void OnOrdersFilterChanged(string? value)
-    {
-        SelectedStatsFilter = null;
-        _ = ApplyFiltersAsync();
-    }
-
-    partial void OnRegularFilterChanged(string? value)
-    {
-        SelectedStatsFilter = null;
-        _ = ApplyFiltersAsync();
-    }
-
-    partial void OnActiveOrdersFilterChanged(string? value)
-    {
-        SelectedStatsFilter = null;
-        _ = ApplyFiltersAsync();
-    }
-
     partial void OnSearchChanged(string? value)
     {
         _ = SearchAsync();
@@ -522,5 +525,32 @@ public partial class CustomersViewModel(
     partial void OnSelectedCustomerChanged(CustomerDto? value)
     {
         OpenCustomerDetailsCommand.NotifyCanExecuteChanged();
+    }
+    
+    partial void OnOrdersFilterChanged(string? value)
+    {
+        if (_isSelectingStatsFilter)
+            return;
+
+        SelectedStatsFilter = null;
+        _ = ApplyFiltersAsync();
+    }
+
+    partial void OnRegularFilterChanged(string? value)
+    {
+        if (_isSelectingStatsFilter)
+            return;
+
+        SelectedStatsFilter = null;
+        _ = ApplyFiltersAsync();
+    }
+
+    partial void OnActiveOrdersFilterChanged(string? value)
+    {
+        if (_isSelectingStatsFilter)
+            return;
+
+        SelectedStatsFilter = null;
+        _ = ApplyFiltersAsync();
     }
 }
