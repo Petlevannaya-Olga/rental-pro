@@ -11,17 +11,21 @@
                                              PrimaryColor="Blue"
                                              SecondaryColor="LightBlue" />
 
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary
+                    Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <Style TargetType="ScrollBar">
-                <Setter Property="Width" Value="8" />
+
+                <Setter Property="Width" Value="14" />
                 <Setter Property="Background" Value="Transparent" />
 
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ScrollBar">
+
                             <Grid Background="Transparent">
+
                                 <Track x:Name="PART_Track"
                                        IsDirectionReversed="True">
 
@@ -35,10 +39,13 @@
 
                                     <Track.Thumb>
                                         <Thumb>
+
                                             <Thumb.Template>
                                                 <ControlTemplate TargetType="Thumb">
+
                                                     <Border x:Name="ThumbBorder"
                                                             Width="8"
+                                                            HorizontalAlignment="Center"
                                                             CornerRadius="4"
                                                             Background="#C7D4EA" />
 
@@ -50,16 +57,21 @@
                                                                     Value="#1E73FF" />
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
+
                                                 </ControlTemplate>
                                             </Thumb.Template>
+
                                         </Thumb>
                                     </Track.Thumb>
 
                                 </Track>
+
                             </Grid>
+
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+
             </Style>
 
         </ResourceDictionary>

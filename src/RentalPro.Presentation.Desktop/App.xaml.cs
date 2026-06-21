@@ -45,6 +45,7 @@ public partial class App : Application
             .AddHttpMessageHandler<AuthHeaderHandler>();
 
         services.AddSingleton<NavigationService>();
+        
         services.AddTransient<DashboardApiClient>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<DashboardView>();
@@ -58,8 +59,9 @@ public partial class App : Application
         services.AddTransient<CustomersApiClient>();
         services.AddTransient<CustomersView>();
         services.AddTransient<CustomersViewModel>();
-        
+        services.AddSingleton<CustomerEditViewModel>();
         services.AddTransient<CustomerEditView>();
-        services.AddTransient<CustomerEditViewModel>();
+        
+        services.AddSingleton<FakeCustomerGeneratorService>();
     }
 }

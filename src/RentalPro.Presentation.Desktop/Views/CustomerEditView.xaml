@@ -6,23 +6,34 @@
 
     <UserControl.Resources>
 
-        <Style x:Key="FormCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="#F8FAFD" />
-            <Setter Property="BorderBrush" Value="#DDE6F2" />
-            <Setter Property="BorderThickness" Value="1" />
+        <Style x:Key="FormCardStyle"
+               TargetType="Border">
+
+            <Setter Property="Background" Value="White" />
             <Setter Property="CornerRadius" Value="16" />
-            <Setter Property="Padding" Value="22" />
+            <Setter Property="Padding" Value="24" />
+
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="10"
+                                      ShadowDepth="1"
+                                      Opacity="0.05" />
+                </Setter.Value>
+            </Setter>
+
         </Style>
 
         <Style x:Key="PrimaryActionButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource MaterialDesignFlatButton}">
+
             <Setter Property="Background" Value="#1E73FF" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="Height" Value="48" />
             <Setter Property="Padding" Value="22 0" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12" />
+
         </Style>
 
     </UserControl.Resources>
@@ -39,23 +50,44 @@
         <Button Grid.Row="0"
                 HorizontalAlignment="Left"
                 Command="{Binding BackCommand}"
-                Style="{StaticResource MaterialDesignFlatButton}"
+                Background="Transparent"
+                BorderThickness="0"
                 Padding="0"
-                Margin="0 0 0 16">
+                Margin="0 0 0 16"
+                Cursor="Hand">
 
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="ArrowLeft"
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="Transparent">
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Button.Template>
+
+            <Grid>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <materialDesign:PackIcon Grid.Column="0"
+                                         Kind="ArrowLeft"
                                          Width="24"
                                          Height="24"
-                                         Margin="0 0 8 0"
+                                         Margin="0 0 10 0"
+                                         VerticalAlignment="Center"
                                          Foreground="#1E73FF" />
 
-                <TextBlock Text="Назад к списку клиентов"
+                <TextBlock Grid.Column="1"
+                           Text="Назад к списку клиентов"
                            VerticalAlignment="Center"
                            FontSize="14"
                            FontWeight="SemiBold"
                            Foreground="#6B7890" />
-            </StackPanel>
+
+            </Grid>
+
         </Button>
 
         <!-- Скроллится только форма -->
@@ -73,19 +105,19 @@
 
                 <!-- Данные клиента -->
                 <Border Grid.Row="0"
-                        Style="{StaticResource FormCardStyle}">
+                        Style="{StaticResource FormCardStyle}"
+                        Margin="0 0 12 0">
 
                     <Grid>
+
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="1" />
-                            <RowDefinition Height="20" />
+                            <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0"
-                                    Orientation="Horizontal"
-                                    Margin="0 0 0 16">
+                                    Orientation="Horizontal">
 
                             <materialDesign:PackIcon Kind="AccountOutline"
                                                      Width="24"
@@ -97,13 +129,10 @@
                                        FontSize="18"
                                        FontWeight="SemiBold"
                                        Foreground="#17233A" />
+
                         </StackPanel>
 
-                        <Border Grid.Row="1"
-                                Height="1"
-                                Background="#DDE6F2" />
-
-                        <Grid Grid.Row="3">
+                        <Grid Grid.Row="2">
 
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -171,24 +200,26 @@
                                      Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
 
                         </Grid>
+
                     </Grid>
+
                 </Border>
 
                 <!-- Адрес -->
                 <Border Grid.Row="2"
-                        Style="{StaticResource FormCardStyle}">
+                        Style="{StaticResource FormCardStyle}"
+                        Margin="0 0 12 0">
 
                     <Grid>
+
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="1" />
-                            <RowDefinition Height="20" />
+                            <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0"
-                                    Orientation="Horizontal"
-                                    Margin="0 0 0 16">
+                                    Orientation="Horizontal">
 
                             <materialDesign:PackIcon Kind="MapMarkerOutline"
                                                      Width="24"
@@ -200,13 +231,10 @@
                                        FontSize="18"
                                        FontWeight="SemiBold"
                                        Foreground="#17233A" />
+
                         </StackPanel>
 
-                        <Border Grid.Row="1"
-                                Height="1"
-                                Background="#DDE6F2" />
-
-                        <Grid Grid.Row="3">
+                        <Grid Grid.Row="2">
 
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -268,17 +296,19 @@
 
                             <TextBox Grid.Row="4"
                                      Grid.Column="0"
-                                     Grid.ColumnSpan="1"
                                      Text="{Binding Customer.Apartment, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Квартира/офис"
                                      Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
 
                         </Grid>
+
                     </Grid>
+
                 </Border>
 
             </Grid>
+
         </ScrollViewer>
 
         <!-- Нижняя панель -->
@@ -286,15 +316,11 @@
               Margin="0 22 0 0">
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="1" />
                 <RowDefinition Height="18" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0"
-                    Background="#DDE6F2" />
-
-            <TextBlock Grid.Row="2"
+           <TextBlock Grid.Row="2"
                        Text="{Binding ErrorMessage}"
                        Foreground="#DC2626"
                        FontSize="13"
@@ -320,13 +346,16 @@
                         Style="{StaticResource MaterialDesignOutlinedButton}">
 
                     <StackPanel Orientation="Horizontal">
+
                         <materialDesign:PackIcon Kind="MagicWand"
                                                  Width="20"
                                                  Height="20"
                                                  Margin="0 0 8 0" />
 
                         <TextBlock Text="Заполнить тестовыми данными" />
+
                     </StackPanel>
+
                 </Button>
 
                 <Button Height="48"
@@ -335,6 +364,7 @@
                         Style="{StaticResource PrimaryActionButtonStyle}">
 
                     <StackPanel Orientation="Horizontal">
+
                         <materialDesign:PackIcon Kind="Check"
                                                  Width="20"
                                                  Height="20"
@@ -342,11 +372,15 @@
                                                  Foreground="White" />
 
                         <TextBlock Text="{Binding SaveButtonText}" />
+
                     </StackPanel>
+
                 </Button>
 
             </StackPanel>
+
         </Grid>
 
     </Grid>
+
 </UserControl>

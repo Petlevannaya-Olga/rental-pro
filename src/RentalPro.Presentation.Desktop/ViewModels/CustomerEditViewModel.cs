@@ -2,11 +2,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RentalPro.Contracts.Customers;
 using RentalPro.Presentation.Desktop.Api;
+using RentalPro.Presentation.Desktop.Services;
+using RentalPro.Presentation.Desktop.Views;
 
 namespace RentalPro.Presentation.Desktop.ViewModels;
 
 public partial class CustomerEditViewModel(
-    CustomersApiClient customersApiClient)
+    CustomersApiClient customersApiClient,
+    NavigationService navigationService,
+    FakeCustomerGeneratorService fakeCustomerGeneratorService)
     : ObservableObject
 {
     [ObservableProperty]
@@ -21,11 +25,18 @@ public partial class CustomerEditViewModel(
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool isSaving;
+
     public string Title =>
-        IsEditMode ? "Редактирование клиента" : "Добавление клиента";
+        IsEditMode
+            ? "Редактирование клиента"
+            : "Добавление клиента";
 
     public string SaveButtonText =>
-        IsEditMode ? "Сохранить изменения" : "Сохранить";
+        IsEditMode
+            ? "Сохранить изменения"
+            : "Сохранить клиента";
 
     public void OpenCreate()
     {
@@ -33,9 +44,12 @@ public partial class CustomerEditViewModel(
         CustomerId = null;
         Customer = new CustomerEditModel();
         ErrorMessage = string.Empty;
+        IsSaving = false;
 
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(SaveButtonText));
+
+        SaveCommand.NotifyCanExecuteChanged();
     }
 
     public void OpenEdit(CustomerDto dto)
@@ -43,6 +57,7 @@ public partial class CustomerEditViewModel(
         IsEditMode = true;
         CustomerId = dto.Id;
         ErrorMessage = string.Empty;
+        IsSaving = false;
 
         Customer = new CustomerEditModel
         {
@@ -64,24 +79,52 @@ public partial class CustomerEditViewModel(
 
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(SaveButtonText));
+
+        SaveCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
+    private void Back()
+    {
+        navigationService.NavigateTo<CustomersView>("Клиенты");
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
         try
         {
+            IsSaving = true;
             ErrorMessage = string.Empty;
 
             if (IsEditMode)
                 await UpdateAsync();
             else
                 await CreateAsync();
+
+            navigationService.NavigateTo<CustomersView>("Клиенты");
         }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
         }
+        finally
+        {
+            IsSaving = false;
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+    }
+    
+    [RelayCommand]
+    private void FillTestData()
+    {
+        Customer = fakeCustomerGeneratorService.Generate();
+        ErrorMessage = string.Empty;
+    }
+
+    private bool CanSave()
+    {
+        return !IsSaving;
     }
 
     private async Task CreateAsync()
@@ -108,7 +151,7 @@ public partial class CustomerEditViewModel(
     private async Task UpdateAsync()
     {
         if (CustomerId is null)
-            return;
+            throw new InvalidOperationException("Не выбран клиент для редактирования");
 
         var request = new UpdateCustomerRequest(
             Customer.LastName,
@@ -127,5 +170,10 @@ public partial class CustomerEditViewModel(
             Customer.Apartment);
 
         await customersApiClient.UpdateCustomerAsync(CustomerId.Value, request);
+    }
+
+    partial void OnIsSavingChanged(bool value)
+    {
+        SaveCommand.NotifyCanExecuteChanged();
     }
 }
