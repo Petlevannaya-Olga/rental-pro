@@ -421,7 +421,7 @@
                           SelectedItem="{Binding SelectedTool, Mode=TwoWay}"
                           Sorting="ToolsDataGrid_OnSorting"
                           Style="{StaticResource ToolsDataGridStyle}">
-                    
+
                     <DataGrid.InputBindings>
                         <MouseBinding MouseAction="LeftDoubleClick"
                                       Command="{Binding OpenViewToolCommand}"
@@ -714,14 +714,31 @@
                                                             Background="#E5EAF2" />
 
                                                     <!-- Нижние действия -->
+                                                    <!-- Нижние действия -->
                                                     <StackPanel Grid.Row="2"
                                                                 Margin="0 8">
 
+                                                        <!-- Перевести в ремонт -->
                                                         <Button
                                                             Command="{Binding DataContext.MoveToRepairCommand,
-                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                            CommandParameter="{Binding}"
-                                                            Style="{StaticResource ActionsMenuButtonStyle}">
+                              RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}">
+
+                                                            <Button.Style>
+                                                                <Style TargetType="Button"
+                                                                       BasedOn="{StaticResource ActionsMenuButtonStyle}">
+                                                                    <Setter Property="Visibility"
+                                                                            Value="Collapsed" />
+
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding StatusName}"
+                                                                                Value="Доступен">
+                                                                            <Setter Property="Visibility"
+                                                                                    Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
 
                                                             <Grid Margin="18 0 16 0">
                                                                 <Grid.ColumnDefinitions>
@@ -743,9 +760,93 @@
                                                             </Grid>
                                                         </Button>
 
+                                                        <!-- Завершить ремонт -->
+                                                        <Button
+                                                            Command="{Binding DataContext.CompleteRepairCommand,
+                              RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}">
+
+                                                            <Button.Style>
+                                                                <Style TargetType="Button"
+                                                                       BasedOn="{StaticResource ActionsMenuButtonStyle}">
+                                                                    <Setter Property="Visibility"
+                                                                            Value="Collapsed" />
+
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding StatusName}"
+                                                                                Value="На ремонте">
+                                                                            <Setter Property="Visibility"
+                                                                                    Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+
+                                                            <Grid Margin="18 0 16 0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="28" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <materialDesign:PackIcon Grid.Column="0"
+                                                                        Kind="CheckCircleOutline"
+                                                                        Width="19"
+                                                                        Height="19"
+                                                                        Foreground="#16A34A" />
+
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="Завершить ремонт"
+                                                                           FontSize="14"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#334155" />
+                                                            </Grid>
+                                                        </Button>
+
+                                                        <!-- Списать -->
+                                                        <Button
+                                                            Command="{Binding DataContext.WriteOffCommand,
+                              RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}">
+
+                                                            <Button.Style>
+                                                                <Style TargetType="Button"
+                                                                       BasedOn="{StaticResource ActionsMenuButtonStyle}">
+                                                                    <Setter Property="Visibility"
+                                                                            Value="Collapsed" />
+
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding StatusName}"
+                                                                                Value="На ремонте">
+                                                                            <Setter Property="Visibility"
+                                                                                    Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+
+                                                            <Grid Margin="18 0 16 0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="28" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <materialDesign:PackIcon Grid.Column="0"
+                                                                        Kind="DeleteOutline"
+                                                                        Width="19"
+                                                                        Height="19"
+                                                                        Foreground="#DC2626" />
+
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="Списать"
+                                                                           FontSize="14"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#DC2626" />
+                                                            </Grid>
+                                                        </Button>
+
                                                         <Button
                                                             Command="{Binding DataContext.DeleteToolCommand,
-                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                              RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource ActionsDangerButtonStyle}">
 
@@ -767,6 +868,7 @@
                                                                            FontWeight="SemiBold"
                                                                            Foreground="#DC2626" />
                                                             </Grid>
+
                                                         </Button>
 
                                                     </StackPanel>

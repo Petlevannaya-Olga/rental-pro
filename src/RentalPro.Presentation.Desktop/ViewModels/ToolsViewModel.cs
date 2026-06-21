@@ -112,6 +112,15 @@ public partial class ToolsViewModel(
     public bool CanGoPrevious => CurrentPage > 1;
 
     public bool CanGoNext => CurrentPage < TotalPages;
+    
+    public bool CanSendToRepair =>
+        SelectedTool?.StatusName == "Доступен";
+    
+    public bool CanCompleteRepair =>
+        SelectedTool?.StatusName == "На ремонте";
+    
+    public bool CanWriteOff =>
+        SelectedTool?.StatusName == "На ремонте";
 
     [RelayCommand]
     private async Task OpenRentalHistoryAsync(ToolDto? tool)
@@ -655,5 +664,72 @@ public partial class ToolsViewModel(
 
     partial void OnSelectedToolChanged(ToolDto? value)
     {
+    }
+    
+    [RelayCommand]
+    private async Task SendToRepairAsync()
+    {
+        if (SelectedTool is null)
+            return;
+
+        await ChangeToolStatusAsync(
+            SelectedTool,
+            "На ремонте");
+    }
+
+    [RelayCommand]
+    private async Task CompleteRepairAsync()
+    {
+        if (SelectedTool is null)
+            return;
+
+        await ChangeToolStatusAsync(
+            SelectedTool,
+            "Доступен");
+    }
+
+    [RelayCommand]
+    private async Task WriteOffAsync()
+    {
+        if (SelectedTool is null)
+            return;
+
+        await ChangeToolStatusAsync(
+            SelectedTool,
+            "Списан");
+    }
+    
+    private async Task ChangeToolStatusAsync(
+        ToolDto tool,
+        string statusName)
+    {
+        var status = Statuses
+            .FirstOrDefault(x => x.Name == statusName);
+
+        if (status is null)
+        {
+            notificationService.Error(
+                $"Статус «{statusName}» не найден");
+
+            return;
+        }
+
+        var result = await toolsApiClient.ChangeToolStatusAsync(
+            tool.Id,
+            status.Id);
+
+        if (result.IsFailure)
+        {
+            notificationService.Error(
+                result.Error.Message);
+
+            return;
+        }
+
+        notificationService.Success(
+            $"Инструмент «{tool.Name}» переведен в статус «{statusName}»");
+
+        await LoadToolsAsync();
+        await LoadStatsAsync();
     }
 }
