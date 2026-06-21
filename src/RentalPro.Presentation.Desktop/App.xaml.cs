@@ -69,5 +69,13 @@ public partial class App : Application
         
         services.AddSingleton<CustomerOrderHistoryViewModel>();
         services.AddSingleton<CustomerOrderHistoryView>();
+        
+        services.AddSingleton<DictionariesApiClient>();
+        
+        services.AddSingleton<ToolsApiClient>();
+        services.AddSingleton<FakeToolGeneratorService>();
+
+        services.AddSingleton<ToolsViewModel>();
+        services.AddSingleton<ToolsView>();
     }
 }

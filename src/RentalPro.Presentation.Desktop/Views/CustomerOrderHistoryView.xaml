@@ -16,36 +16,54 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <!-- Шапка -->
+            <StackPanel Grid.Row="0">
 
-                <StackPanel>
-                    <TextBlock Text="История заказов"
-                               FontSize="20"
-                               FontWeight="SemiBold"
-                               Foreground="#071B39" />
-
-                    <TextBlock Text="{Binding CustomerFullName}"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="#6B7890"
-                               Margin="0 8 0 0" />
-                </StackPanel>
-
-                <Button Grid.Column="1"
+                <Button HorizontalAlignment="Left"
                         Command="{Binding BackCommand}"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Назад">
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="0"
+                        Cursor="Hand">
 
-                    <materialDesign:PackIcon Kind="Close"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="#64748B" />
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent">
+                                <ContentPresenter />
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <materialDesign:PackIcon Grid.Column="0"
+                                                 Kind="ArrowLeft"
+                                                 Width="24"
+                                                 Height="24"
+                                                 Margin="0 0 10 0"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="#1E73FF" />
+
+                        <TextBlock Grid.Column="1"
+                                   Text="Назад к списку клиентов"
+                                   VerticalAlignment="Center"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#6B7890" />
+                    </Grid>
                 </Button>
-            </Grid>
+
+                <TextBlock Text="{Binding CustomerFullName}"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="#071B39"
+                           Margin="0 24 0 0" />
+
+            </StackPanel>
 
             <DataGrid Grid.Row="2"
                       ItemsSource="{Binding Orders}"
@@ -65,15 +83,13 @@
 
                 <DataGrid.Columns>
 
-                    <DataGridTemplateColumn Header="Заказ"
-                                            Width="2*">
+                    <DataGridTemplateColumn Header="Заказ" Width="2*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Number}"
                                                FontWeight="SemiBold"
                                                Foreground="#071B39" />
-
                                     <TextBlock Text="{Binding OrderDate, StringFormat={}{0:dd.MM.yyyy}}"
                                                FontSize="12"
                                                Foreground="#6B7890"
@@ -83,38 +99,152 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="Инстр."
-                                        Binding="{Binding ToolsCount}"
-                                        Width="90" />
-
-                    <DataGridTextColumn Header="Выдача"
-                                        Binding="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
-                                        Width="140" />
-
-                    <DataGridTemplateColumn Header="Статус"
-                                            Width="220">
+                    <DataGridTemplateColumn Header="Инстр." Width="90">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border Background="#FFF1DC"
-                                        CornerRadius="14"
+                                <TextBlock Text="{Binding ToolsCount}"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Выдача" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Статус" Width="240">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="14"
                                         Padding="12 6"
-                                        HorizontalAlignment="Left">
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center">
+
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+
+                                            <Setter Property="Background"
+                                                    Value="#FFF1DC" />
+
+                                            <Style.Triggers>
+
+                                                <DataTrigger Binding="{Binding StatusName}"
+                                                             Value="Завершен">
+                                                    <Setter Property="Background"
+                                                            Value="#DCFCE7" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding StatusName}"
+                                                             Value="Выполняется">
+                                                    <Setter Property="Background"
+                                                            Value="#DBEAFE" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding StatusName}"
+                                                             Value="Готов к выдаче">
+                                                    <Setter Property="Background"
+                                                            Value="#E0E7FF" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding StatusName}"
+                                                             Value="Подтвержден">
+                                                    <Setter Property="Background"
+                                                            Value="#FEF3C7" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding StatusName}"
+                                                             Value="Отменен">
+                                                    <Setter Property="Background"
+                                                            Value="#F1F5F9" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding StatusName}"
+                                                             Value="Ожидает закрытия аренды">
+                                                    <Setter Property="Background"
+                                                            Value="#FFF1DC" />
+                                                </DataTrigger>
+
+                                            </Style.Triggers>
+
+                                        </Style>
+                                    </Border.Style>
+
                                     <TextBlock Text="{Binding StatusName}"
-                                               Foreground="#F97316"
                                                FontWeight="SemiBold"
-                                               FontSize="13" />
+                                               FontSize="13">
+
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+
+                                                <Setter Property="Foreground"
+                                                        Value="#F97316" />
+
+                                                <Style.Triggers>
+
+                                                    <DataTrigger Binding="{Binding StatusName}"
+                                                                 Value="Завершен">
+                                                        <Setter Property="Foreground"
+                                                                Value="#16A34A" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}"
+                                                                 Value="Выполняется">
+                                                        <Setter Property="Foreground"
+                                                                Value="#2563EB" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}"
+                                                                 Value="Готов к выдаче">
+                                                        <Setter Property="Foreground"
+                                                                Value="#4F46E5" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}"
+                                                                 Value="Подтвержден">
+                                                        <Setter Property="Foreground"
+                                                                Value="#D97706" />
+                                                    </DataTrigger>
+
+                                                   <DataTrigger Binding="{Binding StatusName}"
+                                                                 Value="Отменен">
+                                                        <Setter Property="Foreground"
+                                                                Value="#64748B" />
+                                                    </DataTrigger>
+
+                                                </Style.Triggers>
+
+                                            </Style>
+                                        </TextBlock.Style>
+
+                                    </TextBlock>
+
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="Аренда"
-                                        Binding="{Binding RentalAmount, StringFormat={}{0:N0} ₽}"
-                                        Width="140" />
+                    <DataGridTemplateColumn Header="Аренда" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding RentalAmount, StringFormat={}{0:N0} ₽}"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="Залог"
-                                        Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
-                                        Width="140" />
+                    <DataGridTemplateColumn Header="Залог" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                 </DataGrid.Columns>
             </DataGrid>

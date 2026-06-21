@@ -1,77 +1,10 @@
-<UserControl x:Class="RentalPro.Presentation.Desktop.Views.CustomersView"
+<UserControl x:Class="RentalPro.Presentation.Desktop.Views.ToolsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Background="Transparent">
 
     <UserControl.Resources>
-        <Style x:Key="PrimaryCardButton"
-               TargetType="Button">
-
-            <Setter Property="Background" Value="#1E73FF" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Height" Value="72" />
-            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12" />
-
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="12">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root"
-                                        Property="Background"
-                                        Value="#1664E8" />
-                            </Trigger>
-
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root"
-                                        Property="Background"
-                                        Value="#0F56C9" />
-                            </Trigger>
-
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Root"
-                                        Property="Opacity"
-                                        Value="0.55" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="PrimaryActionButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource MaterialDesignFlatButton}">
-
-            <Setter Property="Background" Value="#1E73FF" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Height" Value="40" />
-            <Setter Property="Padding" Value="18 0" />
-            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12" />
-
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1664E8" />
-                    <Setter Property="Foreground" Value="White" />
-                </Trigger>
-
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#0F56C9" />
-                    <Setter Property="Foreground" Value="White" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White" />
@@ -108,72 +41,28 @@
             <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
-        <Style x:Key="DashboardDataGridStyle"
+        <Style x:Key="ToolsDataGridStyle"
                TargetType="DataGrid"
                BasedOn="{StaticResource MaterialDesignDataGrid}">
 
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="RowBackground" Value="White" />
             <Setter Property="AlternatingRowBackground" Value="White" />
-
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
             <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7" />
             <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
-
             <Setter Property="AutoGenerateColumns" Value="False" />
             <Setter Property="CanUserAddRows" Value="False" />
             <Setter Property="CanUserDeleteRows" Value="False" />
             <Setter Property="CanUserResizeRows" Value="False" />
             <Setter Property="CanUserSortColumns" Value="True" />
             <Setter Property="IsReadOnly" Value="True" />
-
-            <Setter Property="MinRowHeight" Value="58" />
-
+            <Setter Property="MinRowHeight" Value="64" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="SelectionMode" Value="Single" />
             <Setter Property="SelectionUnit" Value="FullRow" />
-
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-
-            <Setter Property="CellStyle">
-                <Setter.Value>
-                    <Style TargetType="DataGridCell"
-                           BasedOn="{StaticResource MaterialDesignDataGridCell}">
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                    </Style>
-                </Setter.Value>
-            </Setter>
-
-            <Setter Property="ColumnHeaderStyle">
-                <Setter.Value>
-                    <Style TargetType="DataGridColumnHeader"
-                           BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CenteredColumnHeaderStyle"
-               TargetType="DataGridColumnHeader"
-               BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-
-            <Setter Property="HorizontalContentAlignment"
-                    Value="Center" />
-
-            <Setter Property="VerticalContentAlignment"
-                    Value="Center" />
-        </Style>
-
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-
-        <Style x:Key="ActionsPopupBoxStyle"
-               TargetType="materialDesign:PopupBox">
-
-            <Setter Property="Foreground" Value="#1E73FF" />
-            <Setter Property="Padding" Value="0" />
         </Style>
 
         <Style x:Key="ActionsMenuButtonStyle"
@@ -206,61 +95,103 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
+        
         <Style x:Key="ActionsDangerButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource ActionsMenuButtonStyle}">
             <Setter Property="Foreground" Value="#DC2626" />
         </Style>
-
-        <Style x:Key="DataGridRowHoverStyle"
-               TargetType="DataGridRow">
-
-            <Setter Property="Cursor"
-                    Value="Hand" />
-
-            <Style.Triggers>
-
-                <Trigger Property="IsMouseOver"
-                         Value="True">
-
-                    <Setter Property="Background"
-                            Value="#F8FAFC" />
-
-                </Trigger>
-
-            </Style.Triggers>
-
+        
+        <Style x:Key="CenteredCellTextStyle"
+               TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment"
+                    Value="Left" />
+            <Setter Property="TextAlignment"
+                    Value="Center" />
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
         </Style>
+        
+        <Style x:Key="PrimaryCardButton"
+               TargetType="Button">
+
+            <Setter Property="Background" Value="#1E73FF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="72" />
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="12">
+
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#1664E8" />
+
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#0F56C9" />
+
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+
+                                <Setter TargetName="Root"
+                                        Property="Opacity"
+                                        Value="0.55" />
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
     </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Верхние карточки -->
+        <!-- Карточки -->
         <UniformGrid Grid.Row="0"
                      Columns="5"
                      Margin="0 0 0 8">
 
-            <!-- Всего клиентов -->
+            <!-- Всего -->
             <Border Cursor="Hand">
-
                 <Border.Style>
-                    <Style TargetType="Border"
-                           BasedOn="{StaticResource StatCardStyle}">
-
+                    <Style TargetType="Border" BasedOn="{StaticResource StatCardStyle}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsAllStatsSelected}"
-                                         Value="True">
-                                <Setter Property="Background"
-                                        Value="#F3F8FF" />
+                            <DataTrigger Binding="{Binding IsAllStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
                             </DataTrigger>
                         </Style.Triggers>
-
                     </Style>
                 </Border.Style>
 
@@ -272,155 +203,132 @@
 
                 <StackPanel>
                     <DockPanel Margin="0 0 0 4">
-                        <materialDesign:PackIcon Kind="AccountGroupOutline"
-                                                 Width="22"
-                                                 Height="22"
-                                                 Foreground="#1E73FF" />
-
-                        <TextBlock Text="Всего клиентов"
-                                   Style="{StaticResource StatTitleStyle}" />
-                    </DockPanel>
-
-                    <TextBlock Text="{Binding TotalCustomers}"
-                               Style="{StaticResource StatValueStyle}" />
-                </StackPanel>
-            </Border>
-
-            <!-- С заказами -->
-            <Border Cursor="Hand">
-
-                <Border.Style>
-                    <Style TargetType="Border"
-                           BasedOn="{StaticResource StatCardStyle}">
-
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsWithOrdersStatsSelected}"
-                                         Value="True">
-                                <Setter Property="Background"
-                                        Value="#F3F8FF" />
-                            </DataTrigger>
-                        </Style.Triggers>
-
-                    </Style>
-                </Border.Style>
-
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding SelectStatsFilterCommand}"
-                                  CommandParameter="withOrders" />
-                </Border.InputBindings>
-
-                <StackPanel>
-                    <DockPanel Margin="0 0 0 4">
-                        <materialDesign:PackIcon Kind="ReceiptTextOutline"
-                                                 Width="22"
-                                                 Height="22"
-                                                 Foreground="#F97316" />
-
-                        <TextBlock Text="С заказами"
-                                   Style="{StaticResource StatTitleStyle}" />
-                    </DockPanel>
-
-                    <TextBlock Text="{Binding WithOrdersCount}"
-                               Style="{StaticResource StatValueStyle}" />
-                </StackPanel>
-            </Border>
-
-            <!-- Постоянные -->
-            <Border Cursor="Hand">
-
-                <Border.Style>
-                    <Style TargetType="Border"
-                           BasedOn="{StaticResource StatCardStyle}">
-
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsRegularStatsSelected}"
-                                         Value="True">
-                                <Setter Property="Background"
-                                        Value="#F3F8FF" />
-                            </DataTrigger>
-                        </Style.Triggers>
-
-                    </Style>
-                </Border.Style>
-
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding SelectStatsFilterCommand}"
-                                  CommandParameter="regular" />
-                </Border.InputBindings>
-
-                <StackPanel>
-                    <DockPanel Margin="0 0 0 4">
-                        <materialDesign:PackIcon Kind="StarOutline"
-                                                 Width="22"
-                                                 Height="22"
-                                                 Foreground="#7C3AED" />
-
-                        <TextBlock Text="Постоянные"
-                                   Style="{StaticResource StatTitleStyle}" />
-                    </DockPanel>
-
-                    <TextBlock Text="{Binding RegularCustomersCount}"
-                               Style="{StaticResource StatValueStyle}" />
-                </StackPanel>
-            </Border>
-
-            <!-- Активная аренда -->
-            <Border Cursor="Hand">
-
-                <Border.Style>
-                    <Style TargetType="Border"
-                           BasedOn="{StaticResource StatCardStyle}">
-
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsActiveStatsSelected}"
-                                         Value="True">
-                                <Setter Property="Background"
-                                        Value="#F3F8FF" />
-                            </DataTrigger>
-                        </Style.Triggers>
-
-                    </Style>
-                </Border.Style>
-
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding SelectStatsFilterCommand}"
-                                  CommandParameter="active" />
-                </Border.InputBindings>
-
-                <StackPanel>
-                    <DockPanel Margin="0 0 0 4">
                         <materialDesign:PackIcon Kind="Tools"
                                                  Width="22"
                                                  Height="22"
-                                                 Foreground="#16A34A" />
-
-                        <TextBlock Text="Активная аренда"
+                                                 Foreground="#1E73FF" />
+                        <TextBlock Text="Всего инструментов"
                                    Style="{StaticResource StatTitleStyle}" />
                     </DockPanel>
 
-                    <TextBlock Text="{Binding WithActiveOrdersCount}"
+                    <TextBlock Text="{Binding TotalTools}"
                                Style="{StaticResource StatValueStyle}" />
                 </StackPanel>
             </Border>
 
-            <!-- Добавить клиента -->
-            <Button Command="{Binding OpenCreateCustomerCommand}"
+            <!-- Доступно -->
+            <Border Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StatCardStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAvailableStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding SelectStatsFilterCommand}"
+                                  CommandParameter="available" />
+                </Border.InputBindings>
+
+                <StackPanel>
+                    <DockPanel Margin="0 0 0 4">
+                        <materialDesign:PackIcon Kind="CheckCircleOutline"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#16A34A" />
+                        <TextBlock Text="Доступно"
+                                   Style="{StaticResource StatTitleStyle}" />
+                    </DockPanel>
+
+                    <TextBlock Text="{Binding AvailableCount}"
+                               Style="{StaticResource StatValueStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- В аренде -->
+            <Border Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StatCardStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRentedStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding SelectStatsFilterCommand}"
+                                  CommandParameter="rented" />
+                </Border.InputBindings>
+
+                <StackPanel>
+                    <DockPanel Margin="0 0 0 4">
+                        <materialDesign:PackIcon Kind="SwapHorizontal"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#F97316" />
+                        <TextBlock Text="В аренде"
+                                   Style="{StaticResource StatTitleStyle}" />
+                    </DockPanel>
+
+                    <TextBlock Text="{Binding RentedCount}"
+                               Style="{StaticResource StatValueStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- На ремонте -->
+            <Border Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StatCardStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRepairStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding SelectStatsFilterCommand}"
+                                  CommandParameter="repair" />
+                </Border.InputBindings>
+
+                <StackPanel>
+                    <DockPanel Margin="0 0 0 4">
+                        <materialDesign:PackIcon Kind="WrenchOutline"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#DC2626" />
+                        <TextBlock Text="На ремонте"
+                                   Style="{StaticResource StatTitleStyle}" />
+                    </DockPanel>
+
+                    <TextBlock Text="{Binding RepairCount}"
+                               Style="{StaticResource StatValueStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Добавить -->
+            <Button Command="{Binding OpenCreateToolCommand}"
                     Style="{StaticResource PrimaryCardButton}"
                     Margin="0 0 12 12">
 
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center">
-
                     <materialDesign:PackIcon Kind="Plus"
                                              Width="28"
                                              Height="28"
                                              Foreground="White"
                                              HorizontalAlignment="Center" />
 
-                    <TextBlock Text="Добавить клиента"
+                    <TextBlock Text="Добавить инструмент"
                                Foreground="White"
                                FontSize="14"
                                FontWeight="SemiBold"
@@ -443,205 +351,200 @@
                 </Grid.RowDefinitions>
 
                 <!-- Фильтры -->
-                <Border Grid.Row="0"
-                        Background="Transparent"
-                        Padding="0"
-                        Margin="12 0 0 16">
+                <Grid Grid.Row="0"
+                      Margin="12 0 0 16">
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*" />
-                            <ColumnDefinition Width="20" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="20" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="20" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="14" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
-                                 Height="48"
-                                 materialDesign:HintAssist.Hint="ФИО, телефон, email или адрес"
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    <TextBox Grid.Column="0"
+                             Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                             Height="48"
+                             materialDesign:HintAssist.Hint="Название, инвентарный или серийный номер"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
 
-                        <ComboBox Grid.Column="2"
-                                  Height="48"
-                                  SelectedValue="{Binding OrdersFilter, UpdateSourceTrigger=PropertyChanged}"
-                                  SelectedValuePath="Tag"
-                                  materialDesign:HintAssist.Hint="Заказы"
-                                  Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                    <ComboBox Grid.Column="2"
+                              Height="48"
+                              ItemsSource="{Binding Categories}"
+                              SelectedValue="{Binding CategoryId, UpdateSourceTrigger=PropertyChanged}"
+                              SelectedValuePath="Id"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="Категория"
+                              Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
 
-                            <ComboBoxItem Content="Все" Tag="{x:Null}" />
-                            <ComboBoxItem Content="С заказами" Tag="withOrders" />
-                            <ComboBoxItem Content="Без заказов" Tag="withoutOrders" />
-                        </ComboBox>
+                    <ComboBox Grid.Column="4"
+                              Height="48"
+                              ItemsSource="{Binding Statuses}"
+                              SelectedValue="{Binding StatusId, UpdateSourceTrigger=PropertyChanged}"
+                              SelectedValuePath="Id"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="Статус"
+                              Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
 
-                        <ComboBox Grid.Column="4"
-                                  Height="48"
-                                  SelectedValue="{Binding RegularFilter, UpdateSourceTrigger=PropertyChanged}"
-                                  SelectedValuePath="Tag"
-                                  materialDesign:HintAssist.Hint="Постоянные"
-                                  Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                    <ComboBox Grid.Column="6"
+                              Height="48"
+                              ItemsSource="{Binding Manufacturers}"
+                              SelectedValue="{Binding ManufacturerId, UpdateSourceTrigger=PropertyChanged}"
+                              SelectedValuePath="Id"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="Производитель"
+                              Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
 
-                            <ComboBoxItem Content="Все" Tag="{x:Null}" />
-                            <ComboBoxItem Content="Постоянные" Tag="regular" />
-                            <ComboBoxItem Content="Не постоянные" Tag="notRegular" />
-                        </ComboBox>
+                    <Button Grid.Column="8"
+                            Width="42"
+                            Height="42"
+                            VerticalAlignment="Bottom"
+                            Margin="0 0 0 2"
+                            Command="{Binding ResetFiltersCommand}"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Сбросить фильтры">
 
-                        <ComboBox Grid.Column="6"
-                                  Height="48"
-                                  SelectedValue="{Binding ActiveOrdersFilter, UpdateSourceTrigger=PropertyChanged}"
-                                  SelectedValuePath="Tag"
-                                  materialDesign:HintAssist.Hint="Активная аренда"
-                                  Style="{StaticResource MaterialDesignFloatingHintComboBox}">
-
-                            <ComboBoxItem Content="Все" Tag="{x:Null}" />
-                            <ComboBoxItem Content="С активной арендой" Tag="withActiveOrders" />
-                            <ComboBoxItem Content="Без активной аренды" Tag="withoutActiveOrders" />
-                        </ComboBox>
-
-                        <Button Grid.Column="8"
-                                Width="42"
-                                Height="42"
-                                VerticalAlignment="Bottom"
-                                Margin="0 0 0 2"
-                                Command="{Binding ResetFiltersCommand}"
-                                Style="{StaticResource MaterialDesignIconButton}"
-                                ToolTip="Сбросить фильтры">
-
-                            <materialDesign:PackIcon Kind="Refresh"
-                                                     Width="22"
-                                                     Height="22"
-                                                     Foreground="#1E73FF" />
-                        </Button>
-                    </Grid>
-                </Border>
+                        <materialDesign:PackIcon Kind="Refresh"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#1E73FF" />
+                    </Button>
+                </Grid>
 
                 <!-- Таблица -->
                 <DataGrid Grid.Row="1"
-                          ItemsSource="{Binding Customers}"
-                          SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}"
-                          Style="{StaticResource DashboardDataGridStyle}"
-                          CanUserSortColumns="True"
-                          RowStyle="{StaticResource DataGridRowHoverStyle}"
-                          materialDesign:DataGridAssist.ApplyMaterialDesignColumnStyles="True">
-
-                    <DataGrid.InputBindings>
-                        <MouseBinding MouseAction="LeftDoubleClick"
-                                      Command="{Binding OpenCustomerDetailsCommand}"
-                                      CommandParameter="{Binding SelectedCustomer}" />
-                    </DataGrid.InputBindings>
+                          Sorting="ToolsDataGrid_OnSorting"
+                          ItemsSource="{Binding Tools}"
+                          SelectedItem="{Binding SelectedTool, Mode=TwoWay}"
+                          Style="{StaticResource ToolsDataGridStyle}">
 
                     <DataGrid.Columns>
 
-                        <DataGridTemplateColumn Header="Клиент"
-                                                Width="3*"
-                                                MinWidth="320"
-                                                SortMemberPath="FullName">
+                        <DataGridTemplateColumn Header="Инструмент"
+                                                Width="2.8*"
+                                                SortMemberPath="Name">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center"
-                                                Margin="4 6">
 
-                                        <TextBlock Text="{Binding FullName}"
+                                    <StackPanel VerticalAlignment="Center"
+                                                Margin="4 4">
+
+                                        <TextBlock Text="{Binding Name}"
                                                    FontWeight="SemiBold"
                                                    FontSize="14"
                                                    Foreground="#071B39"
                                                    TextTrimming="CharacterEllipsis" />
 
-                                        <TextBlock Text="{Binding Address}"
+                                        <TextBlock Text="{Binding InventoryNumber}"
                                                    FontSize="12"
                                                    Foreground="#6B7890"
-                                                   Margin="0 4 0 0"
-                                                   TextWrapping="Wrap"
-                                                   HorizontalAlignment="Stretch"
-                                                   TextAlignment="Left" />
-
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Контакты"
-                                                Width="2*"
-                                                MinWidth="210"
-                                                SortMemberPath="PhoneNumber">
-
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center"
-                                                Margin="4 0">
-
-                                        <TextBlock Text="{Binding PhoneNumber}"
-                                                   FontSize="13"
-                                                   Foreground="#071B39"
+                                                   Margin="0 3 0 0"
                                                    TextTrimming="CharacterEllipsis" />
 
-                                        <TextBlock Text="{Binding Email}"
+                                        <TextBlock Text="{Binding SerialNumber}"
                                                    FontSize="12"
-                                                   Foreground="#6B7890"
-                                                   Margin="0 4 0 0"
+                                                   Foreground="#94A3B8"
+                                                   Margin="0 2 0 0"
                                                    TextTrimming="CharacterEllipsis" />
 
                                     </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Паспорт"
-                                                Width="150"
-                                                SortMemberPath="Passport">
-
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Grid VerticalAlignment="Stretch">
-                                        <TextBlock Text="{Binding Passport}"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                    </Grid>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Всего"
-                                                Width="90"
-                                                SortMemberPath="OrdersCount">
-
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-
-                                    <TextBlock Text="{Binding OrdersCount}"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               FontSize="14" />
 
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
 
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Активных"
-                                                Width="100"
-                                                SortMemberPath="ActiveOrdersCount">
+                        <DataGridTextColumn Header="Категория"
+                                            Binding="{Binding CategoryName}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            Width="1.4*" />
 
+                        <DataGridTextColumn Header="Производитель"
+                                            Binding="{Binding ManufacturerName}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            Width="1.4*" />
+
+                        <DataGridTextColumn Header="Аренда/день"
+                                            Binding="{Binding RentalPricePerDay, StringFormat={}{0:N0} ₽}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            Width="130" />
+
+                        <DataGridTextColumn Header="Залог"
+                                            Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            Width="120" />
+
+                        <DataGridTemplateColumn Header="Статус"
+                                                Width="160">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
+                                    <Border CornerRadius="14"
+                                            Padding="12 6"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center">
 
-                                    <TextBlock Text="{Binding ActiveOrdersCount}"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               Foreground="#16A34A"
-                                               FontSize="14" />
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#F1F5F9" />
 
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Доступен">
+                                                        <Setter Property="Background" Value="#DCFCE7" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="В аренде">
+                                                        <Setter Property="Background" Value="#DBEAFE" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="На ремонте">
+                                                        <Setter Property="Background" Value="#FEE2E2" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Забронирован">
+                                                        <Setter Property="Background" Value="#FEF3C7" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+
+                                        <TextBlock Text="{Binding StatusName}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13">
+
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#64748B" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="Доступен">
+                                                            <Setter Property="Foreground" Value="#16A34A" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="В аренде">
+                                                            <Setter Property="Foreground" Value="#2563EB" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="На ремонте">
+                                                            <Setter Property="Foreground" Value="#DC2626" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}"
+                                                                     Value="Забронирован">
+                                                            <Setter Property="Foreground" Value="#D97706" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
-
                         </DataGridTemplateColumn>
 
                         <DataGridTemplateColumn Width="56"
@@ -667,11 +570,9 @@
                                                                          Foreground="#64748B" />
                                             </materialDesign:PopupBox.ToggleContent>
 
-                                            <Border Width="220"
+                                            <Border Width="240"
                                                     Background="White"
-                                                    BorderThickness="0"
-                                                    CornerRadius="14"
-                                                    ClipToBounds="True">
+                                                    CornerRadius="14">
 
                                                 <Grid>
 
@@ -681,13 +582,39 @@
                                                         <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
 
-                                                    <!-- Верхние действия -->
+                                                    <!-- Основные действия -->
                                                     <StackPanel Grid.Row="0"
                                                                 Margin="0 8">
 
                                                         <Button
-                                                            Command="{Binding DataContext.OpenEditCustomerCommand,
-                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Command="{Binding DataContext.OpenViewToolCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource ActionsMenuButtonStyle}">
+
+                                                            <Grid Margin="18 0 16 0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="28" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <materialDesign:PackIcon Grid.Column="0"
+                                                                        Kind="EyeOutline"
+                                                                        Width="19"
+                                                                        Height="19"
+                                                                        Foreground="#64748B" />
+
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="Просмотр"
+                                                                           FontSize="14"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#334155" />
+                                                            </Grid>
+                                                        </Button>
+
+                                                        <Button
+                                                            Command="{Binding DataContext.OpenEditToolCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource ActionsMenuButtonStyle}">
 
@@ -701,21 +628,19 @@
                                                                         Kind="PencilOutline"
                                                                         Width="19"
                                                                         Height="19"
-                                                                        Foreground="#64748B"
-                                                                        VerticalAlignment="Center" />
+                                                                        Foreground="#64748B" />
 
                                                                 <TextBlock Grid.Column="1"
                                                                            Text="Редактировать"
                                                                            FontSize="14"
                                                                            FontWeight="SemiBold"
-                                                                           Foreground="#334155"
-                                                                           VerticalAlignment="Center" />
+                                                                           Foreground="#334155" />
                                                             </Grid>
                                                         </Button>
 
                                                         <Button
-                                                            Command="{Binding DataContext.OpenOrdersHistoryCommand,
-                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Command="{Binding DataContext.OpenRentalHistoryCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource ActionsMenuButtonStyle}">
 
@@ -729,33 +654,55 @@
                                                                         Kind="History"
                                                                         Width="19"
                                                                         Height="19"
-                                                                        Foreground="#64748B"
-                                                                        VerticalAlignment="Center" />
+                                                                        Foreground="#64748B" />
 
                                                                 <TextBlock Grid.Column="1"
-                                                                           Text="История заказов"
+                                                                           Text="История аренды"
                                                                            FontSize="14"
                                                                            FontWeight="SemiBold"
-                                                                           Foreground="#334155"
-                                                                           VerticalAlignment="Center" />
+                                                                           Foreground="#334155" />
                                                             </Grid>
                                                         </Button>
 
                                                     </StackPanel>
 
-                                                    <!-- Разделитель -->
                                                     <Border Grid.Row="1"
                                                             Height="1"
-                                                            Background="#E5EAF2"
-                                                            Margin="0" />
+                                                            Background="#E5EAF2" />
 
-                                                    <!-- Удаление -->
+                                                    <!-- Нижние действия -->
                                                     <StackPanel Grid.Row="2"
                                                                 Margin="0 8">
 
                                                         <Button
-                                                            Command="{Binding DataContext.DeleteCustomerCommand,
-                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Command="{Binding DataContext.MoveToRepairCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource ActionsMenuButtonStyle}">
+
+                                                            <Grid Margin="18 0 16 0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="28" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <materialDesign:PackIcon Grid.Column="0"
+                                                                        Kind="WrenchOutline"
+                                                                        Width="19"
+                                                                        Height="19"
+                                                                        Foreground="#64748B" />
+
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="Перевести в ремонт"
+                                                                           FontSize="14"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#334155" />
+                                                            </Grid>
+                                                        </Button>
+
+                                                        <Button
+                                                            Command="{Binding DataContext.DeleteToolCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource ActionsDangerButtonStyle}">
 
@@ -769,21 +716,20 @@
                                                                         Kind="DeleteOutline"
                                                                         Width="19"
                                                                         Height="19"
-                                                                        Foreground="#94A3B8"
-                                                                        VerticalAlignment="Center" />
+                                                                        Foreground="#94A3B8" />
 
                                                                 <TextBlock Grid.Column="1"
                                                                            Text="Удалить"
                                                                            FontSize="14"
                                                                            FontWeight="SemiBold"
-                                                                           Foreground="#DC2626"
-                                                                           VerticalAlignment="Center" />
+                                                                           Foreground="#DC2626" />
                                                             </Grid>
                                                         </Button>
 
                                                     </StackPanel>
 
                                                 </Grid>
+
                                             </Border>
 
                                         </materialDesign:PopupBox>
@@ -792,12 +738,13 @@
 
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
+
                         </DataGridTemplateColumn>
 
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <!-- Экспорт и пагинация -->
+                <!-- Низ -->
                 <Grid Grid.Row="2"
                       Margin="12 16 0 0">
 
@@ -807,7 +754,6 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Левая группа кнопок -->
                     <StackPanel Grid.Column="0"
                                 Orientation="Horizontal">
 
@@ -815,41 +761,31 @@
                                 Padding="16 0"
                                 Command="{Binding ExportCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}">
-
                             <StackPanel Orientation="Horizontal">
-
                                 <materialDesign:PackIcon Kind="FileExcelOutline"
                                                          Width="18"
                                                          Height="18"
                                                          Margin="0 0 8 0" />
-
                                 <TextBlock Text="Экспорт" />
-
                             </StackPanel>
                         </Button>
 
                         <Button Height="40"
                                 Padding="16 0"
                                 Margin="12 0 12 0"
-                                Command="{Binding GenerateTestCustomersCommand}"
+                                Command="{Binding GenerateTestToolsCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}">
-
                             <StackPanel Orientation="Horizontal">
-
                                 <materialDesign:PackIcon Kind="DatabasePlusOutline"
                                                          Width="18"
                                                          Height="18"
                                                          Margin="0 0 8 0" />
-
                                 <TextBlock Text="Тестовые данные" />
-
                             </StackPanel>
-
                         </Button>
 
                     </StackPanel>
 
-                    <!-- Пагинация -->
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
@@ -857,9 +793,7 @@
                         <Button Width="36"
                                 Height="36"
                                 Command="{Binding PreviousPageCommand}"
-                                Style="{StaticResource MaterialDesignIconButton}"
-                                ToolTip="Предыдущая страница">
-
+                                Style="{StaticResource MaterialDesignIconButton}">
                             <materialDesign:PackIcon Kind="ChevronLeft"
                                                      Width="20"
                                                      Height="20" />
@@ -870,25 +804,22 @@
                                    FontWeight="SemiBold"
                                    Foreground="#6B7890"
                                    Margin="12 0">
-
                             <Run Text="{Binding CurrentPage, Mode=OneWay}" />
                             <Run Text=" из " />
                             <Run Text="{Binding TotalPages, Mode=OneWay}" />
-
                         </TextBlock>
 
                         <Button Width="36"
                                 Height="36"
                                 Command="{Binding NextPageCommand}"
-                                Style="{StaticResource MaterialDesignIconButton}"
-                                ToolTip="Следующая страница">
-
+                                Style="{StaticResource MaterialDesignIconButton}">
                             <materialDesign:PackIcon Kind="ChevronRight"
                                                      Width="20"
                                                      Height="20" />
                         </Button>
 
                     </StackPanel>
+
                 </Grid>
             </Grid>
         </Border>
