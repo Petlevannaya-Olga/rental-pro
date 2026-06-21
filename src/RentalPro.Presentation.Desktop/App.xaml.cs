@@ -66,5 +66,8 @@ public partial class App : Application
         
         services.AddSingleton<NotificationService>();
         services.AddSingleton<NotificationViewModel>();
+        
+        services.AddSingleton<CustomerOrderHistoryViewModel>();
+        services.AddSingleton<CustomerOrderHistoryView>();
     }
 }

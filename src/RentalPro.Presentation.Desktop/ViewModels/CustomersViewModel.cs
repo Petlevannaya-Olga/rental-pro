@@ -14,6 +14,7 @@ public partial class CustomersViewModel(
     NavigationService navigationService,
     CustomerEditViewModel customerEditViewModel,
     FakeCustomerGeneratorService fakeCustomerGeneratorService,
+    CustomerOrderHistoryViewModel customerOrderHistoryViewModel,
     NotificationService notificationService)
     : ObservableObject
 {
@@ -171,12 +172,15 @@ public partial class CustomersViewModel(
     }
 
     [RelayCommand]
-    private void OpenOrdersHistory(CustomerDto? customer)
+    private async Task OpenOrdersHistoryAsync(CustomerDto? customer)
     {
         if (customer is null)
             return;
 
-        notificationService.Info("История заказов клиента будет добавлена позже");
+        await customerOrderHistoryViewModel.OpenAsync(customer);
+
+        navigationService.NavigateTo<CustomerOrderHistoryView>(
+            "История заказов");
     }
 
     [RelayCommand]

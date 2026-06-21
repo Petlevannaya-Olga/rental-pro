@@ -308,4 +308,40 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
             .Failure(fallbackCode, fallbackMessage)
             .ToErrors();
     }
+    
+    public async Task<Result<List<CustomerOrderHistoryItemDto>, Errors>> GetOrderHistoryAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/customers/{customerId}/order-history",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "customer.order.history.load.failed",
+                    "Не удалось загрузить историю заказов клиента",
+                    cancellationToken);
+            }
+
+            var history = await response.Content
+                .ReadFromJsonAsync<List<CustomerOrderHistoryItemDto>>(cancellationToken);
+
+            return history ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "customer.order.history.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
+        }
+    }
 }
