@@ -419,6 +419,7 @@
                 <DataGrid Grid.Row="1"
                           ItemsSource="{Binding Tools}"
                           SelectedItem="{Binding SelectedTool, Mode=TwoWay}"
+                          Sorting="ToolsDataGrid_OnSorting"
                           Style="{StaticResource ToolsDataGridStyle}">
                     
                     <DataGrid.InputBindings>
@@ -489,7 +490,7 @@
 
                         <DataGridTemplateColumn Header="Инструмент"
                                                 Width="2.8*"
-                                                SortMemberPath="Name">
+                                                SortMemberPath="name">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -523,21 +524,25 @@
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="Категория"
+                                            SortMemberPath="category"
                                             Binding="{Binding CategoryName}"
                                             ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="1.4*" />
 
                         <DataGridTextColumn Header="Производитель"
+                                            SortMemberPath="manufacturer"
                                             Binding="{Binding ManufacturerName}"
                                             ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="1.4*" />
 
                         <DataGridTextColumn Header="Аренда/день"
+                                            SortMemberPath="rentalprice"
                                             Binding="{Binding RentalPricePerDay, StringFormat={}{0:N0} ₽}"
                                             ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="130" />
 
                         <DataGridTextColumn Header="Залог"
+                                            SortMemberPath="deposit"
                                             Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
                                             ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="120" />

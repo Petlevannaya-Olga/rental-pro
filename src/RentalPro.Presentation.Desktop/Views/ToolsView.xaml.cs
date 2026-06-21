@@ -20,4 +20,26 @@ public partial class ToolsView : UserControl
             await _viewModel.LoadCommand.ExecuteAsync(null);
         };
     }
+
+    private async void ToolsDataGrid_OnSorting(
+        object sender,
+        DataGridSortingEventArgs e)
+    {
+        e.Handled = true;
+
+        if (string.IsNullOrWhiteSpace(e.Column.SortMemberPath))
+            return;
+
+        var dataGrid = (DataGrid)sender;
+        var sortBy = e.Column.SortMemberPath;
+
+        await _viewModel.SortCommand.ExecuteAsync(sortBy);
+
+        foreach (var column in dataGrid.Columns)
+            column.SortDirection = null;
+
+        e.Column.SortDirection = _viewModel.Descending
+            ? ListSortDirection.Descending
+            : ListSortDirection.Ascending;
+    }
 }
