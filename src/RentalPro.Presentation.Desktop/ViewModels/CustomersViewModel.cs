@@ -151,6 +151,11 @@ public partial class CustomersViewModel(
     }
     
     [RelayCommand]
+    private void OpenOrdersHistory(CustomerDto? customer)
+    {
+    }
+    
+    [RelayCommand]
     public async Task LoadAsync()
     {
         await LoadStatsAsync();
