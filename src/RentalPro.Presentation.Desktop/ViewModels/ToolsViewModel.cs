@@ -341,9 +341,12 @@ public partial class ToolsViewModel(
     }
 
     [RelayCommand]
-    private void OpenCreateTool()
+    private async Task OpenCreateToolAsync()
     {
-        notificationService.Info("Форма добавления инструмента будет добавлена позже");
+        await toolEditViewModel.OpenCreateAsync();
+
+        navigationService.NavigateTo<ToolEditView>(
+            "Добавление инструмента");
     }
 
     [RelayCommand]
