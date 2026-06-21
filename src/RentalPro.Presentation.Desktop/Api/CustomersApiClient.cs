@@ -130,4 +130,63 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
         return await response.Content.ReadAsByteArrayAsync(cancellationToken);
     }
+    
+    public async Task DeleteCustomerAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        var response = await httpClient.DeleteAsync(
+            $"api/customers/{id}",
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await ReadErrorMessageAsync(
+                response,
+                "Не удалось удалить клиента",
+                cancellationToken);
+
+            throw new Exception(message);
+        }
+    }
+    
+    private static async Task<string> ReadErrorMessageAsync(
+        HttpResponseMessage response,
+        string fallbackMessage,
+        CancellationToken cancellationToken)
+    {
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(content))
+            return fallbackMessage;
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(content);
+
+            if (document.RootElement.TryGetProperty("message", out var messageElement))
+            {
+                var message = messageElement.GetString();
+
+                if (!string.IsNullOrWhiteSpace(message))
+                    return message;
+            }
+
+            if (document.RootElement.TryGetProperty("Message", out var upperMessageElement))
+            {
+                var message = upperMessageElement.GetString();
+
+                if (!string.IsNullOrWhiteSpace(message))
+                    return message;
+            }
+
+            return fallbackMessage;
+        }
+        catch
+        {
+            return fallbackMessage;
+        }
+    }
 }

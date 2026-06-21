@@ -85,6 +85,8 @@
 
         </Style>
 
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
     </UserControl.Resources>
 
     <Grid Margin="20 0 20 20">
@@ -201,6 +203,7 @@
 
                             <TextBox Grid.Row="0"
                                      Grid.Column="0"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.LastName, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Фамилия"
@@ -208,6 +211,7 @@
 
                             <TextBox Grid.Row="0"
                                      Grid.Column="2"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.FirstName, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Имя"
@@ -215,6 +219,7 @@
 
                             <TextBox Grid.Row="0"
                                      Grid.Column="4"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.MiddleName, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Отчество"
@@ -222,6 +227,7 @@
 
                             <TextBox Grid.Row="2"
                                      Grid.Column="0"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.PhoneNumber, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Телефон"
@@ -229,6 +235,7 @@
 
                             <TextBox Grid.Row="2"
                                      Grid.Column="2"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.Email, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Email"
@@ -236,6 +243,7 @@
 
                             <TextBox Grid.Row="4"
                                      Grid.Column="0"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.PassportSeries, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Серия паспорта"
@@ -243,6 +251,7 @@
 
                             <TextBox Grid.Row="4"
                                      Grid.Column="2"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.PassportNumber, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Номер паспорта"
@@ -303,6 +312,7 @@
 
                             <TextBox Grid.Row="0"
                                      Grid.Column="0"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.PostalCode, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Индекс"
@@ -310,6 +320,7 @@
 
                             <TextBox Grid.Row="0"
                                      Grid.Column="2"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.Region, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Регион"
@@ -317,6 +328,7 @@
 
                             <TextBox Grid.Row="0"
                                      Grid.Column="4"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.City, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Город"
@@ -324,6 +336,7 @@
 
                             <TextBox Grid.Row="2"
                                      Grid.Column="0"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.Street, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Улица"
@@ -331,6 +344,7 @@
 
                             <TextBox Grid.Row="2"
                                      Grid.Column="2"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.House, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Дом"
@@ -338,6 +352,7 @@
 
                             <TextBox Grid.Row="2"
                                      Grid.Column="4"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.Building, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Корпус"
@@ -345,6 +360,7 @@
 
                             <TextBox Grid.Row="4"
                                      Grid.Column="0"
+                                     IsReadOnly="{Binding IsViewMode}"
                                      Text="{Binding Customer.Apartment, UpdateSourceTrigger=PropertyChanged}"
                                      Height="48"
                                      materialDesign:HintAssist.Hint="Квартира/офис"
@@ -386,6 +402,7 @@
                         Padding="16 0"
                         Margin="12 0 12 0"
                         Command="{Binding FillTestDataCommand}"
+                        Visibility="{Binding CanShowTestDataButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                         Style="{StaticResource MaterialDesignOutlinedButton}">
 
                     <StackPanel Orientation="Horizontal">
@@ -406,6 +423,7 @@
                         FontSize="14"
                         FontWeight="SemiBold"
                         Padding="24 0"
+                        Visibility="{Binding IsEditable, Converter={StaticResource BooleanToVisibilityConverter}}"
                         Command="{Binding SaveCommand}"
                         Style="{StaticResource PrimaryActionButtonStyle}">
 

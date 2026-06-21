@@ -852,11 +852,5 @@
                 </Grid>
             </Grid>
         </Border>
-
-        <TextBlock Grid.Row="2"
-                   Text="{Binding ErrorMessage}"
-                   Foreground="#DC2626"
-                   FontSize="14"
-                   Margin="0 14 16 0" />
     </Grid>
 </UserControl>

@@ -66,12 +66,12 @@ public partial class CustomersViewModel(
 
     [ObservableProperty]
     private CustomerDto? _selectedCustomer;
-    
+
     [ObservableProperty]
-    private string? selectedStatsFilter;
+    private string? _selectedStatsFilter = "all";
 
     public NotificationService Notifications { get; } = notificationService;
-    
+
     public int TotalPages =>
         TotalCount <= 0
             ? 1
@@ -114,6 +114,13 @@ public partial class CustomersViewModel(
         };
 
     [RelayCommand]
+    public async Task LoadAsync()
+    {
+        await LoadStatsAsync();
+        await LoadCustomersAsync();
+    }
+
+    [RelayCommand]
     private async Task SelectStatsFilterAsync(string filter)
     {
         SelectedStatsFilter = filter;
@@ -149,17 +156,14 @@ public partial class CustomersViewModel(
 
         await LoadCustomersAsync();
     }
-    
+
     [RelayCommand]
     private void OpenOrdersHistory(CustomerDto? customer)
     {
-    }
-    
-    [RelayCommand]
-    public async Task LoadAsync()
-    {
-        await LoadStatsAsync();
-        await LoadCustomersAsync();
+        if (customer is null)
+            return;
+
+        notificationService.Info("История заказов клиента будет добавлена позже");
     }
 
     [RelayCommand]
@@ -187,9 +191,16 @@ public partial class CustomersViewModel(
         if (customer is null)
             return;
 
-        OpenEditCustomer(customer);
+        customerEditViewModel.OpenView(customer);
+
+        navigationService.NavigateTo<CustomerEditView>("Просмотр клиента");
     }
-    
+
+    private bool CanOpenCustomerDetails(CustomerDto? customer)
+    {
+        return customer is not null;
+    }
+
     [RelayCommand]
     private async Task GenerateTestCustomersAsync()
     {
@@ -224,6 +235,7 @@ public partial class CustomersViewModel(
             }
 
             CurrentPage = 1;
+            SelectedStatsFilter = "all";
 
             await LoadStatsAsync();
             await LoadCustomersAsync();
@@ -233,20 +245,13 @@ public partial class CustomersViewModel(
         }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
-
-            notificationService.Error(
-                "Не удалось создать тестовых клиентов");
+            ErrorMessage = string.Empty;
+            notificationService.Error(ex.Message);
         }
         finally
         {
             IsLoading = false;
         }
-    }
-
-    private bool CanOpenCustomerDetails(CustomerDto? customer)
-    {
-        return customer is not null;
     }
 
     [RelayCommand]
@@ -263,6 +268,7 @@ public partial class CustomersViewModel(
         OrdersFilter = null;
         RegularFilter = null;
         ActiveOrdersFilter = null;
+        SelectedStatsFilter = "all";
         CurrentPage = 1;
 
         await LoadCustomersAsync();
@@ -271,7 +277,9 @@ public partial class CustomersViewModel(
     [RelayCommand]
     private async Task SearchAsync()
     {
+        SelectedStatsFilter = null;
         CurrentPage = 1;
+
         await LoadCustomersAsync();
     }
 
@@ -287,6 +295,7 @@ public partial class CustomersViewModel(
         }
 
         CurrentPage = 1;
+
         await LoadCustomersAsync();
     }
 
@@ -309,14 +318,14 @@ public partial class CustomersViewModel(
         CurrentPage++;
         await LoadCustomersAsync();
     }
-    
+
     [RelayCommand]
     private async Task ExportAsync()
     {
         try
         {
-            notificationService.Info("Началась выгрузка в Excel");
             ErrorMessage = string.Empty;
+            notificationService.Info("Началась выгрузка клиентов в Excel");
 
             var request = new ExportCustomersRequest(
                 Search,
@@ -339,20 +348,43 @@ public partial class CustomersViewModel(
                 return;
 
             await File.WriteAllBytesAsync(dialog.FileName, bytes);
+
             notificationService.Success("Клиенты выгружены в Excel");
         }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
-            notificationService.Error("Не удалось выгрузить клиентов в Excel");
+            ErrorMessage = string.Empty;
+            notificationService.Error(ex.Message);
         }
     }
-    
-    private static string? ToNullable(string? value)
+
+    [RelayCommand]
+    private async Task DeleteCustomerAsync(CustomerDto? customer)
     {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : value.Trim();
+        if (customer is null)
+            return;
+
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+
+            await customersApiClient.DeleteCustomerAsync(customer.Id);
+
+            notificationService.Success("Клиент удален");
+
+            await LoadStatsAsync();
+            await LoadCustomersAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = string.Empty;
+            notificationService.Error(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private async Task LoadCustomersAsync()
@@ -377,20 +409,16 @@ public partial class CustomersViewModel(
             Customers = result.Items.ToList();
             TotalCount = result.TotalCount;
 
-            OnPropertyChanged(nameof(TotalPages));
-            OnPropertyChanged(nameof(PageStart));
-            OnPropertyChanged(nameof(PageEnd));
-            OnPropertyChanged(nameof(CanGoPrevious));
-            OnPropertyChanged(nameof(CanGoNext));
-
-            PreviousPageCommand.NotifyCanExecuteChanged();
-            NextPageCommand.NotifyCanExecuteChanged();
+            RefreshPaging();
         }
         catch (Exception ex)
         {
             Customers = [];
             TotalCount = 0;
-            ErrorMessage = ex.Message;
+            ErrorMessage = string.Empty;
+            notificationService.Error(ex.Message);
+
+            RefreshPaging();
         }
         finally
         {
@@ -411,22 +439,45 @@ public partial class CustomersViewModel(
         }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
+            ErrorMessage = string.Empty;
+            notificationService.Error(ex.Message);
         }
+    }
+
+    private void RefreshPaging()
+    {
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageStart));
+        OnPropertyChanged(nameof(PageEnd));
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+    }
+
+    private static string? ToNullable(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
     }
 
     partial void OnOrdersFilterChanged(string? value)
     {
+        SelectedStatsFilter = null;
         _ = ApplyFiltersAsync();
     }
 
     partial void OnRegularFilterChanged(string? value)
     {
+        SelectedStatsFilter = null;
         _ = ApplyFiltersAsync();
     }
 
     partial void OnActiveOrdersFilterChanged(string? value)
     {
+        SelectedStatsFilter = null;
         _ = ApplyFiltersAsync();
     }
 

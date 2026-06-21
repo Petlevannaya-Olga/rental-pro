@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RentalPro.Contracts.Customers;
 using RentalPro.Presentation.Desktop.Api;
+using RentalPro.Presentation.Desktop.Common;
 using RentalPro.Presentation.Desktop.Services;
 using RentalPro.Presentation.Desktop.Views;
 
@@ -19,7 +20,7 @@ public partial class CustomerEditViewModel(
     private CustomerEditModel customer = new();
 
     [ObservableProperty]
-    private bool isEditMode;
+    private FormMode mode = FormMode.Create;
 
     [ObservableProperty]
     private Guid? customerId;
@@ -29,15 +30,30 @@ public partial class CustomerEditViewModel(
 
     [ObservableProperty]
     private bool isSaving;
+    
+    
+    public bool IsCreateMode => Mode == FormMode.Create;
+
+    public bool IsEditMode => Mode == FormMode.Edit;
+
+    public bool IsViewMode => Mode == FormMode.View;
+
+    public bool IsEditable => Mode is FormMode.Create or FormMode.Edit;
+    
+    public bool CanShowTestDataButton => Mode == FormMode.Create;
 
     public string Title =>
-        IsEditMode
-            ? "Редактирование клиента"
-            : "Добавление клиента";
+        Mode switch
+        {
+            FormMode.Create => "Добавление клиента",
+            FormMode.Edit => "Редактирование клиента",
+            FormMode.View => "Просмотр клиента",
+            _ => "Клиент"
+        };
 
     public string SaveButtonText =>
-        IsEditMode
-            ? "Сохранить изменения"
+        Mode == FormMode.Edit
+            ? "Сохранить"
             : "Сохранить клиента";
 
     private bool IsFormFilled =>
@@ -56,27 +72,99 @@ public partial class CustomerEditViewModel(
 
     private bool CanSave()
     {
-        return !IsSaving && IsFormFilled;
+        return IsEditable
+               && !IsSaving
+               && IsFormFilled;
     }
 
     public void OpenCreate()
     {
-        IsEditMode = false;
+        Mode = FormMode.Create;
         CustomerId = null;
         ErrorMessage = string.Empty;
         IsSaving = false;
 
         SetCustomer(new CustomerEditModel());
-        RefreshHeader();
+        RefreshState();
     }
 
     public void OpenEdit(CustomerDto dto)
     {
-        IsEditMode = true;
+        Mode = FormMode.Edit;
         CustomerId = dto.Id;
         ErrorMessage = string.Empty;
         IsSaving = false;
 
+        SetCustomerFromDto(dto);
+        RefreshState();
+    }
+
+    public void OpenView(CustomerDto dto)
+    {
+        Mode = FormMode.View;
+        CustomerId = dto.Id;
+        ErrorMessage = string.Empty;
+        IsSaving = false;
+
+        SetCustomerFromDto(dto);
+        RefreshState();
+    }
+
+    [RelayCommand]
+    private void Back()
+    {
+        navigationService.NavigateTo<CustomersView>("Клиенты");
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    private async Task SaveAsync()
+    {
+        try
+        {
+            IsSaving = true;
+            ErrorMessage = string.Empty;
+
+            if (Mode == FormMode.Edit)
+                await UpdateAsync();
+            else if (Mode == FormMode.Create)
+                await CreateAsync();
+            else
+                return;
+
+            notificationService.Success(
+                Mode == FormMode.Edit
+                    ? "Данные клиента обновлены"
+                    : "Клиент добавлен");
+
+            navigationService.NavigateTo<CustomersView>("Клиенты");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            notificationService.Error("Не удалось сохранить клиента");
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanFillTestData))]
+    private void FillTestData()
+    {
+        SetCustomer(fakeCustomerGeneratorService.Generate());
+        ErrorMessage = string.Empty;
+
+        notificationService.Success("Сгенерированы тестовые данные");
+    }
+
+    private bool CanFillTestData()
+    {
+        return Mode == FormMode.Create && !IsSaving;
+    }
+
+    private void SetCustomerFromDto(CustomerDto dto)
+    {
         SetCustomer(new CustomerEditModel
         {
             LastName = dto.LastName,
@@ -94,52 +182,6 @@ public partial class CustomerEditViewModel(
             Building = dto.Building,
             Apartment = dto.Apartment
         });
-
-        RefreshHeader();
-    }
-
-    [RelayCommand]
-    private void Back()
-    {
-        navigationService.NavigateTo<CustomersView>("Клиенты");
-    }
-
-    [RelayCommand(CanExecute = nameof(CanSave))]
-    private async Task SaveAsync()
-    {
-        try
-        {
-            IsSaving = true;
-            ErrorMessage = string.Empty;
-
-            if (IsEditMode)
-                await UpdateAsync();
-            else
-                await CreateAsync();
-
-            notificationService.Success(
-                IsEditMode
-                    ? "Данные клиента обновлены"
-                    : "Клиент добавлен");
-            
-            navigationService.NavigateTo<CustomersView>("Клиенты");
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = ex.Message;
-        }
-        finally
-        {
-            IsSaving = false;
-        }
-    }
-
-    [RelayCommand]
-    private void FillTestData()
-    {
-        SetCustomer(fakeCustomerGeneratorService.Generate());
-        ErrorMessage = string.Empty;
-        notificationService.Success("Сгенерированы тестовые данные");
     }
 
     private void SetCustomer(CustomerEditModel newCustomer)
@@ -160,10 +202,18 @@ public partial class CustomerEditViewModel(
         RefreshSaveState();
     }
 
-    private void RefreshHeader()
+    private void RefreshState()
     {
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(SaveButtonText));
+        OnPropertyChanged(nameof(IsCreateMode));
+        OnPropertyChanged(nameof(IsEditMode));
+        OnPropertyChanged(nameof(IsViewMode));
+        OnPropertyChanged(nameof(IsEditable));
+        OnPropertyChanged(nameof(CanShowTestDataButton));
+
+        RefreshSaveState();
+        FillTestDataCommand.NotifyCanExecuteChanged();
     }
 
     private void RefreshSaveState()
@@ -223,8 +273,14 @@ public partial class CustomerEditViewModel(
             : value.Trim();
     }
 
+    partial void OnModeChanged(FormMode value)
+    {
+        RefreshState();
+    }
+
     partial void OnIsSavingChanged(bool value)
     {
         RefreshSaveState();
+        FillTestDataCommand.NotifyCanExecuteChanged();
     }
 }
