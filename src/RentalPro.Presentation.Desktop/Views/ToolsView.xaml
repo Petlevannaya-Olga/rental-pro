@@ -651,32 +651,6 @@
                                                                 Margin="0 8">
 
                                                         <Button
-                                                            Command="{Binding DataContext.OpenViewToolCommand,
-                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                            CommandParameter="{Binding}"
-                                                            Style="{StaticResource ActionsMenuButtonStyle}">
-
-                                                            <Grid Margin="18 0 16 0">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="28" />
-                                                                    <ColumnDefinition Width="*" />
-                                                                </Grid.ColumnDefinitions>
-
-                                                                <materialDesign:PackIcon Grid.Column="0"
-                                                                        Kind="EyeOutline"
-                                                                        Width="19"
-                                                                        Height="19"
-                                                                        Foreground="#64748B" />
-
-                                                                <TextBlock Grid.Column="1"
-                                                                           Text="Просмотр"
-                                                                           FontSize="14"
-                                                                           FontWeight="SemiBold"
-                                                                           Foreground="#334155" />
-                                                            </Grid>
-                                                        </Button>
-
-                                                        <Button
                                                             Command="{Binding DataContext.OpenEditToolCommand,
                                                   RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
