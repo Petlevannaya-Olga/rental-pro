@@ -447,7 +447,7 @@
 
                                         <Grid>
 
-                                            <Image Source="{Binding PhotoUrl}"
+                                            <Image Source="{Binding FullPhotoUrl}"
                                                    Stretch="UniformToFill" />
 
                                             <materialDesign:PackIcon Kind="Tools"

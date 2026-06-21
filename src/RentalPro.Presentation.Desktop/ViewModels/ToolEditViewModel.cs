@@ -45,6 +45,20 @@ public partial class ToolEditViewModel(
 
     [ObservableProperty]
     private List<DictionaryItem> statuses = [];
+    
+    public string? ToolPhotoUrl
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Tool.PhotoPath))
+                return null;
+
+            if (Tool.PhotoPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                return Tool.PhotoPath;
+
+            return $"https://localhost:7099{Tool.PhotoPath}";
+        }
+    }
 
     private byte[]? _selectedImageBytes;
     private string? _selectedImageFileName;
@@ -387,6 +401,7 @@ public partial class ToolEditViewModel(
         OnPropertyChanged(nameof(CategoryName));
         OnPropertyChanged(nameof(ManufacturerName));
         OnPropertyChanged(nameof(StatusName));
+        OnPropertyChanged(nameof(ToolPhotoUrl));
     }
     
     private void ToolOnPropertyChanged(

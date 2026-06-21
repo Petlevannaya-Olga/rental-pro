@@ -85,8 +85,8 @@
 
                         <Grid Height="280">
 
-                            <Image Source="{Binding Tool.PhotoPath}"
-                                   Stretch="UniformToFill" />
+                            <Image Source="{Binding ToolPhotoUrl}"
+                                   Stretch="Uniform" />
 
                             <materialDesign:PackIcon Kind="ImageOutline"
                                                      Width="48"
@@ -236,8 +236,8 @@
 
                     <Grid Height="280">
 
-                        <Image Source="{Binding Tool.PhotoPath}"
-                               Stretch="UniformToFill" />
+                        <Image Source="{Binding ToolPhotoUrl}"
+                               Stretch="Uniform" />
 
                         <materialDesign:PackIcon Kind="ImageOutline"
                                                  Width="48"

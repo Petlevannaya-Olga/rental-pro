@@ -18,4 +18,12 @@ public sealed record ToolDto(
     string? CurrentCondition,
     string? PhotoPath,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt)
+{
+    public string? FullPhotoUrl =>
+        string.IsNullOrWhiteSpace(PhotoPath)
+            ? null
+            : PhotoPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                ? PhotoPath
+                : $"https://localhost:7099{PhotoPath}";
+}
