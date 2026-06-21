@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows.Controls;
 using RentalPro.Presentation.Desktop.ViewModels;
 
@@ -18,18 +19,5 @@ public partial class ToolsView : UserControl
         {
             await _viewModel.LoadCommand.ExecuteAsync(null);
         };
-    }
-
-    private async void ToolsDataGrid_OnSorting(
-        object sender,
-        DataGridSortingEventArgs e)
-    {
-        e.Handled = true;
-
-        if (e.Column.SortMemberPath is null)
-            return;
-
-        await _viewModel.SortCommand.ExecuteAsync(
-            e.Column.SortMemberPath.ToLowerInvariant());
     }
 }

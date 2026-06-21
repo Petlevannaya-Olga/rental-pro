@@ -6,6 +6,68 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        
+        <Style x:Key="PrimaryActionButtonStyle"
+               TargetType="Button">
+
+            <Setter Property="Background" Value="#1E73FF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="24 0" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="5">
+
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#1664E8" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#0F56C9" />
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#AFC9FF" />
+
+                                <Setter Property="Foreground"
+                                        Value="White" />
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
+
+        </Style>
     </UserControl.Resources>
 
     <Border Background="White"
@@ -502,9 +564,10 @@
                             Margin="12 0 0 0"
                             Command="{Binding SaveCommand}"
                             Visibility="{Binding IsEditable, Converter={StaticResource BooleanToVisibilityConverter}}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            Background="#1E73FF"
-                            Foreground="White">
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            MinWidth="180"
+                            FontSize="14"
+                            FontWeight="SemiBold">
 
                         <TextBlock Text="{Binding SaveButtonText}" />
                     </Button>

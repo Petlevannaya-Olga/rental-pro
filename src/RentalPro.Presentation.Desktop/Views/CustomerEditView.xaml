@@ -85,8 +85,6 @@
 
         </Style>
 
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-
     </UserControl.Resources>
 
     <Grid Margin="20 0 20 20">

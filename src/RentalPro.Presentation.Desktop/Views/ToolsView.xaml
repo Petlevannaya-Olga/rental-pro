@@ -417,7 +417,6 @@
 
                 <!-- Таблица -->
                 <DataGrid Grid.Row="1"
-                          Sorting="ToolsDataGrid_OnSorting"
                           ItemsSource="{Binding Tools}"
                           SelectedItem="{Binding SelectedTool, Mode=TwoWay}"
                           Style="{StaticResource ToolsDataGridStyle}">
@@ -544,7 +543,8 @@
                                             Width="120" />
 
                         <DataGridTemplateColumn Header="Статус"
-                                                Width="160">
+                                                Width="160"
+                                                SortMemberPath="status">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="14"
