@@ -17,7 +17,7 @@ public partial class DashboardViewModel(
 
     [ObservableProperty]
     private string _errorMessage = string.Empty;
-    
+
     [ObservableProperty]
     private List<DashboardReturnItemViewModel> _returns = [];
 
@@ -29,13 +29,17 @@ public partial class DashboardViewModel(
             IsLoading = true;
             ErrorMessage = string.Empty;
 
-            Dashboard = await dashboardApiClient.GetDashboardAsync();
+            var result = await dashboardApiClient.GetDashboardAsync();
 
-            if (Dashboard is null)
+            if (result.IsFailure)
             {
-                ErrorMessage = "Не удалось загрузить данные дашборда";
+                Dashboard = null;
+                Returns = [];
+                ErrorMessage = result.Error.Message;
                 return;
             }
+
+            Dashboard = result.Value;
 
             Returns =
             [
@@ -45,10 +49,6 @@ public partial class DashboardViewModel(
                 ..Dashboard.UpcomingReturns
                     .Select(x => DashboardReturnItemViewModel.FromDto(x, false))
             ];
-        }
-        catch
-        {
-            ErrorMessage = "Не удалось подключиться к серверу";
         }
         finally
         {

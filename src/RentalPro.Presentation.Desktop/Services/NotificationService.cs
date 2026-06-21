@@ -55,7 +55,7 @@ public sealed class NotificationService(NotificationViewModel notification)
     {
         try
         {
-            await Task.Delay(3500, cancellationToken);
+            await Task.Delay(2000, cancellationToken);
 
             if (cancellationToken.IsCancellationRequested)
                 return;
