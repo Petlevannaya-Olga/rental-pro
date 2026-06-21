@@ -65,5 +65,6 @@ public partial class App : Application
         services.AddSingleton<FakeCustomerGeneratorService>();
         
         services.AddSingleton<NotificationService>();
+        services.AddSingleton<NotificationViewModel>();
     }
 }

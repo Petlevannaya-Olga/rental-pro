@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:common="clr-namespace:RentalPro.Presentation.Desktop.Common"
+        xmlns:services="clr-namespace:RentalPro.Presentation.Desktop.Services"
         Title="RentalPRO"
         Width="1280"
         Height="760"
@@ -10,8 +11,9 @@
         Background="#F4F7FC">
 
     <Window.Resources>
-        <common:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter"/>
+        <common:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter" />
         <common:StringEqualsConverter x:Key="StringEqualsConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
         <Style x:Key="RentalProSnackbarStyle"
                TargetType="materialDesign:Snackbar">
@@ -32,13 +34,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <Style x:Key="MenuTextStyle"
                TargetType="TextBlock">
-            <Setter Property="Visibility" Value="Visible"/>
+            <Setter Property="Visibility" Value="Visible" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
-                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Setter Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -52,8 +54,8 @@
             <Setter Property="VerticalAlignment" Value="Center" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
-                    <Setter Property="Margin" Value="0"/>
-                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="HorizontalAlignment" Value="Center" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -68,7 +70,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="GroupName" Value="MainMenu" />
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -99,11 +101,66 @@
 
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <DataTemplate DataType="{x:Type services:NotificationMessage}">
+            <Border Background="White"
+                    CornerRadius="14"
+                    MinWidth="340"
+                    MaxWidth="480">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Цветная полоска -->
+                    <Border Grid.Column="0"
+                            Background="{Binding AccentColor}"
+                            CornerRadius="14 0 0 14" />
+
+                    <!-- Иконка -->
+                    <Border Grid.Column="1"
+                            Width="42"
+                            Height="42"
+                            Margin="16 14 12 14"
+                            CornerRadius="21"
+                            Background="#F4F7FC">
+
+                        <materialDesign:PackIcon Kind="{Binding Icon}"
+                                                 Width="24"
+                                                 Height="24"
+                                                 Foreground="{Binding AccentColor}"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center" />
+                    </Border>
+
+                    <!-- Текст -->
+                    <StackPanel Grid.Column="2"
+                                Margin="0 12 18 12"
+                                VerticalAlignment="Center">
+
+                        <TextBlock Text="{Binding Title}"
+                                   FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="#071B39" />
+
+                        <TextBlock Text="{Binding Text}"
+                                   FontSize="13"
+                                   Foreground="#52637A"
+                                   TextWrapping="Wrap"
+                                   Margin="0 3 0 0" />
+
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
 
     </Window.Resources>
 
@@ -112,8 +169,8 @@
             <ColumnDefinition Width="{Binding IsMenuCollapsed, Converter={StaticResource BoolToGridLengthConverter}}" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        
-       <!-- Левое меню -->
+
+        <!-- Левое меню -->
         <Border Grid.Column="0"
                 Background="#071B39">
 
@@ -129,8 +186,8 @@
                       Margin="18 18 18 14">
 
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="40"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="40" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <!-- Кнопка свернуть/развернуть меню -->
@@ -149,10 +206,10 @@
                                                  VerticalAlignment="Center">
                             <materialDesign:PackIcon.Style>
                                 <Style TargetType="materialDesign:PackIcon">
-                                    <Setter Property="Kind" Value="ChevronLeft"/>
+                                    <Setter Property="Kind" Value="ChevronLeft" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
-                                            <Setter Property="Kind" Value="ChevronRight"/>
+                                            <Setter Property="Kind" Value="ChevronRight" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -183,10 +240,10 @@
                         <StackPanel VerticalAlignment="Center">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
-                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Visibility" Value="Visible" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Setter Property="Visibility" Value="Collapsed" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -226,7 +283,7 @@
                             <TextBlock Text="Инструменты" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
-                    
+
                     <RadioButton
                         IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Клиенты, Mode=TwoWay}"
                         Style="{StaticResource MenuRadioButtonStyle}">
@@ -271,7 +328,7 @@
                             <TextBlock Text="Справочники" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
-                    
+
                     <RadioButton
                         IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Пользователи, Mode=TwoWay}"
                         Style="{StaticResource MenuRadioButtonStyle}">
@@ -288,11 +345,12 @@
                             Margin="18 0 18 22"
                             VerticalAlignment="Bottom">
 
-                    <RadioButton IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Профиль, Mode=TwoWay}"
-                                 Style="{StaticResource MenuRadioButtonStyle}">
+                    <RadioButton
+                        IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Профиль, Mode=TwoWay}"
+                        Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountCircleOutline" Style="{StaticResource MenuIconStyle}"/>
-                            <TextBlock Text="Профиль" Style="{StaticResource MenuTextStyle}"/>
+                            <materialDesign:PackIcon Kind="AccountCircleOutline" Style="{StaticResource MenuIconStyle}" />
+                            <TextBlock Text="Профиль" Style="{StaticResource MenuTextStyle}" />
                         </StackPanel>
                     </RadioButton>
 
@@ -359,16 +417,82 @@
             <!-- Контент -->
             <Grid Grid.Row="1"
                   Margin="34">
-                <ContentControl Content="{Binding CurrentView}"/>
+                <ContentControl Content="{Binding CurrentView}" />
             </Grid>
         </Grid>
-       <materialDesign:Snackbar
-           Grid.Column="1"
-           Panel.ZIndex="999"
-           Style="{StaticResource RentalProSnackbarStyle}"
-           MessageQueue="{Binding Notifications.MessageQueue}"
-           HorizontalAlignment="Right"
-           VerticalAlignment="Bottom"
-           Margin="0 0 24 24" />
+
+        <Border Grid.Column="1"
+                Width="400"
+                Height="{Binding Notifications.Notification.Height}"
+                Opacity="{Binding Notifications.Notification.Opacity}"
+                IsHitTestVisible="{Binding Notifications.Notification.IsOpen}"
+                Background="White"
+                CornerRadius="16"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0 0 24 24"
+                Panel.ZIndex="999">
+
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24"
+                                  ShadowDepth="4"
+                                  Opacity="0.15" />
+            </Border.Effect>
+
+            <Grid>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Цветная полоска -->
+
+                <Border Grid.Column="0"
+                        Background="{Binding Notifications.Notification.AccentColor}"
+                        CornerRadius="16 0 0 16" />
+
+                <!-- Иконка -->
+
+                <Border Grid.Column="1"
+                        Width="44"
+                        Height="44"
+                        Margin="16 14 12 14"
+                        CornerRadius="22"
+                        Background="#F4F7FC">
+
+                    <materialDesign:PackIcon
+                        Kind="{Binding Notifications.Notification.Icon}"
+                        Width="22"
+                        Height="22"
+                        Foreground="{Binding Notifications.Notification.AccentColor}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+
+                </Border>
+
+                <!-- Текст -->
+
+                <StackPanel Grid.Column="2"
+                            Margin="0 12 18 12"
+                            VerticalAlignment="Center">
+
+                    <TextBlock Text="{Binding Notifications.Notification.Title}"
+                               FontSize="13"
+                               FontWeight="Bold"
+                               Foreground="#071B39" />
+
+                    <TextBlock Text="{Binding Notifications.Notification.Message}"
+                               FontSize="13"
+                               Foreground="#5B6B82"
+                               Margin="0 4 0 0"
+                               TextWrapping="Wrap" />
+
+                </StackPanel>
+
+            </Grid>
+
+        </Border>
     </Grid>
 </Window>
