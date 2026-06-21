@@ -43,14 +43,11 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(
+                return await ReadErrorsAsync(
                     response,
+                    "customers.get.failed",
                     "Не удалось загрузить список клиентов",
                     cancellationToken);
-
-                return CommonErrors
-                    .Failure("customers.get.failed", message)
-                    .ToErrors();
             }
 
             var result = await response.Content
@@ -90,14 +87,11 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(
+                return await ReadErrorsAsync(
                     response,
+                    "customers.stats.failed",
                     "Не удалось загрузить статистику клиентов",
                     cancellationToken);
-
-                return CommonErrors
-                    .Failure("customers.stats.failed", message)
-                    .ToErrors();
             }
 
             var result = await response.Content
@@ -139,14 +133,11 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(
+                return await ReadErrorsAsync(
                     response,
+                    "customers.create.failed",
                     "Не удалось создать клиента",
                     cancellationToken);
-
-                return CommonErrors
-                    .Failure("customers.create.failed", message)
-                    .ToErrors();
             }
 
             return UnitResult.Success<Errors>();
@@ -177,14 +168,11 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(
+                return await ReadErrorsAsync(
                     response,
+                    "customers.update.failed",
                     "Не удалось обновить клиента",
                     cancellationToken);
-
-                return CommonErrors
-                    .Failure("customers.update.failed", message)
-                    .ToErrors();
             }
 
             return UnitResult.Success<Errors>();
@@ -231,14 +219,11 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(
+                return await ReadErrorsAsync(
                     response,
+                    "customers.export.failed",
                     "Не удалось экспортировать клиентов",
                     cancellationToken);
-
-                return CommonErrors
-                    .Failure("customers.export.failed", message)
-                    .ToErrors();
             }
 
             var fileBytes = await response.Content
@@ -270,14 +255,11 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(
+                return await ReadErrorsAsync(
                     response,
+                    "customers.delete.failed",
                     "Не удалось удалить клиента",
                     cancellationToken);
-
-                return CommonErrors
-                    .Failure("customers.delete.failed", message)
-                    .ToErrors();
             }
 
             return UnitResult.Success<Errors>();
@@ -303,41 +285,27 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
         return $"{path}?{string.Join("&", query)}";
     }
 
-    private static async Task<string> ReadErrorMessageAsync(
+    private static async Task<Errors> ReadErrorsAsync(
         HttpResponseMessage response,
+        string fallbackCode,
         string fallbackMessage,
         CancellationToken cancellationToken)
     {
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(content))
-            return fallbackMessage;
-
         try
         {
-            using var document = JsonDocument.Parse(content);
+            var errors = await response.Content.ReadFromJsonAsync<Error[]>(
+                cancellationToken);
 
-            if (document.RootElement.TryGetProperty("message", out var messageElement))
-            {
-                var message = messageElement.GetString();
-
-                if (!string.IsNullOrWhiteSpace(message))
-                    return message;
-            }
-
-            if (document.RootElement.TryGetProperty("Message", out var upperMessageElement))
-            {
-                var message = upperMessageElement.GetString();
-
-                if (!string.IsNullOrWhiteSpace(message))
-                    return message;
-            }
-
-            return fallbackMessage;
+            if (errors is not null)
+                return errors;
         }
         catch
         {
-            return fallbackMessage;
+            // ignored
         }
+
+        return CommonErrors
+            .Failure(fallbackCode, fallbackMessage)
+            .ToErrors();
     }
 }

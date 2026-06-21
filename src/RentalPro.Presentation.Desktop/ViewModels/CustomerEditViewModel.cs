@@ -1,11 +1,13 @@
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CSharpFunctionalExtensions;
 using RentalPro.Contracts.Customers;
 using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Common;
 using RentalPro.Presentation.Desktop.Services;
 using RentalPro.Presentation.Desktop.Views;
+using RentalPro.Shared;
 
 namespace RentalPro.Presentation.Desktop.ViewModels;
 
@@ -30,8 +32,7 @@ public partial class CustomerEditViewModel(
 
     [ObservableProperty]
     private bool isSaving;
-    
-    
+
     public bool IsCreateMode => Mode == FormMode.Create;
 
     public bool IsEditMode => Mode == FormMode.Edit;
@@ -39,7 +40,7 @@ public partial class CustomerEditViewModel(
     public bool IsViewMode => Mode == FormMode.View;
 
     public bool IsEditable => Mode is FormMode.Create or FormMode.Edit;
-    
+
     public bool CanShowTestDataButton => Mode == FormMode.Create;
 
     public string Title =>
@@ -124,12 +125,21 @@ public partial class CustomerEditViewModel(
             IsSaving = true;
             ErrorMessage = string.Empty;
 
+            UnitResult<Errors> result;
+
             if (Mode == FormMode.Edit)
-                await UpdateAsync();
+                result = await UpdateAsync();
             else if (Mode == FormMode.Create)
-                await CreateAsync();
+                result = await CreateAsync();
             else
                 return;
+
+            if (result.IsFailure)
+            {
+                ErrorMessage = result.Error.Message;
+                notificationService.Error(result.Error.Message);
+                return;
+            }
 
             notificationService.Success(
                 Mode == FormMode.Edit
@@ -221,7 +231,7 @@ public partial class CustomerEditViewModel(
         SaveCommand.NotifyCanExecuteChanged();
     }
 
-    private async Task CreateAsync()
+    private async Task<UnitResult<Errors>> CreateAsync()
     {
         var request = new CreateCustomerRequest(
             Customer.LastName.Trim(),
@@ -239,13 +249,19 @@ public partial class CustomerEditViewModel(
             NormalizeOptional(Customer.Building),
             NormalizeOptional(Customer.Apartment));
 
-        await customersApiClient.CreateCustomerAsync(request);
+        return await customersApiClient.CreateCustomerAsync(request);
     }
 
-    private async Task UpdateAsync()
+    private async Task<UnitResult<Errors>> UpdateAsync()
     {
         if (CustomerId is null)
-            throw new InvalidOperationException("Не выбран клиент для редактирования");
+        {
+            return CommonErrors
+                .Failure(
+                    "customers.update.no-selected-customer",
+                    "Не выбран клиент для редактирования")
+                .ToErrors();
+        }
 
         var request = new UpdateCustomerRequest(
             Customer.LastName.Trim(),
@@ -263,7 +279,9 @@ public partial class CustomerEditViewModel(
             NormalizeOptional(Customer.Building),
             NormalizeOptional(Customer.Apartment));
 
-        await customersApiClient.UpdateCustomerAsync(CustomerId.Value, request);
+        return await customersApiClient.UpdateCustomerAsync(
+            CustomerId.Value,
+            request);
     }
 
     private static string? NormalizeOptional(string? value)
