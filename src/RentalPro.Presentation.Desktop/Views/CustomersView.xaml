@@ -526,6 +526,7 @@
                           SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}"
                           Style="{StaticResource DashboardDataGridStyle}"
                           CanUserSortColumns="True"
+                          Sorting="CustomersDataGrid_OnSorting"
                           RowStyle="{StaticResource DataGridRowHoverStyle}"
                           materialDesign:DataGridAssist.ApplyMaterialDesignColumnStyles="True">
 
@@ -540,7 +541,7 @@
                         <DataGridTemplateColumn Header="Клиент"
                                                 Width="3*"
                                                 MinWidth="320"
-                                                SortMemberPath="FullName">
+                                                SortMemberPath="fullname">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -569,7 +570,7 @@
                         <DataGridTemplateColumn Header="Контакты"
                                                 Width="2*"
                                                 MinWidth="210"
-                                                SortMemberPath="PhoneNumber">
+                                                SortMemberPath="phonenumber">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -594,7 +595,7 @@
 
                         <DataGridTemplateColumn Header="Паспорт"
                                                 Width="150"
-                                                SortMemberPath="Passport">
+                                                SortMemberPath="passport">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -609,7 +610,7 @@
 
                         <DataGridTemplateColumn Header="Всего"
                                                 Width="90"
-                                                SortMemberPath="OrdersCount">
+                                                SortMemberPath="orderscount">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -627,7 +628,7 @@
 
                         <DataGridTemplateColumn Header="Активных"
                                                 Width="100"
-                                                SortMemberPath="ActiveOrdersCount">
+                                                SortMemberPath="activeorderscount">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>

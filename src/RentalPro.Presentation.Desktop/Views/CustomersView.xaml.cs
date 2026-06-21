@@ -1,5 +1,5 @@
+using System.ComponentModel;
 using System.Windows.Controls;
-using System.Windows.Input;
 using RentalPro.Presentation.Desktop.ViewModels;
 
 namespace RentalPro.Presentation.Desktop.Views;
@@ -27,9 +27,19 @@ public partial class CustomersView : UserControl
     {
         e.Handled = true;
 
-        if (e.Column.SortMemberPath is null)
+        if (string.IsNullOrWhiteSpace(e.Column.SortMemberPath))
             return;
 
-        await _viewModel.SortCommand.ExecuteAsync(e.Column.SortMemberPath.ToLowerInvariant());
+        var dataGrid = (DataGrid)sender;
+        var sortBy = e.Column.SortMemberPath;
+
+        await _viewModel.SortCommand.ExecuteAsync(sortBy);
+
+        foreach (var column in dataGrid.Columns)
+            column.SortDirection = null;
+
+        e.Column.SortDirection = _viewModel.Descending
+            ? ListSortDirection.Descending
+            : ListSortDirection.Ascending;
     }
 }
