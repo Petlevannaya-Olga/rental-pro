@@ -214,6 +214,25 @@
             <Setter Property="Foreground" Value="#DC2626" />
         </Style>
 
+        <Style x:Key="DataGridRowHoverStyle"
+               TargetType="DataGridRow">
+
+            <Setter Property="Cursor"
+                    Value="Hand" />
+
+            <Style.Triggers>
+
+                <Trigger Property="IsMouseOver"
+                         Value="True">
+
+                    <Setter Property="Background"
+                            Value="#F8FAFC" />
+
+                </Trigger>
+
+            </Style.Triggers>
+
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -467,6 +486,7 @@
                           SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}"
                           Style="{StaticResource DashboardDataGridStyle}"
                           CanUserSortColumns="True"
+                          RowStyle="{StaticResource DataGridRowHoverStyle}"
                           materialDesign:DataGridAssist.ApplyMaterialDesignColumnStyles="True">
 
                     <DataGrid.InputBindings>
@@ -610,108 +630,120 @@
                                             <Border Width="220"
                                                     Background="White"
                                                     BorderThickness="0"
-                                                    CornerRadius="12">
+                                                    CornerRadius="14"
+                                                    ClipToBounds="True">
 
-                                                <StackPanel Margin="0 8">
+                                                <Grid>
 
-                                                    <Button
-                                                        Command="{Binding DataContext.OpenEditCustomerCommand,
-                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ActionsMenuButtonStyle}">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="1" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
 
-                                                        <Grid Margin="18 0 16 0">
+                                                    <!-- Верхние действия -->
+                                                    <StackPanel Grid.Row="0"
+                                                                Margin="0 8">
 
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="28" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
+                                                        <Button
+                                                            Command="{Binding DataContext.OpenEditCustomerCommand,
+                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource ActionsMenuButtonStyle}">
 
-                                                            <materialDesign:PackIcon Grid.Column="0"
-                                                                    Kind="PencilOutline"
-                                                                    Width="19"
-                                                                    Height="19"
-                                                                    Foreground="#64748B"
-                                                                    VerticalAlignment="Center" />
+                                                            <Grid Margin="18 0 16 0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="28" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
 
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="Редактировать"
-                                                                       FontSize="14"
-                                                                       FontWeight="SemiBold"
-                                                                       Foreground="#1E73FF"
-                                                                       VerticalAlignment="Center" />
+                                                                <materialDesign:PackIcon Grid.Column="0"
+                                                                        Kind="PencilOutline"
+                                                                        Width="19"
+                                                                        Height="19"
+                                                                        Foreground="#64748B"
+                                                                        VerticalAlignment="Center" />
 
-                                                        </Grid>
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="Редактировать"
+                                                                           FontSize="14"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#334155"
+                                                                           VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </Button>
 
-                                                    </Button>
+                                                        <Button
+                                                            Command="{Binding DataContext.OpenOrdersHistoryCommand,
+                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource ActionsMenuButtonStyle}">
 
-                                                    <Button
-                                                        Command="{Binding DataContext.OpenOrdersHistoryCommand,
-                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ActionsMenuButtonStyle}">
+                                                            <Grid Margin="18 0 16 0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="28" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
 
-                                                        <Grid Margin="18 0 16 0">
+                                                                <materialDesign:PackIcon Grid.Column="0"
+                                                                        Kind="History"
+                                                                        Width="19"
+                                                                        Height="19"
+                                                                        Foreground="#64748B"
+                                                                        VerticalAlignment="Center" />
 
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="28" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="История заказов"
+                                                                           FontSize="14"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#334155"
+                                                                           VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </Button>
 
-                                                            <materialDesign:PackIcon Grid.Column="0"
-                                                                    Kind="History"
-                                                                    Width="19"
-                                                                    Height="19"
-                                                                    Foreground="#64748B"
-                                                                    VerticalAlignment="Center" />
+                                                    </StackPanel>
 
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="История заказов"
-                                                                       FontSize="14"
-                                                                       FontWeight="SemiBold"
-                                                                       Foreground="#1E73FF"
-                                                                       VerticalAlignment="Center" />
-
-                                                        </Grid>
-
-                                                    </Button>
-
-                                                    <Border Height="1"
+                                                    <!-- Разделитель -->
+                                                    <Border Grid.Row="1"
+                                                            Height="1"
                                                             Background="#E5EAF2"
-                                                            Margin="0 8" />
+                                                            Margin="0" />
 
-                                                    <Button
-                                                        Command="{Binding DataContext.DeleteCustomerCommand,
-                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ActionsDangerButtonStyle}">
+                                                    <!-- Удаление -->
+                                                    <StackPanel Grid.Row="2"
+                                                                Margin="0 8">
 
-                                                        <Grid Margin="18 0 16 0">
+                                                        <Button
+                                                            Command="{Binding DataContext.DeleteCustomerCommand,
+                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource ActionsDangerButtonStyle}">
 
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="28" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
+                                                            <Grid Margin="18 0 16 0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="28" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
 
-                                                            <materialDesign:PackIcon Grid.Column="0"
-                                                                    Kind="DeleteOutline"
-                                                                    Width="19"
-                                                                    Height="19"
-                                                                    Foreground="#94A3B8"
-                                                                    VerticalAlignment="Center" />
+                                                                <materialDesign:PackIcon Grid.Column="0"
+                                                                        Kind="DeleteOutline"
+                                                                        Width="19"
+                                                                        Height="19"
+                                                                        Foreground="#94A3B8"
+                                                                        VerticalAlignment="Center" />
 
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="Удалить"
-                                                                       FontSize="14"
-                                                                       FontWeight="SemiBold"
-                                                                       Foreground="#DC2626"
-                                                                       VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="Удалить"
+                                                                           FontSize="14"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#DC2626"
+                                                                           VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </Button>
 
-                                                        </Grid>
+                                                    </StackPanel>
 
-                                                    </Button>
-
-                                                </StackPanel>
+                                                </Grid>
                                             </Border>
 
                                         </materialDesign:PopupBox>
