@@ -450,13 +450,12 @@
                                             <Image Source="{Binding FullPhotoUrl}"
                                                    Stretch="UniformToFill" />
 
-                                            <materialDesign:PackIcon Kind="Tools"
-                                                                     Width="24"
-                                                                     Height="24"
-                                                                     Foreground="#94A3B8"
+                                            <materialDesign:PackIcon Kind="ImageOutline"
+                                                                     Width="48"
+                                                                     Height="48"
+                                                                     Foreground="#CBD5E1"
                                                                      HorizontalAlignment="Center"
                                                                      VerticalAlignment="Center">
-
                                                 <materialDesign:PackIcon.Style>
                                                     <Style TargetType="materialDesign:PackIcon">
                                                         <Setter Property="Visibility"
@@ -464,13 +463,13 @@
 
                                                         <Style.Triggers>
 
-                                                            <DataTrigger Binding="{Binding PhotoUrl}"
+                                                            <DataTrigger Binding="{Binding FullPhotoUrl}"
                                                                          Value="">
                                                                 <Setter Property="Visibility"
                                                                         Value="Visible" />
                                                             </DataTrigger>
 
-                                                            <DataTrigger Binding="{Binding PhotoUrl}"
+                                                            <DataTrigger Binding="{Binding FullPhotoUrl}"
                                                                          Value="{x:Null}">
                                                                 <Setter Property="Visibility"
                                                                         Value="Visible" />
@@ -479,9 +478,7 @@
                                                         </Style.Triggers>
                                                     </Style>
                                                 </materialDesign:PackIcon.Style>
-
                                             </materialDesign:PackIcon>
-
                                         </Grid>
 
                                     </Border>

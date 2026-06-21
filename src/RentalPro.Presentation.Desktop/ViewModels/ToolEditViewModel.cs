@@ -46,6 +46,9 @@ public partial class ToolEditViewModel(
     [ObservableProperty]
     private List<DictionaryItem> statuses = [];
     
+    [ObservableProperty]
+    private string? selectedImagePreviewPath;
+    
     public string? ToolPhotoUrl
     {
         get
@@ -59,6 +62,11 @@ public partial class ToolEditViewModel(
             return $"https://localhost:7099{Tool.PhotoPath}";
         }
     }
+    
+    public string? DisplayPhotoPath =>
+        !string.IsNullOrWhiteSpace(SelectedImagePreviewPath)
+            ? SelectedImagePreviewPath
+            : ToolPhotoUrl;
 
     private byte[]? _selectedImageBytes;
     private string? _selectedImageFileName;
@@ -253,7 +261,10 @@ public partial class ToolEditViewModel(
         _selectedImageFileName = Path.GetFileName(dialog.FileName);
         _selectedImageContentType = GetContentType(dialog.FileName);
 
+        SelectedImagePreviewPath = dialog.FileName;
         Tool.PhotoPath = dialog.FileName;
+
+        OnPropertyChanged(nameof(DisplayPhotoPath));
 
         RefreshSaveState();
     }
@@ -394,6 +405,7 @@ public partial class ToolEditViewModel(
 
         RefreshToolDerivedProperties();
         RefreshSaveState();
+        OnPropertyChanged(nameof(DisplayPhotoPath));
     }
     
     private void RefreshToolDerivedProperties()
@@ -470,6 +482,8 @@ public partial class ToolEditViewModel(
         _selectedImageBytes = null;
         _selectedImageFileName = null;
         _selectedImageContentType = null;
+        SelectedImagePreviewPath = null;
+        OnPropertyChanged(nameof(DisplayPhotoPath));
     }
 
     partial void OnModeChanged(FormMode value)
