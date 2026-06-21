@@ -231,7 +231,13 @@ public partial class CustomersViewModel(
                     ToNullable(customer.Building),
                     ToNullable(customer.Apartment));
 
-                await customersApiClient.CreateCustomerAsync(request);
+                var createResult = await customersApiClient.CreateCustomerAsync(request);
+
+                if (createResult.IsFailure)
+                {
+                    notificationService.Error(createResult.Error.Message);
+                    return;
+                }
             }
 
             CurrentPage = 1;
@@ -335,7 +341,13 @@ public partial class CustomersViewModel(
                 SortBy,
                 Descending);
 
-            var bytes = await customersApiClient.ExportCustomersAsync(request);
+            var exportResult = await customersApiClient.ExportCustomersAsync(request);
+
+            if (exportResult.IsFailure)
+            {
+                notificationService.Error(exportResult.Error.Message);
+                return;
+            }
 
             var dialog = new SaveFileDialog
             {
@@ -347,7 +359,7 @@ public partial class CustomersViewModel(
             if (dialog.ShowDialog() != true)
                 return;
 
-            await File.WriteAllBytesAsync(dialog.FileName, bytes);
+            await File.WriteAllBytesAsync(dialog.FileName, exportResult.Value);
 
             notificationService.Success("Клиенты выгружены в Excel");
         }
@@ -369,7 +381,13 @@ public partial class CustomersViewModel(
             IsLoading = true;
             ErrorMessage = string.Empty;
 
-            await customersApiClient.DeleteCustomerAsync(customer.Id);
+            var deleteResult = await customersApiClient.DeleteCustomerAsync(customer.Id);
+
+            if (deleteResult.IsFailure)
+            {
+                notificationService.Error(deleteResult.Error.Message);
+                return;
+            }
 
             notificationService.Success("Клиент удален");
 
@@ -406,8 +424,17 @@ public partial class CustomersViewModel(
 
             var result = await customersApiClient.GetCustomersAsync(request);
 
-            Customers = result.Items.ToList();
-            TotalCount = result.TotalCount;
+            if (result.IsFailure)
+            {
+                Customers = [];
+                TotalCount = 0;
+                notificationService.Error(result.Error.Message);
+                RefreshPaging();
+                return;
+            }
+
+            Customers = result.Value.Items.ToList();
+            TotalCount = result.Value.TotalCount;
 
             RefreshPaging();
         }
@@ -430,12 +457,18 @@ public partial class CustomersViewModel(
     {
         try
         {
-            var stats = await customersApiClient.GetStatsAsync();
+            var result = await customersApiClient.GetStatsAsync();
 
-            TotalCustomers = stats.TotalCount;
-            WithOrdersCount = stats.WithOrdersCount;
-            RegularCustomersCount = stats.RegularCustomersCount;
-            WithActiveOrdersCount = stats.WithActiveOrdersCount;
+            if (result.IsFailure)
+            {
+                notificationService.Error(result.Error.Message);
+                return;
+            }
+
+            TotalCustomers = result.Value.TotalCount;
+            WithOrdersCount = result.Value.WithOrdersCount;
+            RegularCustomersCount = result.Value.RegularCustomersCount;
+            WithActiveOrdersCount = result.Value.WithActiveOrdersCount;
         }
         catch (Exception ex)
         {

@@ -1,5 +1,7 @@
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
+using CSharpFunctionalExtensions;
 using RentalPro.Contracts.Customers;
 using RentalPro.Shared;
 
@@ -7,7 +9,7 @@ namespace RentalPro.Presentation.Desktop.Api;
 
 public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 {
-    public async Task<PagedResult<CustomerDto>> GetCustomersAsync(
+    public async Task<Result<PagedResult<CustomerDto>, Errors>> GetCustomersAsync(
         GetCustomersRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -35,69 +37,169 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
         var url = BuildUrl("api/customers", parameters);
 
-        var response = await httpClient.GetAsync(url, cancellationToken);
+        try
+        {
+            var response = await httpClient.GetAsync(url, cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-            throw new Exception(await response.Content.ReadAsStringAsync(cancellationToken));
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось загрузить список клиентов",
+                    cancellationToken);
 
-        return await response.Content.ReadFromJsonAsync<PagedResult<CustomerDto>>(cancellationToken)
-               ?? throw new Exception("Сервер вернул пустой список клиентов");
+                return CommonErrors
+                    .Failure("customers.get.failed", message)
+                    .ToErrors();
+            }
+
+            var result = await response.Content
+                .ReadFromJsonAsync<PagedResult<CustomerDto>>(cancellationToken);
+
+            if (result is null)
+            {
+                return CommonErrors
+                    .Failure(
+                        "customers.empty.response",
+                        "Сервер вернул пустой список клиентов")
+                    .ToErrors();
+            }
+
+            return result;
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "customers.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
+        }
     }
 
-    public async Task<CustomerStatsDto> GetStatsAsync(
+    public async Task<Result<CustomerStatsDto, Errors>> GetStatsAsync(
         CancellationToken cancellationToken = default)
     {
         var httpClient = httpClientFactory.CreateClient("Api");
 
-        return await httpClient.GetFromJsonAsync<CustomerStatsDto>(
-                   "api/customers/stats",
-                   cancellationToken)
-               ?? throw new Exception("Сервер вернул пустую статистику клиентов");
+        try
+        {
+            var response = await httpClient.GetAsync(
+                "api/customers/stats",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось загрузить статистику клиентов",
+                    cancellationToken);
+
+                return CommonErrors
+                    .Failure("customers.stats.failed", message)
+                    .ToErrors();
+            }
+
+            var result = await response.Content
+                .ReadFromJsonAsync<CustomerStatsDto>(cancellationToken);
+
+            if (result is null)
+            {
+                return CommonErrors
+                    .Failure(
+                        "customers.empty.stats",
+                        "Сервер вернул пустую статистику клиентов")
+                    .ToErrors();
+            }
+
+            return result;
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "customers.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
+        }
     }
-    
-    public async Task CreateCustomerAsync(
+
+    public async Task<UnitResult<Errors>> CreateCustomerAsync(
         CreateCustomerRequest request,
         CancellationToken cancellationToken = default)
     {
         var httpClient = httpClientFactory.CreateClient("Api");
 
-        var response = await httpClient.PostAsJsonAsync(
-            "api/customers",
-            request,
-            cancellationToken);
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                "api/customers",
+                request,
+                cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-            throw new Exception(await response.Content.ReadAsStringAsync(cancellationToken));
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось создать клиента",
+                    cancellationToken);
+
+                return CommonErrors
+                    .Failure("customers.create.failed", message)
+                    .ToErrors();
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "customers.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
+        }
     }
-    
-    public async Task UpdateCustomerAsync(
+
+    public async Task<UnitResult<Errors>> UpdateCustomerAsync(
         Guid id,
         UpdateCustomerRequest request,
         CancellationToken cancellationToken = default)
     {
         var httpClient = httpClientFactory.CreateClient("Api");
 
-        var response = await httpClient.PutAsJsonAsync(
-            $"api/customers/{id}",
-            request,
-            cancellationToken);
+        try
+        {
+            var response = await httpClient.PutAsJsonAsync(
+                $"api/customers/{id}",
+                request,
+                cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-            throw new Exception(await response.Content.ReadAsStringAsync(cancellationToken));
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось обновить клиента",
+                    cancellationToken);
+
+                return CommonErrors
+                    .Failure("customers.update.failed", message)
+                    .ToErrors();
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "customers.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
+        }
     }
 
-    private static string BuildUrl(
-        string path,
-        Dictionary<string, string?> parameters)
-    {
-        var query = parameters
-            .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-            .Select(x => $"{Uri.EscapeDataString(x.Key)}={Uri.EscapeDataString(x.Value!)}");
-
-        return $"{path}?{string.Join("&", query)}";
-    }
-    
-    public async Task<byte[]> ExportCustomersAsync(
+    public async Task<Result<byte[], Errors>> ExportCustomersAsync(
         ExportCustomersRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -123,35 +225,84 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
         var url = BuildUrl("api/customers/export", parameters);
 
-        var response = await httpClient.GetAsync(url, cancellationToken);
+        try
+        {
+            var response = await httpClient.GetAsync(url, cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-            throw new Exception(await response.Content.ReadAsStringAsync(cancellationToken));
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось экспортировать клиентов",
+                    cancellationToken);
 
-        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                return CommonErrors
+                    .Failure("customers.export.failed", message)
+                    .ToErrors();
+            }
+
+            var fileBytes = await response.Content
+                .ReadAsByteArrayAsync(cancellationToken);
+
+            return fileBytes;
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "customers.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
+        }
     }
-    
-    public async Task DeleteCustomerAsync(
+
+    public async Task<UnitResult<Errors>> DeleteCustomerAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
         var httpClient = httpClientFactory.CreateClient("Api");
 
-        var response = await httpClient.DeleteAsync(
-            $"api/customers/{id}",
-            cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            var message = await ReadErrorMessageAsync(
-                response,
-                "Не удалось удалить клиента",
+            var response = await httpClient.DeleteAsync(
+                $"api/customers/{id}",
                 cancellationToken);
 
-            throw new Exception(message);
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(
+                    response,
+                    "Не удалось удалить клиента",
+                    cancellationToken);
+
+                return CommonErrors
+                    .Failure("customers.delete.failed", message)
+                    .ToErrors();
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "customers.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
         }
     }
-    
+
+    private static string BuildUrl(
+        string path,
+        Dictionary<string, string?> parameters)
+    {
+        var query = parameters
+            .Where(x => !string.IsNullOrWhiteSpace(x.Value))
+            .Select(x => $"{Uri.EscapeDataString(x.Key)}={Uri.EscapeDataString(x.Value!)}");
+
+        return $"{path}?{string.Join("&", query)}";
+    }
+
     private static async Task<string> ReadErrorMessageAsync(
         HttpResponseMessage response,
         string fallbackMessage,
@@ -164,7 +315,7 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
 
         try
         {
-            using var document = System.Text.Json.JsonDocument.Parse(content);
+            using var document = JsonDocument.Parse(content);
 
             if (document.RootElement.TryGetProperty("message", out var messageElement))
             {

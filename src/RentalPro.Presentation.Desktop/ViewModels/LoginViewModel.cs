@@ -46,19 +46,27 @@ public partial class LoginViewModel(
             return;
         }
 
+        IsLoading = true;
+
         try
         {
-            IsLoading = true;
-
             var result = await authApiClient.LoginAsync(Login, Password);
 
-            if (result is null || string.IsNullOrWhiteSpace(result.Token))
+            if (result.IsFailure)
             {
-                ErrorMessage = "Неверный логин или пароль";
+                ErrorMessage = result.Error.Message;
                 return;
             }
 
-            tokenStorage.SetToken(result.Token);
+            var loginResponse = result.Value;
+
+            if (string.IsNullOrWhiteSpace(loginResponse.Token))
+            {
+                ErrorMessage = "Сервер не вернул токен авторизации";
+                return;
+            }
+
+            tokenStorage.SetToken(loginResponse.Token);
 
             var mainWindow = serviceProvider
                 .GetRequiredService<MainWindow>();
@@ -73,10 +81,6 @@ public partial class LoginViewModel(
                     break;
                 }
             }
-        }
-        catch
-        {
-            ErrorMessage = "Не удалось подключиться к серверу";
         }
         finally
         {
