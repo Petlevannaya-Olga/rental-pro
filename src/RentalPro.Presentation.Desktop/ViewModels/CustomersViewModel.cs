@@ -13,6 +13,7 @@ public partial class CustomersViewModel(
     CustomersApiClient customersApiClient,
     NavigationService navigationService,
     CustomerEditViewModel customerEditViewModel,
+    FakeCustomerGeneratorService fakeCustomerGeneratorService,
     NotificationService notificationService)
     : ObservableObject
 {
@@ -143,6 +144,60 @@ public partial class CustomersViewModel(
 
         OpenEditCustomer(customer);
     }
+    
+    [RelayCommand]
+    private async Task GenerateTestCustomersAsync()
+    {
+        const int count = 10;
+
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+
+            for (var i = 0; i < count; i++)
+            {
+                var customer = fakeCustomerGeneratorService.Generate();
+
+                var request = new CreateCustomerRequest(
+                    customer.LastName,
+                    customer.FirstName,
+                    customer.MiddleName,
+                    customer.PhoneNumber,
+                    customer.Email,
+                    customer.PassportSeries,
+                    customer.PassportNumber,
+                    customer.PostalCode,
+                    customer.Region,
+                    customer.City,
+                    customer.Street,
+                    customer.House,
+                    ToNullable(customer.Building),
+                    ToNullable(customer.Apartment));
+
+                await customersApiClient.CreateCustomerAsync(request);
+            }
+
+            CurrentPage = 1;
+
+            await LoadStatsAsync();
+            await LoadCustomersAsync();
+
+            notificationService.Success(
+                $"Успешно создано {count} тестовых клиентов");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+
+            notificationService.Error(
+                "Не удалось создать тестовых клиентов");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
     private bool CanOpenCustomerDetails(CustomerDto? customer)
     {
@@ -246,6 +301,13 @@ public partial class CustomersViewModel(
             ErrorMessage = ex.Message;
             notificationService.Error("Не удалось выгрузить клиентов в Excel");
         }
+    }
+    
+    private static string? ToNullable(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
     }
 
     private async Task LoadCustomersAsync()
