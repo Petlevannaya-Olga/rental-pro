@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace RentalPro.Presentation.Desktop.ViewModels;
+namespace RentalPro.Presentation.Desktop.Models;
 
 public partial class CustomerEditModel : ObservableObject
 {

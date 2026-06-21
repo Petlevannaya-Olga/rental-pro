@@ -1,28 +1,42 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace RentalPro.Presentation.Desktop.Models;
 
-public sealed class ToolEditModel
+public partial class ToolEditModel : ObservableObject
 {
-    public string ArticleNumber { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _articleNumber = string.Empty;
 
-    public string Name { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _name = string.Empty;
 
-    public string? Description { get; set; }
+    [ObservableProperty]
+    private string? _description;
 
-    public Guid? CategoryId { get; set; }
+    [ObservableProperty]
+    private Guid? _categoryId;
 
-    public Guid? ManufacturerId { get; set; }
+    [ObservableProperty]
+    private Guid? _manufacturerId;
 
-    public Guid? StatusId { get; set; }
+    [ObservableProperty]
+    private Guid? _statusId;
 
-    public decimal RentalPricePerDay { get; set; }
+    [ObservableProperty]
+    private decimal _rentalPricePerDay;
 
-    public decimal DepositAmount { get; set; }
+    [ObservableProperty]
+    private decimal _depositAmount;
 
-    public string SerialNumber { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _serialNumber = string.Empty;
 
-    public string InventoryNumber { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _inventoryNumber = string.Empty;
 
-    public string? CurrentCondition { get; set; }
+    [ObservableProperty]
+    private string? _currentCondition;
 
-    public string? PhotoPath { get; set; }
+    [ObservableProperty]
+    private string? _photoPath;
 }

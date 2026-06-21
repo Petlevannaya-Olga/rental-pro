@@ -1,5 +1,6 @@
 using Bogus;
 using RentalPro.Presentation.Desktop.ViewModels;
+using CustomerEditModel = RentalPro.Presentation.Desktop.Models.CustomerEditModel;
 
 namespace RentalPro.Presentation.Desktop.Services;
 

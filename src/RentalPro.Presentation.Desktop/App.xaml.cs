@@ -77,5 +77,8 @@ public partial class App : Application
 
         services.AddSingleton<ToolsViewModel>();
         services.AddSingleton<ToolsView>();
+        
+        services.AddSingleton<ToolEditViewModel>();
+        services.AddSingleton<ToolEditView>();
     }
 }

@@ -19,7 +19,7 @@ public partial class CustomerEditViewModel(
     : ObservableObject
 {
     [ObservableProperty]
-    private CustomerEditModel customer = new();
+    private Models.CustomerEditModel customer = new();
 
     [ObservableProperty]
     private FormMode mode = FormMode.Create;
@@ -85,7 +85,7 @@ public partial class CustomerEditViewModel(
         ErrorMessage = string.Empty;
         IsSaving = false;
 
-        SetCustomer(new CustomerEditModel());
+        SetCustomer(new Models.CustomerEditModel());
         RefreshState();
     }
 
@@ -175,7 +175,7 @@ public partial class CustomerEditViewModel(
 
     private void SetCustomerFromDto(CustomerDto dto)
     {
-        SetCustomer(new CustomerEditModel
+        SetCustomer(new Models.CustomerEditModel
         {
             LastName = dto.LastName,
             FirstName = dto.FirstName,
@@ -194,7 +194,7 @@ public partial class CustomerEditViewModel(
         });
     }
 
-    private void SetCustomer(CustomerEditModel newCustomer)
+    private void SetCustomer(Models.CustomerEditModel newCustomer)
     {
         Customer.PropertyChanged -= CustomerOnPropertyChanged;
 

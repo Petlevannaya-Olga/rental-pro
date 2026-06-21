@@ -421,6 +421,12 @@
                           ItemsSource="{Binding Tools}"
                           SelectedItem="{Binding SelectedTool, Mode=TwoWay}"
                           Style="{StaticResource ToolsDataGridStyle}">
+                    
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenViewToolCommand}"
+                                      CommandParameter="{Binding SelectedTool}" />
+                    </DataGrid.InputBindings>
 
                     <DataGrid.Columns>
 

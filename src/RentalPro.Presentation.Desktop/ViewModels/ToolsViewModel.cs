@@ -6,6 +6,7 @@ using RentalPro.Contracts.Tools;
 using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Models;
 using RentalPro.Presentation.Desktop.Services;
+using RentalPro.Presentation.Desktop.Views;
 
 namespace RentalPro.Presentation.Desktop.ViewModels;
 
@@ -13,6 +14,8 @@ public partial class ToolsViewModel(
     ToolsApiClient toolsApiClient,
     DictionariesApiClient dictionariesApiClient,
     FakeToolGeneratorService fakeToolGeneratorService,
+    ToolEditViewModel toolEditViewModel,
+    NavigationService navigationService,
     NotificationService notificationService)
     : ObservableObject
 {
@@ -344,21 +347,27 @@ public partial class ToolsViewModel(
     }
 
     [RelayCommand]
-    private void OpenViewTool(ToolDto? tool)
+    private async Task OpenViewToolAsync(ToolDto? tool)
     {
         if (tool is null)
             return;
 
-        notificationService.Info("Просмотр инструмента будет добавлен позже");
+        await toolEditViewModel.OpenViewAsync(tool);
+
+        navigationService.NavigateTo<ToolEditView>("Просмотр инструмента");
     }
-
+    
     [RelayCommand]
-    private void OpenEditTool(ToolDto? tool)
+    private async Task OpenEditToolAsync(
+        ToolDto? tool)
     {
         if (tool is null)
             return;
 
-        notificationService.Info("Редактирование инструмента будет добавлено позже");
+        await toolEditViewModel.OpenEditAsync(tool);
+
+        navigationService.NavigateTo<ToolEditView>(
+            "Редактирование инструмента");
     }
 
     [RelayCommand]
