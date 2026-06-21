@@ -95,13 +95,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <Style x:Key="ActionsDangerButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource ActionsMenuButtonStyle}">
             <Setter Property="Foreground" Value="#DC2626" />
         </Style>
-        
+
         <Style x:Key="CenteredCellTextStyle"
                TargetType="TextBlock">
             <Setter Property="HorizontalAlignment"
@@ -111,7 +111,7 @@
             <Setter Property="VerticalAlignment"
                     Value="Center" />
         </Style>
-        
+
         <Style x:Key="PrimaryCardButton"
                TargetType="Button">
 
@@ -169,7 +169,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
     </UserControl.Resources>
 
     <Grid>
@@ -424,6 +424,67 @@
 
                     <DataGrid.Columns>
 
+                        <DataGridTemplateColumn Width="80"
+                                                CanUserSort="False">
+
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+
+                                    <Border Width="56"
+                                            Height="56"
+                                            CornerRadius="10"
+                                            Background="#F8FAFC"
+                                            BorderBrush="#E5EAF2"
+                                            BorderThickness="1"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+
+                                        <Grid>
+
+                                            <Image Source="{Binding PhotoUrl}"
+                                                   Stretch="UniformToFill" />
+
+                                            <materialDesign:PackIcon Kind="Tools"
+                                                                     Width="24"
+                                                                     Height="24"
+                                                                     Foreground="#94A3B8"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center">
+
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Visibility"
+                                                                Value="Collapsed" />
+
+                                                        <Style.Triggers>
+
+                                                            <DataTrigger Binding="{Binding PhotoUrl}"
+                                                                         Value="">
+                                                                <Setter Property="Visibility"
+                                                                        Value="Visible" />
+                                                            </DataTrigger>
+
+                                                            <DataTrigger Binding="{Binding PhotoUrl}"
+                                                                         Value="{x:Null}">
+                                                                <Setter Property="Visibility"
+                                                                        Value="Visible" />
+                                                            </DataTrigger>
+
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+
+                                            </materialDesign:PackIcon>
+
+                                        </Grid>
+
+                                    </Border>
+
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+
+                        </DataGridTemplateColumn>
+
                         <DataGridTemplateColumn Header="Инструмент"
                                                 Width="2.8*"
                                                 SortMemberPath="Name">
@@ -461,22 +522,22 @@
 
                         <DataGridTextColumn Header="Категория"
                                             Binding="{Binding CategoryName}"
-                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="1.4*" />
 
                         <DataGridTextColumn Header="Производитель"
                                             Binding="{Binding ManufacturerName}"
-                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="1.4*" />
 
                         <DataGridTextColumn Header="Аренда/день"
                                             Binding="{Binding RentalPricePerDay, StringFormat={}{0:N0} ₽}"
-                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="130" />
 
                         <DataGridTextColumn Header="Залог"
                                             Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
-                                            ElementStyle="{StaticResource CenteredCellTextStyle}" 
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
                                             Width="120" />
 
                         <DataGridTemplateColumn Header="Статус"
