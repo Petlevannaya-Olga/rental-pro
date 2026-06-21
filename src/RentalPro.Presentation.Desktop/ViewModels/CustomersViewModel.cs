@@ -66,6 +66,9 @@ public partial class CustomersViewModel(
 
     [ObservableProperty]
     private CustomerDto? _selectedCustomer;
+    
+    [ObservableProperty]
+    private string? selectedStatsFilter;
 
     public NotificationService Notifications { get; } = notificationService;
     
@@ -110,6 +113,43 @@ public partial class CustomersViewModel(
             _ => null
         };
 
+    [RelayCommand]
+    private async Task SelectStatsFilterAsync(string filter)
+    {
+        SelectedStatsFilter = filter;
+
+        switch (filter)
+        {
+            case "all":
+                OrdersFilter = null;
+                RegularFilter = null;
+                ActiveOrdersFilter = null;
+                break;
+
+            case "withOrders":
+                OrdersFilter = "withOrders";
+                RegularFilter = null;
+                ActiveOrdersFilter = null;
+                break;
+
+            case "regular":
+                OrdersFilter = null;
+                RegularFilter = "regular";
+                ActiveOrdersFilter = null;
+                break;
+
+            case "active":
+                OrdersFilter = null;
+                RegularFilter = null;
+                ActiveOrdersFilter = "withActiveOrders";
+                break;
+        }
+
+        CurrentPage = 1;
+
+        await LoadCustomersAsync();
+    }
+    
     [RelayCommand]
     public async Task LoadAsync()
     {
