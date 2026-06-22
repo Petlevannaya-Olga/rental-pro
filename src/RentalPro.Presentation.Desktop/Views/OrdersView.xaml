@@ -1,0 +1,642 @@
+<UserControl x:Class="RentalPro.Presentation.Desktop.Views.OrdersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="Transparent">
+
+    <UserControl.Resources>
+
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="18"
+                                      ShadowDepth="2"
+                                      Opacity="0.08" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="StatCardStyle"
+               TargetType="Border"
+               BasedOn="{StaticResource CardStyle}">
+            <Setter Property="Height" Value="72" />
+            <Setter Property="Margin" Value="0 0 12 12" />
+            <Setter Property="Padding" Value="16 12" />
+        </Style>
+
+        <Style x:Key="StatTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#6B7890" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="8 0 0 0" />
+        </Style>
+
+        <Style x:Key="StatValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#071B39" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style x:Key="OrdersDataGridStyle"
+               TargetType="DataGrid"
+               BasedOn="{StaticResource MaterialDesignDataGrid}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="RowBackground" Value="White" />
+            <Setter Property="AlternatingRowBackground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7" />
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="MinRowHeight" Value="64" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        </Style>
+
+        <Style x:Key="PrimaryCardButton"
+               TargetType="Button">
+            <Setter Property="Background" Value="#1E73FF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="72" />
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="12">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#1664E8" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#0F56C9" />
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CenteredCellTextStyle"
+               TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ActionsMenuButtonStyle"
+               TargetType="Button">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Padding" Value="18 0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#F8FAFC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Карточки -->
+        <UniformGrid Grid.Row="0"
+                     Columns="5"
+                     Margin="0 0 0 8">
+
+            <Border Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAllStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding SelectStatsFilterCommand}"
+                                  CommandParameter="all" />
+                </Border.InputBindings>
+
+                <StackPanel>
+                    <DockPanel Margin="0 0 0 4">
+                        <materialDesign:PackIcon Kind="ClipboardTextOutline"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#1E73FF" />
+                        <TextBlock Text="Всего заказов"
+                                   Style="{StaticResource StatTitleStyle}" />
+                    </DockPanel>
+
+                    <TextBlock Text="{Binding AllOrdersCount}"
+                               Style="{StaticResource StatValueStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsReadyStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding SelectStatsFilterCommand}"
+                                  CommandParameter="ready" />
+                </Border.InputBindings>
+
+                <StackPanel>
+                    <DockPanel Margin="0 0 0 4">
+                        <materialDesign:PackIcon Kind="PackageVariantClosed"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#0891B2" />
+                        <TextBlock Text="Готовы к выдаче"
+                                   Style="{StaticResource StatTitleStyle}" />
+                    </DockPanel>
+
+                    <TextBlock Text="{Binding ReadyOrdersCount}"
+                               Style="{StaticResource StatValueStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsActiveStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding SelectStatsFilterCommand}"
+                                  CommandParameter="active" />
+                </Border.InputBindings>
+
+                <StackPanel>
+                    <DockPanel Margin="0 0 0 4">
+                        <materialDesign:PackIcon Kind="Autorenew"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#16A34A" />
+                        <TextBlock Text="Выполняются"
+                                   Style="{StaticResource StatTitleStyle}" />
+                    </DockPanel>
+
+                    <TextBlock Text="{Binding ActiveOrdersCount}"
+                               Style="{StaticResource StatValueStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border"
+                           BasedOn="{StaticResource StatCardStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsClosingStatsSelected}" Value="True">
+                                <Setter Property="Background" Value="#EAF3FF" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding SelectStatsFilterCommand}"
+                                  CommandParameter="closing" />
+                </Border.InputBindings>
+
+                <StackPanel>
+                    <DockPanel Margin="0 0 0 4">
+                        <materialDesign:PackIcon Kind="CheckCircleOutline"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#F59E0B" />
+                        <TextBlock Text="Ожидают закрытия"
+                                   Style="{StaticResource StatTitleStyle}" />
+                    </DockPanel>
+
+                    <TextBlock Text="{Binding ClosingOrdersCount}"
+                               Style="{StaticResource StatValueStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Button Command="{Binding OpenCreateOrderCommand}"
+                    Style="{StaticResource PrimaryCardButton}"
+                    Margin="0 0 12 12">
+
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Plus"
+                                             Width="28"
+                                             Height="28"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center" />
+
+                    <TextBlock Text="Создать заказ"
+                               Foreground="White"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Margin="0 8 0 0" />
+                </StackPanel>
+            </Button>
+
+        </UniformGrid>
+
+        <!-- Основная карточка -->
+        <Border Grid.Row="1"
+                Style="{StaticResource CardStyle}"
+                Margin="0 8 16 0">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Фильтры 1 -->
+                <Grid Grid.Row="0"
+                      Margin="12 0 0 12">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                             Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                             Height="48"
+                             materialDesign:HintAssist.Hint="Номер заказа, клиент или инструмент"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                    <ComboBox Grid.Column="2"
+                              Height="48"
+                              ItemsSource="{Binding Statuses}"
+                              SelectedValue="{Binding SelectedStatusId, UpdateSourceTrigger=PropertyChanged}"
+                              SelectedValuePath="Id"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="Статус"
+                              Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+
+                    <DatePicker Grid.Column="4"
+                                Height="48"
+                                SelectedDate="{Binding StartFrom, UpdateSourceTrigger=PropertyChanged}"
+                                materialDesign:HintAssist.Hint="Начало с"
+                                Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
+
+                    <DatePicker Grid.Column="6"
+                                Height="48"
+                                SelectedDate="{Binding StartTo, UpdateSourceTrigger=PropertyChanged}"
+                                materialDesign:HintAssist.Hint="Начало по"
+                                Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
+
+                    <Button Grid.Column="8"
+                            Width="42"
+                            Height="42"
+                            VerticalAlignment="Bottom"
+                            Margin="0 0 0 2"
+                            Command="{Binding ResetFiltersCommand}"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Сбросить фильтры">
+
+                        <materialDesign:PackIcon Kind="Refresh"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Foreground="#1E73FF" />
+                    </Button>
+                </Grid>
+
+                <!-- Фильтры 2 -->
+                <Grid Grid.Row="1"
+                      Margin="12 0 0 16">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <DatePicker Grid.Column="0"
+                                Height="48"
+                                SelectedDate="{Binding EndFrom, UpdateSourceTrigger=PropertyChanged}"
+                                materialDesign:HintAssist.Hint="Окончание с"
+                                Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
+
+                    <DatePicker Grid.Column="2"
+                                Height="48"
+                                SelectedDate="{Binding EndTo, UpdateSourceTrigger=PropertyChanged}"
+                                materialDesign:HintAssist.Hint="Окончание по"
+                                Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
+                </Grid>
+
+                <!-- Таблица -->
+                <DataGrid Grid.Row="2"
+                          ItemsSource="{Binding Orders}"
+                          SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
+                          Sorting="OrdersDataGrid_OnSorting"
+                          Style="{StaticResource OrdersDataGridStyle}">
+
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenOrderDetailsCommand}"
+                                      CommandParameter="{Binding SelectedOrder}" />
+                    </DataGrid.InputBindings>
+
+                    <DataGrid.Columns>
+
+                        <DataGridTemplateColumn Header="Заказ"
+                                                Width="1.4*"
+                                                SortMemberPath="number">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center"
+                                                Margin="4 4">
+                                        <TextBlock Text="{Binding Number}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   Foreground="#071B39" />
+
+                                        <TextBlock Text="{Binding OrderDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                                   FontSize="12"
+                                                   Foreground="#6B7890"
+                                                   Margin="0 3 0 0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Клиент"
+                                            Binding="{Binding CustomerFullName}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                            Width="1.8*"
+                                            SortMemberPath="customer" />
+
+                        <DataGridTextColumn Header="Начало"
+                                            Binding="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                            Width="110"
+                                            SortMemberPath="startdate" />
+
+                        <DataGridTextColumn Header="Окончание"
+                                            Binding="{Binding PlannedReturnDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                            Width="120"
+                                            SortMemberPath="plannedreturndate" />
+
+                        <DataGridTextColumn Header="Дней"
+                                            Binding="{Binding RentalDays}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                            Width="70" />
+
+                        <DataGridTextColumn Header="Инстр."
+                                            Binding="{Binding ItemsCount}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                            Width="80"
+                                            SortMemberPath="itemscount" />
+
+                        <DataGridTextColumn Header="Аренда"
+                                            Binding="{Binding TotalCost, StringFormat={}{0:N0} ₽}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                            Width="120"
+                                            SortMemberPath="totalcost" />
+
+                        <DataGridTemplateColumn Header="Статус"
+                                                Width="210"
+                                                SortMemberPath="status">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="14"
+                                            Padding="12 6"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#F1F5F9" />
+
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Подтвержден">
+                                                        <Setter Property="Background" Value="#FEF3C7" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Готов к выдаче">
+                                                        <Setter Property="Background" Value="#DBEAFE" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Выполняется">
+                                                        <Setter Property="Background" Value="#DCFCE7" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Ожидает закрытия аренды">
+                                                        <Setter Property="Background" Value="#FFF1DC" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Просрочен">
+                                                        <Setter Property="Background" Value="#FEE2E2" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding StatusName}" Value="Отменен">
+                                                        <Setter Property="Background" Value="#F1F5F9" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+
+                                        <TextBlock Text="{Binding StatusName}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13">
+
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#64748B" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="Подтвержден">
+                                                            <Setter Property="Foreground" Value="#D97706" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="Готов к выдаче">
+                                                            <Setter Property="Foreground" Value="#2563EB" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="Выполняется">
+                                                            <Setter Property="Foreground" Value="#16A34A" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="Ожидает закрытия аренды">
+                                                            <Setter Property="Foreground" Value="#F97316" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="Просрочен">
+                                                            <Setter Property="Foreground" Value="#DC2626" />
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding StatusName}" Value="Отменен">
+                                                            <Setter Property="Foreground" Value="#64748B" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Залог"
+                                            Binding="{Binding DepositTotal, StringFormat={}{0:N0} ₽}"
+                                            ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                            Width="120"
+                                            SortMemberPath="deposittotal" />
+
+                        <DataGridTemplateColumn Width="56"
+                                                CanUserSort="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.OpenActionsCommand,
+                                                              RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignIconButton}">
+                                        <materialDesign:PackIcon Kind="DotsVertical"
+                                                                 Width="22"
+                                                                 Height="22"
+                                                                 Foreground="#64748B" />
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Низ -->
+                <Grid Grid.Row="3"
+                      Margin="12 16 0 0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0"
+                            Height="40"
+                            Padding="16 0"
+                            Command="{Binding ExportCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}">
+
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileExcelOutline"
+                                                     Width="18"
+                                                     Height="18"
+                                                     Margin="0 0 8 0" />
+                            <TextBlock Text="Экспорт" />
+                        </StackPanel>
+                    </Button>
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+
+                        <Button Width="36"
+                                Height="36"
+                                Command="{Binding PreviousPageCommand}"
+                                Style="{StaticResource MaterialDesignIconButton}">
+                            <materialDesign:PackIcon Kind="ChevronLeft"
+                                                     Width="20"
+                                                     Height="20" />
+                        </Button>
+
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#6B7890"
+                                   Margin="12 0">
+                            <Run Text="{Binding CurrentPage, Mode=OneWay}" />
+                            <Run Text=" из " />
+                            <Run Text="{Binding TotalPages, Mode=OneWay}" />
+                        </TextBlock>
+
+                        <Button Width="36"
+                                Height="36"
+                                Command="{Binding NextPageCommand}"
+                                Style="{StaticResource MaterialDesignIconButton}">
+                            <materialDesign:PackIcon Kind="ChevronRight"
+                                                     Width="20"
+                                                     Height="20" />
+                        </Button>
+
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

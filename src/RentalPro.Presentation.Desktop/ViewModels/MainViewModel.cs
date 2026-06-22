@@ -60,6 +60,10 @@ public partial class MainViewModel : ObservableObject
             case "Инструменты":
                 _navigationService.NavigateTo<ToolsView>("Инструменты");
                 break;
+            
+            case "Заказы":
+                _navigationService.NavigateTo<OrdersView>("Заказы");
+                break;
         }
     }
 }

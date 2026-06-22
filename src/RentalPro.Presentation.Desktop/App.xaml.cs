@@ -83,5 +83,10 @@ public partial class App : Application
         
         services.AddSingleton<ToolRentalHistoryViewModel>();
         services.AddSingleton<ToolRentalHistoryView>();
+        
+        services.AddSingleton<OrdersViewModel>();
+        services.AddSingleton<OrdersView>();
+        
+        services.AddSingleton<OrdersApiClient>();
     }
 }
