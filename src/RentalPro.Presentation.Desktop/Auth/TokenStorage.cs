@@ -30,6 +30,21 @@ public sealed class TokenStorage
                 : null;
         }
     }
+    
+    public string ManagerFullName
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Token))
+                return "Текущий пользователь";
+
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(Token);
+
+            return jwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value
+                   ?? jwt.Claims.FirstOrDefault(x => x.Type == "name")?.Value
+                   ?? "Текущий пользователь";
+        }
+    }
 
     public void SetToken(string token)
     {

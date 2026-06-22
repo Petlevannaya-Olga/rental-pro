@@ -54,6 +54,9 @@ public partial class OrderEditViewModel(
         Mode == FormMode.Create
             ? "Создание заказа"
             : $"Заказ {Details?.Number}";
+    
+    public string ManagerFullName =>
+        tokenStorage.ManagerFullName;
 
     public decimal RentalAmount =>
         Order.Tools.Sum(x => x.TotalAmount);
@@ -278,6 +281,7 @@ public partial class OrderEditViewModel(
     private void RefreshState()
     {
         OnPropertyChanged(nameof(Title));
+        OnPropertyChanged(nameof(ManagerFullName));
         OnPropertyChanged(nameof(IsCreateMode));
         OnPropertyChanged(nameof(IsViewMode));
         OnPropertyChanged(nameof(IsEditable));
