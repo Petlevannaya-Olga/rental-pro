@@ -295,4 +295,49 @@ public sealed class OrdersApiClient(IHttpClientFactory httpClientFactory)
                 .ToErrors();
         }
     }
+    
+    public async Task<Result<OrderDetailsDto, Errors>> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/orders/{id}",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "order.load.failed",
+                    "Не удалось загрузить заказ",
+                    cancellationToken);
+            }
+
+            var order = await response.Content
+                .ReadFromJsonAsync<OrderDetailsDto>(cancellationToken);
+
+            if (order is null)
+            {
+                return CommonErrors
+                    .Failure(
+                        "order.details.is.null",
+                        "Не удалось получить заказ")
+                    .ToErrors();
+            }
+
+            return order;
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "order.load.failed",
+                    "Не удалось загрузить заказ")
+                .ToErrors();
+        }
+    }
 }

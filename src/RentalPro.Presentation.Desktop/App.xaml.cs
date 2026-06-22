@@ -88,5 +88,8 @@ public partial class App : Application
         services.AddSingleton<OrdersView>();
         
         services.AddSingleton<OrdersApiClient>();
+        
+        services.AddSingleton<OrderEditViewModel>();
+        services.AddSingleton<OrderEditView>();
     }
 }

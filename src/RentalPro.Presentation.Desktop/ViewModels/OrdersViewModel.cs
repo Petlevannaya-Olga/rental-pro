@@ -6,6 +6,7 @@ using RentalPro.Contracts.Orders;
 using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Models;
 using RentalPro.Presentation.Desktop.Services;
+using RentalPro.Presentation.Desktop.Views;
 
 namespace RentalPro.Presentation.Desktop.ViewModels;
 
@@ -13,6 +14,7 @@ public partial class OrdersViewModel(
     OrdersApiClient ordersApiClient,
     DictionariesApiClient dictionariesApiClient,
     NavigationService navigationService,
+    OrderEditViewModel orderEditViewModel,
     NotificationService notificationService)
     : ObservableObject
 {
@@ -242,22 +244,24 @@ public partial class OrdersViewModel(
     }
 
     [RelayCommand]
-    private void OpenCreateOrder()
+    private async Task OpenCreateOrderAsync()
     {
-        notificationService.Info("Форма создания заказа будет добавлена следующим шагом");
+        await orderEditViewModel.OpenCreateAsync();
+
+        navigationService.NavigateTo<OrderEditView>(
+            "Создание заказа");
     }
 
     [RelayCommand]
-    private void OpenOrderDetails(OrderDto? order)
+    private async Task OpenOrderDetailsAsync(OrderDto? order)
     {
         if (order is null)
             return;
 
-        notificationService.Info($"Просмотр заказа {order.Number} будет добавлен следующим шагом");
+        await orderEditViewModel.OpenViewAsync(order.Id);
 
-        // Потом заменим на:
-        // orderDetailsViewModel.Open(order.Id);
-        // navigationService.NavigateTo<OrderDetailsView>($"Заказ {order.Number}");
+        navigationService.NavigateTo<OrderEditView>(
+            $"Заказ {order.Number}");
     }
 
     [RelayCommand]
