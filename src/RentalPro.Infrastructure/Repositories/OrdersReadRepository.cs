@@ -1437,18 +1437,25 @@ public sealed class OrdersReadRepository(
             "orderdate" => $"ORDER BY o.order_date {direction}",
             "createdat" => $"ORDER BY o.created_at {direction}",
             "updatedat" => $"ORDER BY o.updated_at {direction}",
+
             "items" => $"ORDER BY oa.ItemsCount {direction}",
             "itemscount" => $"ORDER BY oa.ItemsCount {direction}",
-            "deposit" => $"ORDER BY oa.DepositTotal {direction}",
-            "deposittotal" => $"ORDER BY oa.DepositTotal {direction}",
-            "amount" => $"ORDER BY oa.TotalCost {direction}",
-            "totalcost" => $"ORDER BY oa.TotalCost {direction}",
+
+            "amount" => $"ORDER BY oa.ActualRentalAmount {direction}",
+            "totalcost" => $"ORDER BY oa.ActualRentalAmount {direction}",
+
+            "deposit" => $"ORDER BY oa.RemainingDepositAmount {direction}",
+            "deposittotal" => $"ORDER BY oa.RemainingDepositAmount {direction}",
+
             "start" => $"ORDER BY oa.StartDate {direction}",
             "startdate" => $"ORDER BY oa.StartDate {direction}",
-            "end" => $"ORDER BY oa.NearestReturnDate {direction}",
-            "plannedreturndate" => $"ORDER BY oa.NearestReturnDate {direction}",
+
+            "end" => $"ORDER BY oa.EndDate {direction}",
+            "plannedreturndate" => $"ORDER BY oa.EndDate {direction}",
+
             "tool" => $"ORDER BY oa.ToolsNames {direction}",
             "tools" => $"ORDER BY oa.ToolsNames {direction}",
+
             _ => "ORDER BY o.created_at DESC"
         };
     }

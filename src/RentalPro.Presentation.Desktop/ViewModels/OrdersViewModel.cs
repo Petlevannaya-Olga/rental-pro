@@ -42,13 +42,17 @@ public partial class OrdersViewModel(
 
     [ObservableProperty] private Guid? _selectedStatusId;
 
-    [ObservableProperty] private DateOnly? _startFrom;
+    [ObservableProperty]
+    private DateTime? _startFromDate;
 
-    [ObservableProperty] private DateOnly? _startTo;
+    [ObservableProperty]
+    private DateTime? _startToDate;
 
-    [ObservableProperty] private DateOnly? _endFrom;
+    [ObservableProperty]
+    private DateTime? _endFromDate;
 
-    [ObservableProperty] private DateOnly? _endTo;
+    [ObservableProperty]
+    private DateTime? _endToDate;
 
     [ObservableProperty] private string? _sortBy = "createdat";
 
@@ -132,10 +136,10 @@ public partial class OrdersViewModel(
         Search = string.Empty;
         SelectedStatusId = null;
 
-        StartFrom = null;
-        StartTo = null;
-        EndFrom = null;
-        EndTo = null;
+        StartFromDate = null;
+        StartToDate = null;
+        EndFromDate = null;
+        EndToDate = null;
 
         SelectedStatsFilter = "all";
         CurrentPage = 1;
@@ -201,10 +205,10 @@ public partial class OrdersViewModel(
             var request = new ExportOrdersRequest(
                 Search: Search,
                 StatusId: SelectedStatusId,
-                StartFrom: StartFrom,
-                StartTo: StartTo,
-                EndFrom: EndFrom,
-                EndTo: EndTo,
+                StartFrom: ToDateOnly(StartFromDate),
+                StartTo: ToDateOnly(StartToDate),
+                EndFrom: ToDateOnly(EndFromDate),
+                EndTo: ToDateOnly(EndToDate),
                 SortBy: SortBy,
                 Descending: Descending);
 
@@ -266,6 +270,29 @@ public partial class OrdersViewModel(
         notificationService.Info($"Действия с заказом {order.Number} будут добавлены следующим шагом");
     }
 
+    [RelayCommand]
+    private async Task CancelOrderAsync(OrderDto? order)
+    {
+        if (order is null)
+            return;
+
+        if (order.StatusName != "Подтвержден")
+            return;
+
+        var result = await ordersApiClient.CancelOrderAsync(order.Id);
+
+        if (result.IsFailure)
+        {
+            notificationService.Error(result.Error.Message);
+            return;
+        }
+
+        notificationService.Success("Заказ отменен");
+
+        await LoadStatsAsync();
+        await LoadOrdersAsync();
+    }
+    
     private async Task LoadStatusesAsync()
     {
         var result = await dictionariesApiClient.GetListAsync<DictionaryItem>(
@@ -293,10 +320,10 @@ public partial class OrdersViewModel(
             var request = new GetOrdersRequest(
                 Search: Search,
                 StatusId: SelectedStatusId,
-                StartFrom: StartFrom,
-                StartTo: StartTo,
-                EndFrom: EndFrom,
-                EndTo: EndTo,
+                StartFrom: ToDateOnly(StartFromDate),
+                StartTo: ToDateOnly(StartToDate),
+                EndFrom: ToDateOnly(EndFromDate),
+                EndTo: ToDateOnly(EndToDate),
                 SortBy: SortBy,
                 Descending: Descending,
                 Page: CurrentPage,
@@ -422,27 +449,34 @@ public partial class OrdersViewModel(
         _ = ApplyFiltersAsync();
     }
 
-    partial void OnStartFromChanged(DateOnly? value)
+    partial void OnStartFromDateChanged(DateTime? value)
     {
         SelectedStatsFilter = null;
         _ = ApplyFiltersAsync();
     }
 
-    partial void OnStartToChanged(DateOnly? value)
+    partial void OnStartToDateChanged(DateTime? value)
     {
         SelectedStatsFilter = null;
         _ = ApplyFiltersAsync();
     }
 
-    partial void OnEndFromChanged(DateOnly? value)
+    partial void OnEndFromDateChanged(DateTime? value)
     {
         SelectedStatsFilter = null;
         _ = ApplyFiltersAsync();
     }
 
-    partial void OnEndToChanged(DateOnly? value)
+    partial void OnEndToDateChanged(DateTime? value)
     {
         SelectedStatsFilter = null;
         _ = ApplyFiltersAsync();
+    }
+    
+    private static DateOnly? ToDateOnly(DateTime? value)
+    {
+        return value.HasValue
+            ? DateOnly.FromDateTime(value.Value)
+            : null;
     }
 }

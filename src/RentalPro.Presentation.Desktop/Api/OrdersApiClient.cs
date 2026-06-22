@@ -261,4 +261,38 @@ public sealed class OrdersApiClient(IHttpClientFactory httpClientFactory)
             .Failure(fallbackCode, fallbackMessage)
             .ToErrors();
     }
+
+    public async Task<UnitResult<Errors>> CancelOrderAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.PostAsync(
+                $"api/orders/{orderId}/cancel",
+                null,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "order.cancel.failed",
+                    "Не удалось отменить заказ",
+                    cancellationToken);
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "order.cancel.failed",
+                    "Не удалось отменить заказ")
+                .ToErrors();
+        }
+    }
 }
