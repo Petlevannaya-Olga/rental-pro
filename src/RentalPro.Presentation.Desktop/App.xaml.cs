@@ -120,5 +120,8 @@ public partial class App : Application
 
         services.AddSingleton<DictionaryDetailsViewModel>();
         services.AddSingleton<DictionaryDetailsView>();
+        
+        services.AddSingleton<ReportsViewModel>();
+        services.AddSingleton<ReportsView>();
     }
 }
