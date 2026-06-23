@@ -512,4 +512,39 @@ public sealed class OrdersApiClient(IHttpClientFactory httpClientFactory)
                 .ToErrors();
         }
     }
+    
+    public async Task<UnitResult<Errors>> CloseRentalAsync(
+        Guid orderId,
+        CloseRentalRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                $"api/orders/{orderId}/close-rental",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "order.close-rental.failed",
+                    "Не удалось закрыть аренду",
+                    cancellationToken);
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "order.close-rental.failed",
+                    "Не удалось закрыть аренду")
+                .ToErrors();
+        }
+    }
 }

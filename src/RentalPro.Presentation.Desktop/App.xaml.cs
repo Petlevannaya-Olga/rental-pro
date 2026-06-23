@@ -112,5 +112,8 @@ public partial class App : Application
         
         services.AddTransient<ReturnDialogViewModel>();
         services.AddTransient<ReturnDialog>();
+        
+        services.AddTransient<CloseRentalDialogViewModel>();
+        services.AddTransient<CloseRentalDialog>();
     }
 }

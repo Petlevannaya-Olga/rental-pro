@@ -44,6 +44,10 @@ public partial class OrderEditViewModel(
         Details is not null
         && Details.StatusName == "Готов к выдаче";
     
+    public bool CanCloseRental =>
+        Details is not null
+        && Details.StatusName == "Ожидает закрытия аренды";
+    
     public IReadOnlyList<OrderDocumentDto> OrderDocuments =>
         Details?.StatusName == "Отменен"
             ? []
@@ -573,6 +577,27 @@ public partial class OrderEditViewModel(
         await OpenViewAsync(Details.Id);
     }
     
+    [RelayCommand]
+    private async Task OpenCloseRentalAsync()
+    {
+        if (Details is null)
+        {
+            notificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var dialog = serviceProvider.GetRequiredService<CloseRentalDialog>();
+
+        await dialog.OpenAsync(Details);
+
+        var result = dialog.ShowDialog();
+
+        if (result != true)
+            return;
+
+        await OpenViewAsync(Details.Id);
+    }
+    
     private static string GetDocumentFileName(OrderDocumentDto document)
     {
         var title = document.Title
@@ -652,6 +677,7 @@ public partial class OrderEditViewModel(
         OnPropertyChanged(nameof(CanIssueTools));
         
         OnPropertyChanged(nameof(CanReturnTools));
+        OnPropertyChanged(nameof(CanCloseRental));
 
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
