@@ -123,5 +123,10 @@ public partial class App : Application
         
         services.AddSingleton<ReportsViewModel>();
         services.AddSingleton<ReportsView>();
+        
+        services.AddSingleton<ReportsApiClient>();
+
+        services.AddSingleton<ReportResultViewModel>();
+        services.AddSingleton<ReportResultView>();
     }
 }

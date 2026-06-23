@@ -16,188 +16,83 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="PrimaryActionButtonStyle"
+               TargetType="Button">
+
+            <Setter Property="Background" Value="#1E73FF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="FontSize" Value="14"></Setter>
+            <Setter Property="Padding" Value="24 0" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="5">
+
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#1664E8" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#0F56C9" />
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#AFC9FF" />
+
+                                <Setter Property="Foreground"
+                                        Value="White" />
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
+
+        </Style>
     </UserControl.Resources>
-    <Grid>
-    <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="20" />
-        <RowDefinition Height="*" />
-    </Grid.RowDefinitions>
+    <materialDesign:DialogHost IsOpen="{Binding IsPeriodDialogOpen}">
 
-    <!-- Верхняя плашка статистики -->
-    <UniformGrid Grid.Row="0"
-                 Columns="4"
-                 Margin="0 0 0 0">
-
-        <Border Height="80"
-                Margin="0 0 20 0"
-                Padding="18 12"
-                Style="{StaticResource CardStyle}">
-
-            <DockPanel>
-                <Border Width="48"
-                        Height="48"
-                        CornerRadius="12"
-                        Background="#DCFCE7"
-                        DockPanel.Dock="Left">
-
-                    <materialDesign:PackIcon Kind="Cash"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="#16A34A"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Center" />
-                </Border>
-
-                <StackPanel Margin="14 0 0 0"
-                            VerticalAlignment="Center">
-
-                    <TextBlock Text="{Binding MonthlyRevenue, StringFormat={}{0:N0} ₽}"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="#071B39" />
-
-                    <TextBlock Text="Выручка за месяц"
-                               FontSize="13"
-                               Foreground="#6B7890" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <Border Height="80"
-                Margin="0 0 20 0"
-                Padding="18 12"
-                Style="{StaticResource CardStyle}">
-
-            <DockPanel>
-                <Border Width="48"
-                        Height="48"
-                        CornerRadius="12"
-                        Background="#DBEAFE"
-                        DockPanel.Dock="Left">
-
-                    <materialDesign:PackIcon Kind="ReceiptTextOutline"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="#2563EB"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Center" />
-                </Border>
-
-                <StackPanel Margin="14 0 0 0"
-                            VerticalAlignment="Center">
-
-                    <TextBlock Text="{Binding ActiveOrdersCount}"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="#071B39" />
-
-                    <TextBlock Text="Активных заказов"
-                               FontSize="13"
-                               Foreground="#6B7890" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <Border Height="80"
-                Margin="0 0 20 0"
-                Padding="18 12"
-                Style="{StaticResource CardStyle}">
-
-            <DockPanel>
-                <Border Width="48"
-                        Height="48"
-                        CornerRadius="12"
-                        Background="#FEE2E2"
-                        DockPanel.Dock="Left">
-
-                    <materialDesign:PackIcon Kind="AlertOutline"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="#DC2626"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Center" />
-                </Border>
-
-                <StackPanel Margin="14 0 0 0"
-                            VerticalAlignment="Center">
-
-                    <TextBlock Text="{Binding OverdueReturnsCount}"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="#071B39" />
-
-                    <TextBlock Text="Просрочено возвратов"
-                               FontSize="13"
-                               Foreground="#6B7890" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <Border Height="80"
-                Margin="0 0 20 0"
-                Padding="18 12"
-                Style="{StaticResource CardStyle}">
-
-            <DockPanel>
-                <Border Width="48"
-                        Height="48"
-                        CornerRadius="12"
-                        Background="#FEF3C7"
-                        DockPanel.Dock="Left">
-
-                    <materialDesign:PackIcon Kind="Wrench"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="#D97706"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Center" />
-                </Border>
-
-                <StackPanel Margin="14 0 0 0"
-                            VerticalAlignment="Center">
-
-                    <TextBlock Text="{Binding ToolsInMaintenanceCount}"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="#071B39" />
-
-                    <TextBlock Text="Инструментов на ремонте"
-                               FontSize="13"
-                               Foreground="#6B7890" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-    </UniformGrid>
-
-    <!-- Карточки отчетов -->
-    <ScrollViewer Grid.Row="2"
-                  VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
-
-        <UniformGrid Columns="3"
-                     Rows="2"
-                     HorizontalAlignment="Stretch"
-                     VerticalAlignment="Top">
-
-            <!-- Выручка по периодам -->
-            <Border Height="200"
-                    Margin="0 0 20 20"
+        <materialDesign:DialogHost.DialogContent>
+            <Border Width="580"
                     Padding="24"
-                    Cursor="Hand"
-                    Style="{StaticResource CardStyle}">
-
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding OpenReportCommand}"
-                                  CommandParameter="revenue" />
-                </Border.InputBindings>
+                    Background="White"
+                    CornerRadius="18">
 
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="24" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="28" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
@@ -207,407 +102,665 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Width="64"
-                                Height="64"
-                                CornerRadius="14"
-                                Background="#DCFCE7"
-                                HorizontalAlignment="Center">
+                        <StackPanel>
+                            <TextBlock Text="Выберите период"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="#071B39" />
 
-                            <materialDesign:PackIcon Kind="ChartLine"
-                                                     Width="30"
-                                                     Height="30"
+                            <TextBlock Text="{Binding SelectedReportTitle}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="#6B7890"
+                                       Margin="0 8 0 0" />
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                                Width="36"
+                                Height="36"
+                                Command="{Binding CancelPeriodDialogCommand}"
+                                Style="{StaticResource MaterialDesignIconButton}">
+
+                            <materialDesign:PackIcon Kind="Close"
+                                                     Width="22"
+                                                     Height="22"
+                                                     Foreground="#64748B" />
+                        </Button>
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <DatePicker Grid.Column="0"
+                                    Height="48"
+                                    SelectedDate="{Binding DateFrom}"
+                                    materialDesign:HintAssist.Hint="Дата начала"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+
+                        <DatePicker Grid.Column="2"
+                                    Height="48"
+                                    SelectedDate="{Binding DateTo}"
+                                    materialDesign:HintAssist.Hint="Дата окончания"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="4"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+
+                        <Button Height="44"
+                                Padding="18 0"
+                                Command="{Binding CancelPeriodDialogCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Content="Отмена" />
+
+                        <Button Height="44"
+                                Width="160"
+                                Padding="22 0"
+                                Margin="12 0 0 0"
+                                Command="{Binding GenerateReportCommand}"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Content="Сформировать" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </materialDesign:DialogHost.DialogContent>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="20" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Верхняя плашка статистики -->
+            <UniformGrid Grid.Row="0"
+                         Columns="4"
+                         Margin="0 0 0 0">
+
+                <Border Height="80"
+                        Margin="0 0 20 0"
+                        Padding="18 12"
+                        Style="{StaticResource CardStyle}">
+
+                    <DockPanel>
+                        <Border Width="48"
+                                Height="48"
+                                CornerRadius="12"
+                                Background="#DCFCE7"
+                                DockPanel.Dock="Left">
+
+                            <materialDesign:PackIcon Kind="Cash"
+                                                     Width="24"
+                                                     Height="24"
                                                      Foreground="#16A34A"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center" />
                         </Border>
 
-                        <Border Grid.Column="1"
-                                Width="44"
-                                Height="44"
+                        <StackPanel Margin="14 0 0 0"
+                                    VerticalAlignment="Center">
+
+                            <TextBlock Text="{Binding MonthlyRevenue, StringFormat={}{0:N0} ₽}"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="#071B39" />
+
+                            <TextBlock Text="Выручка за месяц"
+                                       FontSize="13"
+                                       Foreground="#6B7890" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <Border Height="80"
+                        Margin="0 0 20 0"
+                        Padding="18 12"
+                        Style="{StaticResource CardStyle}">
+
+                    <DockPanel>
+                        <Border Width="48"
+                                Height="48"
                                 CornerRadius="12"
-                                Background="#F8FAFC"
-                                HorizontalAlignment="Right">
-
-                            <materialDesign:PackIcon Kind="ArrowTopRight"
-                                                     Width="22"
-                                                     Height="22"
-                                                     Foreground="#64748B"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
-                    </Grid>
-
-                    <StackPanel Grid.Row="2">
-                        <TextBlock Text="Выручка по периодам"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#071B39" />
-
-                        <TextBlock Text="Анализ поступлений от аренды за выбранный период"
-                                   FontSize="14"
-                                   Foreground="#6B7890"
-                                   Margin="0 10 0 0"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- Популярность инструментов -->
-            <Border Height="200"
-                    Margin="0 0 20 20"
-                    Padding="24"
-                    Cursor="Hand"
-                    Style="{StaticResource CardStyle}">
-
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding OpenReportCommand}"
-                                  CommandParameter="toolPopularity" />
-                </Border.InputBindings>
-
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <Border Width="64"
-                                Height="64"
-                                CornerRadius="14"
                                 Background="#DBEAFE"
-                                HorizontalAlignment="Center">
+                                DockPanel.Dock="Left">
 
-                            <materialDesign:PackIcon Kind="ChartBar"
-                                                     Width="30"
-                                                     Height="30"
+                            <materialDesign:PackIcon Kind="ReceiptTextOutline"
+                                                     Width="24"
+                                                     Height="24"
                                                      Foreground="#2563EB"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center" />
                         </Border>
 
-                        <Border Grid.Column="1"
-                                Width="44"
-                                Height="44"
+                        <StackPanel Margin="14 0 0 0"
+                                    VerticalAlignment="Center">
+
+                            <TextBlock Text="{Binding ActiveOrdersCount}"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="#071B39" />
+
+                            <TextBlock Text="Активных заказов"
+                                       FontSize="13"
+                                       Foreground="#6B7890" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <Border Height="80"
+                        Margin="0 0 20 0"
+                        Padding="18 12"
+                        Style="{StaticResource CardStyle}">
+
+                    <DockPanel>
+                        <Border Width="48"
+                                Height="48"
                                 CornerRadius="12"
-                                Background="#F8FAFC"
-                                HorizontalAlignment="Right">
-
-                            <materialDesign:PackIcon Kind="ArrowTopRight"
-                                                     Width="22"
-                                                     Height="22"
-                                                     Foreground="#64748B"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
-                    </Grid>
-
-                    <StackPanel Grid.Row="2">
-                        <TextBlock Text="Популярность инструментов"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#071B39" />
-
-                        <TextBlock Text="Какие инструменты чаще всего берут в аренду"
-                                   FontSize="14"
-                                   Foreground="#6B7890"
-                                   Margin="0 10 0 0"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- Просроченные возвраты -->
-            <Border Height="200"
-                    Margin="0 0 20 20"
-                    Padding="24"
-                    Cursor="Hand"
-                    Style="{StaticResource CardStyle}">
-
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding OpenReportCommand}"
-                                  CommandParameter="overdueReturns" />
-                </Border.InputBindings>
-
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <Border Width="64"
-                                Height="64"
-                                CornerRadius="14"
                                 Background="#FEE2E2"
-                                HorizontalAlignment="Center">
+                                DockPanel.Dock="Left">
 
-                            <materialDesign:PackIcon Kind="ClockAlertOutline"
-                                                     Width="30"
-                                                     Height="30"
+                            <materialDesign:PackIcon Kind="AlertOutline"
+                                                     Width="24"
+                                                     Height="24"
                                                      Foreground="#DC2626"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center" />
                         </Border>
 
-                        <Border Grid.Column="1"
-                                Width="44"
-                                Height="44"
+                        <StackPanel Margin="14 0 0 0"
+                                    VerticalAlignment="Center">
+
+                            <TextBlock Text="{Binding OverdueReturnsCount}"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="#071B39" />
+
+                            <TextBlock Text="Просрочено возвратов"
+                                       FontSize="13"
+                                       Foreground="#6B7890" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <Border Height="80"
+                        Margin="0 0 20 0"
+                        Padding="18 12"
+                        Style="{StaticResource CardStyle}">
+
+                    <DockPanel>
+                        <Border Width="48"
+                                Height="48"
                                 CornerRadius="12"
-                                Background="#F8FAFC"
-                                HorizontalAlignment="Right">
+                                Background="#FEF3C7"
+                                DockPanel.Dock="Left">
 
-                            <materialDesign:PackIcon Kind="ArrowTopRight"
-                                                     Width="22"
-                                                     Height="22"
-                                                     Foreground="#64748B"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
-                    </Grid>
-
-                    <StackPanel Grid.Row="2">
-                        <TextBlock Text="Просроченные возвраты"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#071B39" />
-
-                        <TextBlock Text="Заказы, которые не были возвращены в срок"
-                                   FontSize="14"
-                                   Foreground="#6B7890"
-                                   Margin="0 10 0 0"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- Отчет по инструментам -->
-            <Border Height="200"
-                    Margin="0 0 20 20"
-                    Padding="24"
-                    Cursor="Hand"
-                    Style="{StaticResource CardStyle}">
-
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding OpenReportCommand}"
-                                  CommandParameter="tools" />
-                </Border.InputBindings>
-
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <Border Width="64"
-                                Height="64"
-                                CornerRadius="14"
-                                Background="#FFEDD5"
-                                HorizontalAlignment="Center">
-
-                            <materialDesign:PackIcon Kind="PackageVariantClosed"
-                                                     Width="30"
-                                                     Height="30"
-                                                     Foreground="#F97316"
+                            <materialDesign:PackIcon Kind="Wrench"
+                                                     Width="24"
+                                                     Height="24"
+                                                     Foreground="#D97706"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center" />
                         </Border>
 
-                        <Border Grid.Column="1"
-                                Width="44"
-                                Height="44"
-                                CornerRadius="12"
-                                Background="#F8FAFC"
-                                HorizontalAlignment="Right">
+                        <StackPanel Margin="14 0 0 0"
+                                    VerticalAlignment="Center">
 
-                            <materialDesign:PackIcon Kind="ArrowTopRight"
-                                                     Width="22"
-                                                     Height="22"
-                                                     Foreground="#64748B"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
-                    </Grid>
+                            <TextBlock Text="{Binding ToolsInMaintenanceCount}"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="#071B39" />
 
-                    <StackPanel Grid.Row="2">
-                        <TextBlock Text="Отчет по инструментам"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#071B39" />
+                            <TextBlock Text="Инструментов на ремонте"
+                                       FontSize="13"
+                                       Foreground="#6B7890" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
 
-                        <TextBlock Text="Инструменты, категории, производители и текущие статусы"
-                                   FontSize="14"
-                                   Foreground="#6B7890"
-                                   Margin="0 10 0 0"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+            </UniformGrid>
 
-            <!-- Отчет по клиентам -->
-            <Border Height="200"
-                    Margin="0 0 20 20"
-                    Padding="24"
-                    Cursor="Hand"
-                    Style="{StaticResource CardStyle}">
+            <!-- Карточки отчетов -->
+            <ScrollViewer Grid.Row="2"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
 
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding OpenReportCommand}"
-                                  CommandParameter="customers" />
-                </Border.InputBindings>
+                <UniformGrid Columns="3"
+                             Rows="2"
+                             HorizontalAlignment="Stretch"
+                             VerticalAlignment="Top">
 
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                    <!-- Выручка по периодам -->
+                    <Border Height="200"
+                            Margin="0 0 20 20"
+                            Padding="24"
+                            Cursor="Hand"
+                            Style="{StaticResource CardStyle}">
 
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding OpenReportCommand}"
+                                          CommandParameter="revenue" />
+                        </Border.InputBindings>
 
-                        <Border Width="64"
-                                Height="64"
-                                CornerRadius="14"
-                                Background="#EDE9FE"
-                                HorizontalAlignment="Center">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                            <materialDesign:PackIcon Kind="AccountGroupOutline"
-                                                     Width="30"
-                                                     Height="30"
-                                                     Foreground="#7C3AED"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="1"
-                                Width="44"
-                                Height="44"
-                                CornerRadius="12"
-                                Background="#F8FAFC"
-                                HorizontalAlignment="Right">
+                                <Border Width="64"
+                                        Height="64"
+                                        CornerRadius="14"
+                                        Background="#DCFCE7"
+                                        HorizontalAlignment="Center">
 
-                            <materialDesign:PackIcon Kind="ArrowTopRight"
-                                                     Width="22"
-                                                     Height="22"
-                                                     Foreground="#64748B"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
-                    </Grid>
+                                    <materialDesign:PackIcon Kind="ChartLine"
+                                                             Width="30"
+                                                             Height="30"
+                                                             Foreground="#16A34A"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
 
-                    <StackPanel Grid.Row="2">
-                        <TextBlock Text="Отчет по клиентам"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#071B39" />
+                                <Border Grid.Column="1"
+                                        Width="44"
+                                        Height="44"
+                                        CornerRadius="12"
+                                        Background="#F8FAFC"
+                                        HorizontalAlignment="Right">
 
-                        <TextBlock Text="Активность клиентов, количество заказов и суммы аренд"
-                                   FontSize="14"
-                                   Foreground="#6B7890"
-                                   Margin="0 10 0 0"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+                                    <materialDesign:PackIcon Kind="ArrowTopRight"
+                                                             Width="22"
+                                                             Height="22"
+                                                             Foreground="#64748B"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
 
-            <!-- Платежи по периодам -->
-            <Border Height="200"
-                    Margin="0 0 20 20"
-                    Padding="24"
-                    Cursor="Hand"
-                    Style="{StaticResource CardStyle}">
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Выручка по периодам"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#071B39" />
 
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick"
-                                  Command="{Binding OpenReportCommand}"
-                                  CommandParameter="payments" />
-                </Border.InputBindings>
+                                <TextBlock Text="Анализ поступлений от аренды за выбранный период"
+                                           FontSize="14"
+                                           Foreground="#6B7890"
+                                           Margin="0 10 0 0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
 
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                    <!-- Популярность инструментов -->
+                    <Border Height="200"
+                            Margin="0 0 20 20"
+                            Padding="24"
+                            Cursor="Hand"
+                            Style="{StaticResource CardStyle}">
 
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding OpenReportCommand}"
+                                          CommandParameter="popularTools" />
+                        </Border.InputBindings>
 
-                        <Border Width="64"
-                                Height="64"
-                                CornerRadius="14"
-                                Background="#CFFAFE"
-                                HorizontalAlignment="Center">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                            <materialDesign:PackIcon Kind="WalletOutline"
-                                                     Width="30"
-                                                     Height="30"
-                                                     Foreground="#0891B2"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="1"
-                                Width="44"
-                                Height="44"
-                                CornerRadius="12"
-                                Background="#F8FAFC"
-                                HorizontalAlignment="Right">
+                                <Border Width="64"
+                                        Height="64"
+                                        CornerRadius="14"
+                                        Background="#DBEAFE"
+                                        HorizontalAlignment="Center">
 
-                            <materialDesign:PackIcon Kind="ArrowTopRight"
-                                                     Width="22"
-                                                     Height="22"
-                                                     Foreground="#64748B"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
-                        </Border>
-                    </Grid>
+                                    <materialDesign:PackIcon Kind="ChartBar"
+                                                             Width="30"
+                                                             Height="30"
+                                                             Foreground="#2563EB"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
 
-                    <StackPanel Grid.Row="2">
-                        <TextBlock Text="Платежи по периодам"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#071B39" />
+                                <Border Grid.Column="1"
+                                        Width="44"
+                                        Height="44"
+                                        CornerRadius="12"
+                                        Background="#F8FAFC"
+                                        HorizontalAlignment="Right">
 
-                        <TextBlock Text="Аренда, полученные залоги и возвраты залогов"
-                                   FontSize="14"
-                                   Foreground="#6B7890"
-                                   Margin="0 10 0 0"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+                                    <materialDesign:PackIcon Kind="ArrowTopRight"
+                                                             Width="22"
+                                                             Height="22"
+                                                             Foreground="#64748B"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
 
-        </UniformGrid>
-    </ScrollViewer>
-</Grid>
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Популярность инструментов"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#071B39" />
+
+                                <TextBlock Text="Какие инструменты чаще всего берут в аренду"
+                                           FontSize="14"
+                                           Foreground="#6B7890"
+                                           Margin="0 10 0 0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Просроченные возвраты -->
+                    <Border Height="200"
+                            Margin="0 0 20 20"
+                            Padding="24"
+                            Cursor="Hand"
+                            Style="{StaticResource CardStyle}">
+
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding OpenReportCommand}"
+                                          CommandParameter="overdueReturns" />
+                        </Border.InputBindings>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Width="64"
+                                        Height="64"
+                                        CornerRadius="14"
+                                        Background="#FEE2E2"
+                                        HorizontalAlignment="Center">
+
+                                    <materialDesign:PackIcon Kind="ClockAlertOutline"
+                                                             Width="30"
+                                                             Height="30"
+                                                             Foreground="#DC2626"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Width="44"
+                                        Height="44"
+                                        CornerRadius="12"
+                                        Background="#F8FAFC"
+                                        HorizontalAlignment="Right">
+
+                                    <materialDesign:PackIcon Kind="ArrowTopRight"
+                                                             Width="22"
+                                                             Height="22"
+                                                             Foreground="#64748B"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Просроченные возвраты"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#071B39" />
+
+                                <TextBlock Text="Заказы, которые не были возвращены в срок"
+                                           FontSize="14"
+                                           Foreground="#6B7890"
+                                           Margin="0 10 0 0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Отчет по инструментам -->
+                    <Border Height="200"
+                            Margin="0 0 20 20"
+                            Padding="24"
+                            Cursor="Hand"
+                            Style="{StaticResource CardStyle}">
+
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding OpenReportCommand}"
+                                          CommandParameter="tools" />
+                        </Border.InputBindings>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Width="64"
+                                        Height="64"
+                                        CornerRadius="14"
+                                        Background="#FFEDD5"
+                                        HorizontalAlignment="Center">
+
+                                    <materialDesign:PackIcon Kind="PackageVariantClosed"
+                                                             Width="30"
+                                                             Height="30"
+                                                             Foreground="#F97316"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Width="44"
+                                        Height="44"
+                                        CornerRadius="12"
+                                        Background="#F8FAFC"
+                                        HorizontalAlignment="Right">
+
+                                    <materialDesign:PackIcon Kind="ArrowTopRight"
+                                                             Width="22"
+                                                             Height="22"
+                                                             Foreground="#64748B"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Отчет по инструментам"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#071B39" />
+
+                                <TextBlock Text="Инструменты, категории, производители и текущие статусы"
+                                           FontSize="14"
+                                           Foreground="#6B7890"
+                                           Margin="0 10 0 0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Отчет по клиентам -->
+                    <Border Height="200"
+                            Margin="0 0 20 20"
+                            Padding="24"
+                            Cursor="Hand"
+                            Style="{StaticResource CardStyle}">
+
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding OpenReportCommand}"
+                                          CommandParameter="customers" />
+                        </Border.InputBindings>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Width="64"
+                                        Height="64"
+                                        CornerRadius="14"
+                                        Background="#EDE9FE"
+                                        HorizontalAlignment="Center">
+
+                                    <materialDesign:PackIcon Kind="AccountGroupOutline"
+                                                             Width="30"
+                                                             Height="30"
+                                                             Foreground="#7C3AED"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Width="44"
+                                        Height="44"
+                                        CornerRadius="12"
+                                        Background="#F8FAFC"
+                                        HorizontalAlignment="Right">
+
+                                    <materialDesign:PackIcon Kind="ArrowTopRight"
+                                                             Width="22"
+                                                             Height="22"
+                                                             Foreground="#64748B"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Отчет по клиентам"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#071B39" />
+
+                                <TextBlock Text="Активность клиентов, количество заказов и суммы аренд"
+                                           FontSize="14"
+                                           Foreground="#6B7890"
+                                           Margin="0 10 0 0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Платежи по периодам -->
+                    <Border Height="200"
+                            Margin="0 0 20 20"
+                            Padding="24"
+                            Cursor="Hand"
+                            Style="{StaticResource CardStyle}">
+
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding OpenReportCommand}"
+                                          CommandParameter="payments" />
+                        </Border.InputBindings>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Width="64"
+                                        Height="64"
+                                        CornerRadius="14"
+                                        Background="#CFFAFE"
+                                        HorizontalAlignment="Center">
+
+                                    <materialDesign:PackIcon Kind="WalletOutline"
+                                                             Width="30"
+                                                             Height="30"
+                                                             Foreground="#0891B2"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Width="44"
+                                        Height="44"
+                                        CornerRadius="12"
+                                        Background="#F8FAFC"
+                                        HorizontalAlignment="Right">
+
+                                    <materialDesign:PackIcon Kind="ArrowTopRight"
+                                                             Width="22"
+                                                             Height="22"
+                                                             Foreground="#64748B"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Платежи по периодам"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#071B39" />
+
+                                <TextBlock Text="Аренда, полученные залоги и возвраты залогов"
+                                           FontSize="14"
+                                           Foreground="#6B7890"
+                                           Margin="0 10 0 0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                </UniformGrid>
+            </ScrollViewer>
+        </Grid>
+    </materialDesign:DialogHost>
 </UserControl>
