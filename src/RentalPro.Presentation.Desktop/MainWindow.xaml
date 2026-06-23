@@ -303,6 +303,7 @@
                     </RadioButton>
 
                     <RadioButton
+                        Visibility="{Binding CanOpenAdminPages, Converter={StaticResource BooleanToVisibilityConverter}}"
                         IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Оплаты, Mode=TwoWay}"
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
@@ -312,6 +313,7 @@
                     </RadioButton>
 
                     <RadioButton
+                        Visibility="{Binding CanOpenAdminPages, Converter={StaticResource BooleanToVisibilityConverter}}"
                         IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Отчеты, Mode=TwoWay}"
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
@@ -321,6 +323,7 @@
                     </RadioButton>
 
                     <RadioButton
+                        Visibility="{Binding CanOpenAdminPages, Converter={StaticResource BooleanToVisibilityConverter}}"
                         IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Справочники, Mode=TwoWay}"
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
@@ -330,6 +333,7 @@
                     </RadioButton>
 
                     <RadioButton
+                        Visibility="{Binding CanOpenAdminPages, Converter={StaticResource BooleanToVisibilityConverter}}"
                         IsChecked="{Binding SelectedMenuItem, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Пользователи, Mode=TwoWay}"
                         Style="{StaticResource MenuRadioButtonStyle}">
                         <StackPanel Orientation="Horizontal">
@@ -394,21 +398,51 @@
                     <Border Grid.Column="1"
                             Background="#EEF4FF"
                             CornerRadius="18"
-                            Padding="16 10"
+                            Padding="14 8"
                             VerticalAlignment="Center">
 
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountCircleOutline"
-                                                     Width="24"
-                                                     Height="24"
-                                                     Foreground="#1E73FF"
-                                                     Margin="0 0 8 0" />
+                        <StackPanel Orientation="Horizontal"
+                                    VerticalAlignment="Center">
 
-                            <TextBlock Text="Пользователь"
-                                       Foreground="#071B39"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       VerticalAlignment="Center" />
+                            <Border Width="38"
+                                    Height="38"
+                                    Margin="0 0 12 0"
+                                    Background="#E8F0FF"
+                                    CornerRadius="19">
+
+                                <materialDesign:PackIcon Kind="Account"
+                                                         Width="21"
+                                                         Height="21"
+                                                         Foreground="#1E73FF"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Margin="0 0 12 0"
+                                        VerticalAlignment="Center">
+
+                                <TextBlock Text="{Binding CurrentUserName}"
+                                           FontWeight="SemiBold"
+                                           FontSize="14"
+                                           Foreground="#071B39" />
+
+                                <TextBlock Text="{Binding CurrentUserRole}"
+                                           FontSize="12"
+                                           Foreground="#6B7890" />
+                            </StackPanel>
+
+                            <Button Width="38"
+                                    Height="38"
+                                    Command="{Binding LogoutCommand}"
+                                    ToolTip="Выход"
+                                    Style="{StaticResource MaterialDesignIconButton}">
+
+                                <materialDesign:PackIcon Kind="Logout"
+                                                         Width="20"
+                                                         Height="20"
+                                                         Foreground="#1E73FF" />
+                            </Button>
+
                         </StackPanel>
                     </Border>
                 </Grid>

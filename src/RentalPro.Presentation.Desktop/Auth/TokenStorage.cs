@@ -31,6 +31,29 @@ public sealed class TokenStorage
         }
     }
     
+    public string? Role
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Token))
+                return null;
+
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(Token);
+
+            return jwt.Claims.FirstOrDefault(x =>
+                    x.Type == ClaimTypes.Role ||
+                    x.Type == "role" ||
+                    x.Type == "roles")
+                ?.Value;
+        }
+    }
+
+    public bool IsAdmin =>
+        Role == "Администратор";
+
+    public bool IsManager =>
+        Role == "Менеджер";
+    
     public string ManagerFullName
     {
         get
