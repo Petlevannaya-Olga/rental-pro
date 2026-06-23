@@ -3,7 +3,9 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using RentalPro.Contracts.Customers;
 using RentalPro.Contracts.Orders;
+using RentalPro.Contracts.Tools;
 using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Auth;
 using RentalPro.Presentation.Desktop.Common;
@@ -19,11 +21,15 @@ public partial class OrderEditViewModel(
     DictionariesApiClient dictionariesApiClient,
     TokenStorage tokenStorage,
     IServiceProvider serviceProvider,
+    FakeOrderGeneratorService fakeOrderGeneratorService,
+    ToolsApiClient toolsApiClient,
+    CustomersApiClient customersApiClient,
     NotificationService notificationService)
     : ObservableObject
 {
     private Guid? _currentUserId;
     private Guid? _confirmedStatusId;
+    private Guid? _availableToolStatusId;
     
     [ObservableProperty]
     private OrderEditModel order = new();
@@ -315,6 +321,67 @@ public partial class OrderEditViewModel(
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
     }
+    
+    [RelayCommand]
+    private async Task FillTestDataAsync()
+    {
+        var customersResult = await customersApiClient.GetCustomersAsync(
+            new GetCustomersRequest(
+                Search: null,
+                HasOrders: null,
+                HasActiveOrders: null,
+                IsRegular: null,
+                SortBy: "fullname",
+                Descending: false,
+                Page: 1,
+                PageSize: 100));
+
+        if (customersResult.IsFailure)
+        {
+            notificationService.Error(customersResult.Error.Message);
+            return;
+        }
+
+        if (_availableToolStatusId is null)
+            await LoadAvailableToolStatusAsync();
+
+        if (_availableToolStatusId is null)
+        {
+            notificationService.Error("Статус инструмента «Доступен» не найден");
+            return;
+        }
+
+        var toolsResult = await toolsApiClient.GetToolsAsync(
+            new GetToolsRequest(
+                Search: null,
+                CategoryId: null,
+                ManufacturerId: null,
+                StatusId: _availableToolStatusId,
+                SortBy: "name",
+                Descending: false,
+                Page: 1,
+                PageSize: 100));
+
+        if (toolsResult.IsFailure)
+        {
+            notificationService.Error(toolsResult.Error.Message);
+            return;
+        }
+
+        UnsubscribeTools();
+
+        fakeOrderGeneratorService.Fill(
+            Order,
+            customersResult.Value.Items.ToList(),
+            toolsResult.Value.Items.ToList());
+
+        SubscribeTools();
+
+        RefreshState();
+        SaveCommand.NotifyCanExecuteChanged();
+
+        notificationService.Success("Тестовые данные заполнены");
+    }
 
     private void SetOrder(OrderEditModel newOrder)
     {
@@ -395,5 +462,35 @@ public partial class OrderEditViewModel(
     partial void OnIsSavingChanged(bool value)
     {
         SaveCommand.NotifyCanExecuteChanged();
+    }
+    
+    private async Task LoadAvailableToolStatusAsync()
+    {
+        var result = await dictionariesApiClient.GetListAsync<DictionaryItem>(
+            "api/tool-statuses",
+            "tool.statuses.load.failed",
+            "Не удалось загрузить статусы инструментов");
+
+        if (result.IsFailure)
+        {
+            notificationService.Error(result.Error.Message);
+            return;
+        }
+
+        _availableToolStatusId = result.Value
+            .FirstOrDefault(x => x.Name == "Доступен")
+            ?.Id;
+    }
+    
+    private void SubscribeTools()
+    {
+        foreach (var tool in Order.Tools)
+            tool.PropertyChanged += ToolOnPropertyChanged;
+    }
+
+    private void UnsubscribeTools()
+    {
+        foreach (var tool in Order.Tools)
+            tool.PropertyChanged -= ToolOnPropertyChanged;
     }
 }

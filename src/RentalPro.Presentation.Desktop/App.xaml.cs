@@ -102,5 +102,7 @@ public partial class App : Application
         
         services.AddTransient<CreateCustomerDialogViewModel>();
         services.AddTransient<CreateCustomerDialog>();
+        
+        services.AddSingleton<FakeOrderGeneratorService>();
     }
 }
