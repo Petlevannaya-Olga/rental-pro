@@ -82,6 +82,47 @@ public partial class OrderEditViewModel(
         Order.Tools.Count == 0
             ? "0"
             : $"{Order.Tools.Max(x => x.RentalDays)}";
+    
+    public decimal ViewRentalAmount =>
+        Details?.TotalCost ?? 0;
+
+    public decimal ViewDepositAmount =>
+        Details?.DepositTotal ?? 0;
+
+    public decimal ViewTotalToPay =>
+        ViewRentalAmount + ViewDepositAmount;
+
+    public int ViewToolsCount =>
+        Details?.Items.Count ?? 0;
+    
+    public List<OrderItemViewModel> ViewItems =>
+        Details?.Items
+            .Select(x => new OrderItemViewModel
+            {
+                ToolName = x.ToolName,
+                StartDate = x.StartDate,
+                PlannedReturnDate = x.PlannedReturnDate,
+                ActualReturnedDate = x.ActualReturnedDate,
+                RentalPricePerDay = x.RentalPricePerDay,
+                TotalAmount = x.TotalAmount,
+                DepositAmount = x.DepositAmount
+            })
+            .ToList()
+        ?? [];
+
+    public string ViewPeriodText
+    {
+        get
+        {
+            if (Details is null || Details.Items.Count == 0)
+                return "—";
+
+            var start = Details.Items.Min(x => x.StartDate);
+            var end = Details.Items.Max(x => x.PlannedReturnDate);
+
+            return $"{start:dd.MM} — {end:dd.MM}";
+        }
+    }
 
     private bool CanSave()
     {
@@ -440,6 +481,13 @@ public partial class OrderEditViewModel(
         OnPropertyChanged(nameof(IsCreateMode));
         OnPropertyChanged(nameof(IsViewMode));
         OnPropertyChanged(nameof(IsEditable));
+        
+        OnPropertyChanged(nameof(ViewRentalAmount));
+        OnPropertyChanged(nameof(ViewDepositAmount));
+        OnPropertyChanged(nameof(ViewTotalToPay));
+        OnPropertyChanged(nameof(ViewToolsCount));
+        OnPropertyChanged(nameof(ViewPeriodText));
+        OnPropertyChanged(nameof(ViewItems));
 
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
