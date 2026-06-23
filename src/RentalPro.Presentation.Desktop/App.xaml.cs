@@ -5,6 +5,7 @@ using RentalPro.Presentation.Desktop.Auth;
 using RentalPro.Presentation.Desktop.Services;
 using RentalPro.Presentation.Desktop.ViewModels;
 using RentalPro.Presentation.Desktop.Views;
+using PaymentsViewModel = RentalPro.Presentation.Desktop.ViewModels.PaymentsViewModel;
 
 namespace RentalPro.Presentation.Desktop;
 
@@ -115,5 +116,8 @@ public partial class App : Application
         
         services.AddTransient<CloseRentalDialogViewModel>();
         services.AddTransient<CloseRentalDialog>();
+        
+        services.AddTransient<PaymentsViewModel>();
+        services.AddTransient<PaymentsView>();
     }
 }
