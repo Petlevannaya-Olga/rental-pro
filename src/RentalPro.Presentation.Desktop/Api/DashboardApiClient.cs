@@ -51,6 +51,50 @@ public sealed class DashboardApiClient(IHttpClientFactory httpClientFactory)
                 .ToErrors();
         }
     }
+    
+    public async Task<Result<DashboardStatsDto, Errors>> GetStatsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.GetAsync(
+                "api/dashboard/stats",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "dashboard.stats.load.failed",
+                    "Не удалось загрузить статистику",
+                    cancellationToken);
+            }
+
+            var stats = await response.Content
+                .ReadFromJsonAsync<DashboardStatsDto>(cancellationToken);
+
+            if (stats is null)
+            {
+                return CommonErrors
+                    .EmptyResponse(
+                        "dashboard.stats.empty.response",
+                        "Сервер вернул пустую статистику")
+                    .ToErrors();
+            }
+
+            return stats;
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "dashboard.connection.failed",
+                    "Не удалось подключиться к серверу")
+                .ToErrors();
+        }
+    }
 
     private static async Task<Errors> ReadErrorsAsync(
         HttpResponseMessage response,

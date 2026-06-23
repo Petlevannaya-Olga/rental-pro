@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Services;
 using RentalPro.Presentation.Desktop.Views;
 
@@ -7,9 +8,22 @@ namespace RentalPro.Presentation.Desktop.ViewModels;
 
 public partial class ReportsViewModel(
     NavigationService navigationService,
+    DashboardApiClient dashboardApiClient,
     NotificationService notificationService)
     : ObservableObject
 {
+    [ObservableProperty]
+    private decimal _monthlyRevenue;
+
+    [ObservableProperty]
+    private int _activeOrdersCount;
+
+    [ObservableProperty]
+    private int _overdueReturnsCount;
+
+    [ObservableProperty]
+    private int _toolsInMaintenanceCount;
+    
     [ObservableProperty]
     private bool _isPeriodDialogOpen;
 
@@ -95,5 +109,22 @@ public partial class ReportsViewModel(
             DateFrom = DateFrom.Value,
             DateTo = DateTo.Value
         });
+    }
+    
+    [RelayCommand]
+    public async Task LoadAsync()
+    {
+        var result = await dashboardApiClient.GetDashboardAsync();
+
+        if (result.IsFailure)
+        {
+            notificationService.Error(result.Error.Message);
+            return;
+        }
+
+        MonthlyRevenue = result.Value.Stats.MonthlyRevenue;
+        ActiveOrdersCount = result.Value.Stats.ActiveOrders;
+        OverdueReturnsCount = result.Value.Stats.OverdueReturnsCount;
+        ToolsInMaintenanceCount = result.Value.Stats.ToolsInRepair;
     }
 }
