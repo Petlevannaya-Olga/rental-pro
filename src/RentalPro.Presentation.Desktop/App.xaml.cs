@@ -5,6 +5,7 @@ using RentalPro.Presentation.Desktop.Auth;
 using RentalPro.Presentation.Desktop.Services;
 using RentalPro.Presentation.Desktop.ViewModels;
 using RentalPro.Presentation.Desktop.Views;
+using DictionariesViewModel = RentalPro.Presentation.Desktop.ViewModels.DictionariesViewModel;
 using PaymentsViewModel = RentalPro.Presentation.Desktop.ViewModels.PaymentsViewModel;
 
 namespace RentalPro.Presentation.Desktop;
@@ -34,90 +35,90 @@ public partial class App : Application
         services.AddSingleton<TokenStorage>();
         services.AddTransient<AuthHeaderHandler>();
 
-        services.AddHttpClient<AuthApiClient>(client =>
-        {
-            client.BaseAddress = new Uri(apiBaseUrl);
-        });
+        services.AddHttpClient<AuthApiClient>(client => { client.BaseAddress = new Uri(apiBaseUrl); });
 
-        services.AddHttpClient("Api", client =>
-            {
-                client.BaseAddress = new Uri(apiBaseUrl);
-            })
+        services.AddHttpClient("Api", client => { client.BaseAddress = new Uri(apiBaseUrl); })
             .AddHttpMessageHandler<AuthHeaderHandler>();
 
         services.AddSingleton<NavigationService>();
-        
+
         services.AddTransient<DashboardApiClient>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<DashboardView>();
-        
+
         services.AddTransient<LoginWindow>();
         services.AddTransient<LoginViewModel>();
 
         services.AddTransient<MainWindow>();
         services.AddTransient<MainViewModel>();
-        
+
         services.AddTransient<CustomersApiClient>();
         services.AddTransient<CustomersView>();
         services.AddTransient<CustomersViewModel>();
         services.AddSingleton<CustomerEditViewModel>();
         services.AddTransient<CustomerEditView>();
-        
+
         services.AddSingleton<FakeCustomerGeneratorService>();
-        
+
         services.AddSingleton<NotificationService>();
         services.AddSingleton<NotificationViewModel>();
-        
+
         services.AddSingleton<CustomerOrderHistoryViewModel>();
         services.AddSingleton<CustomerOrderHistoryView>();
-        
+
         services.AddSingleton<DictionariesApiClient>();
-        
+
         services.AddSingleton<ToolsApiClient>();
         services.AddSingleton<FakeToolGeneratorService>();
 
         services.AddSingleton<ToolsViewModel>();
         services.AddSingleton<ToolsView>();
-        
+
         services.AddSingleton<ToolEditViewModel>();
         services.AddSingleton<ToolEditView>();
-        
+
         services.AddSingleton<ToolRentalHistoryViewModel>();
         services.AddSingleton<ToolRentalHistoryView>();
-        
+
         services.AddSingleton<OrdersViewModel>();
         services.AddSingleton<OrdersView>();
-        
+
         services.AddSingleton<OrdersApiClient>();
-        
+
         services.AddSingleton<OrderEditViewModel>();
         services.AddSingleton<OrderEditView>();
-        
+
         services.AddTransient<SelectCustomerDialogViewModel>();
         services.AddTransient<SelectCustomerDialog>();
-        
+
         services.AddTransient<SelectToolsDialogViewModel>();
         services.AddTransient<SelectToolsDialog>();
-        
+
         services.AddTransient<CreateCustomerDialog>();
-        
+
         services.AddTransient<CreateCustomerDialogViewModel>();
         services.AddTransient<CreateCustomerDialog>();
-        
+
         services.AddSingleton<FakeOrderGeneratorService>();
-        
+
         services.AddTransient<PaymentsApiClient>();
-        
+
         services.AddTransient<PaymentDialogViewModel>();
         services.AddTransient<PaymentDialog>();
-        
+
         services.AddTransient<ReturnDialogViewModel>();
         services.AddTransient<ReturnDialog>();
-        
+
         services.AddTransient<CloseRentalDialogViewModel>();
         services.AddTransient<CloseRentalDialog>();
-        
+
         services.AddTransient<PaymentsViewModel>();
         services.AddTransient<PaymentsView>();
+
+        services.AddSingleton<DictionariesViewModel>();
+        services.AddSingleton<DictionariesView>();
+
+        services.AddSingleton<DictionaryDetailsViewModel>();
+        services.AddSingleton<DictionaryDetailsView>();
     }
 }

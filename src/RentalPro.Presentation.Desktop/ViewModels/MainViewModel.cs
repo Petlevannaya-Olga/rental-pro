@@ -68,6 +68,10 @@ public partial class MainViewModel : ObservableObject
             case "Оплаты":
                 _navigationService.NavigateTo<PaymentsView>("Оплаты");
                 break;
+            
+            case "Справочники":
+                _navigationService.NavigateTo<DictionariesView>("Справочники");
+                break;
         }
     }
 }

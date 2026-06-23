@@ -1,0 +1,132 @@
+<UserControl x:Class="RentalPro.Presentation.Desktop.Views.DictionaryDetailsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="Transparent">
+    <UserControl.Resources>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="18"
+                                      ShadowDepth="2"
+                                      Opacity="0.08" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DashboardDataGridStyle" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowHeight" Value="44" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#071B39" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <Border Grid.Row="0"
+                Style="{StaticResource CardStyle}"
+                Margin="0 0 16 0">
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Width="42"
+                        Height="42"
+                        Command="{Binding BackCommand}"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Назад">
+
+                    <materialDesign:PackIcon Kind="ArrowLeft"
+                                             Width="22"
+                                             Height="22"
+                                             Foreground="#1E73FF" />
+                </Button>
+
+                <StackPanel Grid.Column="2"
+                            VerticalAlignment="Center">
+
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="#071B39" />
+
+                    <TextBlock Text="{Binding Description}"
+                               FontSize="13"
+                               Foreground="#6B7890"
+                               Margin="0 4 0 0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Таблица -->
+        <Border Grid.Row="2"
+                Style="{StaticResource CardStyle}"
+                Margin="0 0 16 0">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <DataGrid Grid.Row="0"
+                          ItemsSource="{Binding Items}"
+                          Style="{StaticResource DashboardDataGridStyle}"
+                          CanUserSortColumns="True"
+                          IsReadOnly="True"
+                          materialDesign:DataGridAssist.ApplyMaterialDesignColumnStyles="True">
+
+                    <DataGrid.Columns>
+
+                        <DataGridTemplateColumn Header="Наименование"
+                                                Width="*"
+                                                SortMemberPath="Name">
+
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#071B39"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock Grid.Row="1"
+                           Text="{Binding Items.Count, StringFormat=Всего записей: {0}}"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="#6B7890"
+                           Margin="12 16 0 0" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
