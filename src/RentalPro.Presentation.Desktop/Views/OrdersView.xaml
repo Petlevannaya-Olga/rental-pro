@@ -551,20 +551,22 @@
                                             Width="130"
                                             SortMemberPath="totalcost" />
 
-                        <DataGridTemplateColumn Width="56"
+                        <DataGridTemplateColumn Width="72"
                                                 CanUserSort="False">
+
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
 
                                     <Button Command="{Binding DataContext.CancelOrderCommand,
                                       RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
-                                            Height="34"
-                                            Padding="12 0">
+                                            Width="36"
+                                            Height="36"
+                                            ToolTip="Отменить заказ">
 
                                         <Button.Style>
                                             <Style TargetType="Button"
-                                                   BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                                   BasedOn="{StaticResource MaterialDesignIconButton}">
                                                 <Setter Property="Visibility"
                                                         Value="Collapsed" />
 
@@ -578,23 +580,16 @@
                                             </Style>
                                         </Button.Style>
 
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="CloseCircleOutline"
-                                                                     Width="17"
-                                                                     Height="17"
-                                                                     Margin="0 0 6 0"
-                                                                     Foreground="#DC2626" />
-
-                                            <TextBlock Text="Отменить"
-                                                       Foreground="#DC2626"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold" />
-                                        </StackPanel>
+                                        <materialDesign:PackIcon Kind="CloseCircleOutline"
+                                                                 Width="18"
+                                                                 Height="18"
+                                                                 Foreground="#DC2626" />
 
                                     </Button>
 
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
+
                         </DataGridTemplateColumn>
 
                     </DataGrid.Columns>

@@ -431,10 +431,11 @@ public sealed class OrdersReadRepository(
 
                            o.order_date AS OrderDate,
                            oa.StartDate AS StartDate,
-                           oa.NearestReturnDate AS PlannedReturnDate,
+                           oa.EndDate AS PlannedReturnDate,
+                           ISNULL(oa.RentalDays, 0) AS RentalDays,
 
-                           ISNULL(oa.TotalCost, 0) AS TotalCost,
-                           ISNULL(oa.DepositTotal, 0) AS DepositTotal,
+                           ISNULL(oa.ActualRentalAmount, 0) AS TotalCost,
+                           ISNULL(oa.RemainingDepositAmount, 0) AS DepositTotal,
 
                            o.comment AS Comment,
                            o.created_at AS CreatedAt,
@@ -473,6 +474,38 @@ public sealed class OrdersReadRepository(
                     "Failed to get orders for export")
                 .ToErrors();
         }
+    }
+
+    private static string GetExportOrderBy(
+        string? sortBy,
+        bool descending)
+    {
+        var direction = descending
+            ? "DESC"
+            : "ASC";
+
+        var column = sortBy?.Trim().ToLowerInvariant() switch
+        {
+            "number" => "o.number",
+            "customerfullname" => "CONCAT_WS(' ', c.last_name, c.first_name, c.middle_name)",
+            "userfullname" => "CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)",
+            "statusname" => "os.name",
+            "itemscount" => "ISNULL(oa.ItemsCount, 0)",
+            "toolsnames" => "ISNULL(oa.ToolsNames, N'')",
+            "orderdate" => "o.order_date",
+            "startdate" => "oa.StartDate",
+            "plannedreturndate" => "oa.NearestReturnDate",
+
+            "rentalamount" => "ISNULL(oa.RentalAmount, 0)",
+            "depositamount" => "ISNULL(oa.DepositAmount, 0)",
+            "totalamount" => "ISNULL(oa.RentalAmount, 0) + ISNULL(oa.DepositAmount, 0)",
+
+            "createdat" => "o.created_at",
+            "updatedat" => "o.updated_at",
+            _ => "o.order_date"
+        };
+
+        return $"ORDER BY {column} {direction}";
     }
 
     private async Task<int> GetOrdersCountAsync(
@@ -1466,139 +1499,139 @@ public sealed class OrdersReadRepository(
         string? FullNameSearchPattern);
 
     private const string FromClause = """
-                                  FROM orders o
-                                  INNER JOIN customers c ON c.id = o.customer_id
-                                  INNER JOIN users u ON u.id = o.user_id
-                                  INNER JOIN order_statuses os ON os.id = o.status_id
-
-                                  OUTER APPLY
-                                  (
-                                      SELECT
-                                          COUNT(oi.id) AS ItemsCount,
-
-                                          STRING_AGG(t.name, N', ') AS ToolsNames,
-
-                                          MIN(oi.start_date) AS StartDate,
-
-                                          CASE
-                                              WHEN SUM(
-                                                  CASE
-                                                      WHEN oi.actual_returned_date IS NULL THEN 1
-                                                      ELSE 0
-                                                  END
-                                              ) = 0
-                                                  THEN MAX(oi.actual_returned_date)
-                                              ELSE MAX(oi.planned_return_date)
-                                          END AS EndDate,
-
-                                          CASE
-                                              WHEN MIN(oi.start_date) IS NULL
-                                                  THEN 0
-
-                                              WHEN DATEDIFF(
-                                                  DAY,
-                                                  MIN(oi.start_date),
-                                                  CASE
-                                                      WHEN SUM(
-                                                          CASE
-                                                              WHEN oi.actual_returned_date IS NULL THEN 1
-                                                              ELSE 0
-                                                          END
-                                                      ) = 0
-                                                          THEN MAX(oi.actual_returned_date)
-                                                      ELSE MAX(oi.planned_return_date)
-                                                  END
-                                              ) < 0
-                                                  THEN 0
-
-                                              ELSE DATEDIFF(
-                                                  DAY,
-                                                  MIN(oi.start_date),
-                                                  CASE
-                                                      WHEN SUM(
-                                                          CASE
-                                                              WHEN oi.actual_returned_date IS NULL THEN 1
-                                                              ELSE 0
-                                                          END
-                                                      ) = 0
-                                                          THEN MAX(oi.actual_returned_date)
-                                                      ELSE MAX(oi.planned_return_date)
-                                                  END
-                                              )
-                                          END AS RentalDays,
-
-                                          SUM(
-                                              oi.rental_price_per_day *
-                                              CASE
-                                                  WHEN oi.actual_returned_date IS NULL
-                                                      THEN
-                                                          CASE
-                                                              WHEN DATEDIFF(
-                                                                  DAY,
-                                                                  oi.start_date,
-                                                                  oi.planned_return_date
-                                                              ) <= 0
-                                                                  THEN 1
-                                                              ELSE DATEDIFF(
-                                                                  DAY,
-                                                                  oi.start_date,
-                                                                  oi.planned_return_date
-                                                              )
-                                                          END
-
-                                                  ELSE
-                                                      CASE
-                                                          WHEN DATEDIFF(
-                                                              DAY,
-                                                              oi.start_date,
-                                                              oi.actual_returned_date
-                                                          ) < 0
-                                                              THEN 0
-                                                          ELSE DATEDIFF(
-                                                              DAY,
-                                                              oi.start_date,
-                                                              oi.actual_returned_date
-                                                          )
-                                                      END
-                                              END
-                                          ) AS ActualRentalAmount,
-
-                                          CASE
-                                              WHEN SUM(oi.deposit_amount)
-                                                   - ISNULL(MAX(payments.RefundedDepositAmount), 0) < 0
-                                                  THEN 0
-
-                                              ELSE SUM(oi.deposit_amount)
-                                                   - ISNULL(MAX(payments.RefundedDepositAmount), 0)
-                                          END AS RemainingDepositAmount
-
-                                      FROM order_items oi
-                                      INNER JOIN tools t
-                                          ON t.id = oi.tool_id
+                                      FROM orders o
+                                      INNER JOIN customers c ON c.id = o.customer_id
+                                      INNER JOIN users u ON u.id = o.user_id
+                                      INNER JOIN order_statuses os ON os.id = o.status_id
 
                                       OUTER APPLY
                                       (
                                           SELECT
-                                              SUM(
-                                                  CASE
-                                                      WHEN pt.name = N'Возврат залога'
-                                                          THEN p.amount
-                                                      ELSE 0
-                                                  END
-                                              ) AS RefundedDepositAmount
-                                          FROM payments p
-                                          INNER JOIN payment_types pt
-                                              ON pt.id = p.payment_type_id
-                                          WHERE p.order_id = oi.order_id
-                                            AND p.deleted_at IS NULL
-                                            AND pt.deleted_at IS NULL
-                                      ) payments
+                                              COUNT(oi.id) AS ItemsCount,
 
-                                      WHERE oi.order_id = o.id
-                                        AND oi.deleted_at IS NULL
-                                        AND t.deleted_at IS NULL
-                                  ) oa
-                                  """;
+                                              STRING_AGG(t.name, N', ') AS ToolsNames,
+
+                                              MIN(oi.start_date) AS StartDate,
+
+                                              CASE
+                                                  WHEN SUM(
+                                                      CASE
+                                                          WHEN oi.actual_returned_date IS NULL THEN 1
+                                                          ELSE 0
+                                                      END
+                                                  ) = 0
+                                                      THEN MAX(oi.actual_returned_date)
+                                                  ELSE MAX(oi.planned_return_date)
+                                              END AS EndDate,
+
+                                              CASE
+                                                  WHEN MIN(oi.start_date) IS NULL
+                                                      THEN 0
+
+                                                  WHEN DATEDIFF(
+                                                      DAY,
+                                                      MIN(oi.start_date),
+                                                      CASE
+                                                          WHEN SUM(
+                                                              CASE
+                                                                  WHEN oi.actual_returned_date IS NULL THEN 1
+                                                                  ELSE 0
+                                                              END
+                                                          ) = 0
+                                                              THEN MAX(oi.actual_returned_date)
+                                                          ELSE MAX(oi.planned_return_date)
+                                                      END
+                                                  ) < 0
+                                                      THEN 0
+
+                                                  ELSE DATEDIFF(
+                                                      DAY,
+                                                      MIN(oi.start_date),
+                                                      CASE
+                                                          WHEN SUM(
+                                                              CASE
+                                                                  WHEN oi.actual_returned_date IS NULL THEN 1
+                                                                  ELSE 0
+                                                              END
+                                                          ) = 0
+                                                              THEN MAX(oi.actual_returned_date)
+                                                          ELSE MAX(oi.planned_return_date)
+                                                      END
+                                                  )
+                                              END AS RentalDays,
+
+                                              SUM(
+                                                  oi.rental_price_per_day *
+                                                  CASE
+                                                      WHEN oi.actual_returned_date IS NULL
+                                                          THEN
+                                                              CASE
+                                                                  WHEN DATEDIFF(
+                                                                      DAY,
+                                                                      oi.start_date,
+                                                                      oi.planned_return_date
+                                                                  ) <= 0
+                                                                      THEN 1
+                                                                  ELSE DATEDIFF(
+                                                                      DAY,
+                                                                      oi.start_date,
+                                                                      oi.planned_return_date
+                                                                  )
+                                                              END
+
+                                                      ELSE
+                                                          CASE
+                                                              WHEN DATEDIFF(
+                                                                  DAY,
+                                                                  oi.start_date,
+                                                                  oi.actual_returned_date
+                                                              ) < 0
+                                                                  THEN 0
+                                                              ELSE DATEDIFF(
+                                                                  DAY,
+                                                                  oi.start_date,
+                                                                  oi.actual_returned_date
+                                                              )
+                                                          END
+                                                  END
+                                              ) AS ActualRentalAmount,
+
+                                              CASE
+                                                  WHEN SUM(oi.deposit_amount)
+                                                       - ISNULL(MAX(payments.RefundedDepositAmount), 0) < 0
+                                                      THEN 0
+
+                                                  ELSE SUM(oi.deposit_amount)
+                                                       - ISNULL(MAX(payments.RefundedDepositAmount), 0)
+                                              END AS RemainingDepositAmount
+
+                                          FROM order_items oi
+                                          INNER JOIN tools t
+                                              ON t.id = oi.tool_id
+
+                                          OUTER APPLY
+                                          (
+                                              SELECT
+                                                  SUM(
+                                                      CASE
+                                                          WHEN pt.name = N'Возврат залога'
+                                                              THEN p.amount
+                                                          ELSE 0
+                                                      END
+                                                  ) AS RefundedDepositAmount
+                                              FROM payments p
+                                              INNER JOIN payment_types pt
+                                                  ON pt.id = p.payment_type_id
+                                              WHERE p.order_id = oi.order_id
+                                                AND p.deleted_at IS NULL
+                                                AND pt.deleted_at IS NULL
+                                          ) payments
+
+                                          WHERE oi.order_id = o.id
+                                            AND oi.deleted_at IS NULL
+                                            AND t.deleted_at IS NULL
+                                      ) oa
+                                      """;
 
     private const string WhereClause = """
                                        WHERE o.deleted_at IS NULL

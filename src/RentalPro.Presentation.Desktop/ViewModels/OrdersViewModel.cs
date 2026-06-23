@@ -211,7 +211,7 @@ public partial class OrdersViewModel(
                 StartTo: ToDateOnly(StartToDate),
                 EndFrom: ToDateOnly(EndFromDate),
                 EndTo: ToDateOnly(EndToDate),
-                SortBy: SortBy,
+                SortBy: string.IsNullOrWhiteSpace(SortBy) ? "number" : SortBy,
                 Descending: Descending);
 
             var result = await ordersApiClient.ExportOrdersAsync(request);
@@ -238,7 +238,7 @@ public partial class OrdersViewModel(
         }
         catch (Exception ex)
         {
-            ErrorMessage = string.Empty;
+            ErrorMessage = ex.Message;
             notificationService.Error(ex.Message);
         }
     }
