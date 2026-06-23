@@ -46,6 +46,12 @@
             <Setter Property="Padding" Value="22 0" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        
+        <Style x:Key="CenteredCellTextStyle"
+               TargetType="TextBlock">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+        </Style>
     </UserControl.Resources>
 
     <Border Background="White"
@@ -206,7 +212,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Менеджер -->
                     <Border Grid.Column="2"
                             Style="{StaticResource PanelCardStyle}">
 
@@ -214,15 +219,15 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
                             <Border Width="54"
                                     Height="54"
                                     CornerRadius="14"
-                                    Background="#DCFCE7"
-                                    VerticalAlignment="Center">
+                                    Background="#DCFCE7">
 
-                                <materialDesign:PackIcon Kind="AccountTie"
+                                <materialDesign:PackIcon Kind="Tools"
                                                          Width="25"
                                                          Height="25"
                                                          Foreground="#16A34A"
@@ -234,18 +239,40 @@
                                         Margin="18 0"
                                         VerticalAlignment="Center">
 
-                                <TextBlock Text="Менеджер"
+                                <TextBlock Text="Инструменты"
                                            Style="{StaticResource MutedTextStyle}" />
 
-                                <TextBlock Text="{Binding ManagerFullName}"
-                                           FontSize="16"
+                                <TextBlock FontSize="16"
                                            FontWeight="SemiBold"
-                                           Foreground="#071B39"
-                                           Margin="0 4 0 0"
-                                           TextWrapping="Wrap" />
+                                           Foreground="#071B39">
+
+                                    <Run Text="Выбрано инструментов: " />
+                                    <Run Text="{Binding ToolsCount, Mode=OneWay}" />
+
+                                </TextBlock>
 
                             </StackPanel>
+
+                            <Button Grid.Column="2"
+                                    Height="40"
+                                    Padding="16 0"
+                                    Command="{Binding SelectToolsCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}">
+
+                                <StackPanel Orientation="Horizontal">
+
+                                    <materialDesign:PackIcon Kind="Plus"
+                                                             Width="18"
+                                                             Height="18"
+                                                             Margin="0 0 8 0" />
+
+                                    <TextBlock Text="Добавить" />
+
+                                </StackPanel>
+
+                            </Button>
                         </Grid>
+
                     </Border>
 
                 </Grid>
@@ -347,7 +374,7 @@
                             <DataGrid.Columns>
 
                                 <DataGridTemplateColumn Header="Инструмент"
-                                                        Width="2.4*">
+                                                        Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel VerticalAlignment="Center">
@@ -371,6 +398,7 @@
                                 <DataGridTextColumn Header="Начало аренды"
                                                     Binding="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
                                                     IsReadOnly="True"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" 
                                                     Width="150" />
 
                                 <DataGridTemplateColumn Header="Окончание аренды"
@@ -380,7 +408,7 @@
                                             <DatePicker
                                                 SelectedDate="{Binding EndDate, UpdateSourceTrigger=PropertyChanged}"
                                                 Height="44"
-                                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                                                Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -388,32 +416,38 @@
                                 <DataGridTextColumn Header="Дней"
                                                     Binding="{Binding RentalDays}"
                                                     IsReadOnly="True"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" 
                                                     Width="90" />
 
                                 <DataGridTextColumn Header="Аренда"
                                                     Binding="{Binding TotalAmount, StringFormat={}{0:N0} ₽}"
                                                     IsReadOnly="True"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" 
                                                     Width="140" />
 
                                 <DataGridTextColumn Header="Залог"
                                                     Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
                                                     IsReadOnly="True"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" 
                                                     Width="130" />
 
-                                <DataGridTemplateColumn Width="56">
+                                <DataGridTemplateColumn Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
 
-                                            <Button
-                                                Command="{Binding DataContext.RemoveToolCommand,
-                                                      RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignIconButton}">
+                                            <Button Width="32"
+                                                    Height="32"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Command="{Binding DataContext.RemoveToolCommand,
+                                      RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconButton}">
 
                                                 <materialDesign:PackIcon Kind="Close"
-                                                                         Width="20"
-                                                                         Height="20"
-                                                                         Foreground="#94A3B8" />
+                                                                         Width="18"
+                                                                         Height="18"
+                                                                         Foreground="#EF4444" />
 
                                             </Button>
 

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -73,8 +74,8 @@ public partial class OrderEditViewModel(
     
     public string RentalDaysText =>
         Order.Tools.Count == 0
-            ? "0 дней"
-            : $"{Order.Tools.Sum(x => x.RentalDays)} дня";
+            ? "0"
+            : $"{Order.Tools.Max(x => x.RentalDays)}";
 
     private bool CanSave()
     {
@@ -97,7 +98,7 @@ public partial class OrderEditViewModel(
         SetOrder(new OrderEditModel
         {
             OrderDate = DateTime.Today,
-            Tools = []
+            Tools = new ObservableCollection<OrderToolEditModel>()
         });
 
         RefreshState();
@@ -262,8 +263,7 @@ public partial class OrderEditViewModel(
     {
         var dialog = serviceProvider.GetRequiredService<SelectToolsDialog>();
 
-        await dialog.LoadAsync(
-            Order.Tools.Select(x => x.ToolId));
+        await dialog.LoadAsync(Order.Tools);
 
         var result = dialog.ShowDialog();
 
@@ -272,18 +272,29 @@ public partial class OrderEditViewModel(
 
         var selectedTools = dialog.ViewModel.Result;
 
-        Order.Tools = selectedTools
-            .Select(x => new OrderToolEditModel
-            {
-                ToolId = x.Id,
-                ToolName = x.Name,
-                RentalPricePerDay = x.RentalPricePerDay,
-                DepositAmount = x.DepositAmount,
-                StartDate = Order.OrderDate,
-                EndDate = Order.OrderDate.AddDays(3)
-            })
-            .ToList();
+        var previousTools = Order.Tools
+            .ToDictionary(x => x.ToolId);
 
+        Order.Tools = new ObservableCollection<OrderToolEditModel>(
+            selectedTools.Select(x =>
+            {
+                if (previousTools.TryGetValue(x.ToolId, out var existing))
+                    return existing;
+
+                return new OrderToolEditModel
+                {
+                    ToolId = x.ToolId,
+                    ToolName = x.ToolName,
+                    RentalPricePerDay = x.RentalPricePerDay,
+                    DepositAmount = x.DepositAmount,
+                    StartDate = Order.OrderDate,
+                    EndDate = Order.OrderDate.AddDays(3)
+                };
+            }));
+
+        foreach (var tool in Order.Tools)
+            tool.PropertyChanged += ToolOnPropertyChanged;
+        
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
     }
@@ -293,6 +304,8 @@ public partial class OrderEditViewModel(
     {
         if (tool is null)
             return;
+
+        tool.PropertyChanged -= ToolOnPropertyChanged;
 
         Order.Tools.Remove(tool);
 
@@ -304,18 +317,48 @@ public partial class OrderEditViewModel(
     {
         Order.PropertyChanged -= OrderOnPropertyChanged;
 
+        foreach (var tool in Order.Tools)
+            tool.PropertyChanged -= ToolOnPropertyChanged;
+
         Order = newOrder;
 
         Order.PropertyChanged += OrderOnPropertyChanged;
 
+        foreach (var tool in Order.Tools)
+            tool.PropertyChanged += ToolOnPropertyChanged;
+
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
+    }
+    
+    private void ToolOnPropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(OrderToolEditModel.RentalDays)
+            or nameof(OrderToolEditModel.TotalAmount)
+            or nameof(OrderToolEditModel.EndDate)
+            or nameof(OrderToolEditModel.StartDate))
+        {
+            RefreshTotals();
+        }
     }
 
     private void OrderOnPropertyChanged(
         object? sender,
         PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(OrderEditModel.OrderDate))
+        {
+            foreach (var tool in Order.Tools)
+            {
+                tool.StartDate = Order.OrderDate;
+
+                if (tool.EndDate <= tool.StartDate)
+                    tool.EndDate = tool.StartDate.AddDays(1);
+            }
+        }
+
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
     }
@@ -338,6 +381,7 @@ public partial class OrderEditViewModel(
         OnPropertyChanged(nameof(DepositAmount));
         OnPropertyChanged(nameof(TotalToPay));
         OnPropertyChanged(nameof(ToolsCount));
+        OnPropertyChanged(nameof(RentalDaysText));
     }
 
     partial void OnModeChanged(FormMode value)

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace RentalPro.Presentation.Desktop.Models;
@@ -17,5 +18,5 @@ public partial class OrderEditModel : ObservableObject
     private string? comment;
 
     [ObservableProperty]
-    private List<OrderToolEditModel> tools = [];
+    private ObservableCollection<OrderToolEditModel> tools = [];
 }

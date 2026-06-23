@@ -1,12 +1,12 @@
 <Window x:Class="RentalPro.Presentation.Desktop.Views.SelectToolsDialog"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:RentalPro.Presentation.Desktop.Views"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300">
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:RentalPro.Presentation.Desktop.Views"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        d:DesignHeight="300" d:DesignWidth="300">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
@@ -46,6 +46,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        
+        <Style x:Key="CenteredCellTextStyle"
+               TargetType="TextBlock">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
         </Style>
     </Window.Resources>
 
@@ -118,7 +124,7 @@
                  Height="46"
                  Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
                  materialDesign:HintAssist.Hint="Название, инвентарный или серийный номер"
-                 Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
 
         <!-- Таблица -->
         <DataGrid Grid.Row="6"
@@ -135,29 +141,47 @@
 
             <DataGrid.Columns>
 
-                <DataGridTemplateColumn Width="44">
+                <DataGridTemplateColumn Width="60">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox HorizontalAlignment="Center"
                                       VerticalAlignment="Center"
+                                      IsChecked="{Binding IsSelected, Mode=OneWay}"
                                       Command="{Binding DataContext.ToggleToolCommand,
-                                                        RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                       CommandParameter="{Binding}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Инструмент" Width="2.2*">
+                <DataGridTemplateColumn Header="Инструмент"
+                                        Width="2*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
+
                                 <TextBlock Text="{Binding Name}"
                                            FontWeight="SemiBold"
-                                           Foreground="#071B39" />
-                                <TextBlock Text="{Binding InventoryNumber, StringFormat=Инв. № {0}}"
-                                           FontSize="12"
+                                           FontSize="14"
+                                           Foreground="#071B39"
+                                           TextTrimming="CharacterEllipsis" />
+
+                                <TextBlock FontSize="12"
                                            Foreground="#6B7890"
-                                           Margin="0 4 0 0" />
+                                           Margin="0 4 0 0"
+                                           TextTrimming="CharacterEllipsis">
+                                    <Run Text="Инв. № " />
+                                    <Run Text="{Binding InventoryNumber, Mode=OneWay}" />
+                                </TextBlock>
+
+                                <TextBlock FontSize="12"
+                                           Foreground="#6B7890"
+                                           Margin="0 2 0 0"
+                                           TextTrimming="CharacterEllipsis">
+                                    <Run Text="Сер. № " />
+                                    <Run Text="{Binding SerialNumber, Mode=OneWay}" />
+                                </TextBlock>
+
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -165,35 +189,45 @@
 
                 <DataGridTextColumn Header="Категория"
                                     Binding="{Binding CategoryName}"
-                                    Width="1.3*" />
+                                    ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                    Width="1.5*" />
 
                 <DataGridTextColumn Header="Производитель"
                                     Binding="{Binding ManufacturerName}"
-                                    Width="1.3*" />
-
-                <DataGridTextColumn Header="Серийный номер"
-                                    Binding="{Binding SerialNumber}"
-                                    Width="1.3*" />
+                                    ElementStyle="{StaticResource CenteredCellTextStyle}"
+                                    Width="1.2*" />
 
                 <DataGridTextColumn Header="Аренда/день"
                                     Binding="{Binding RentalPricePerDay, StringFormat={}{0:N0} ₽}"
+                                    ElementStyle="{StaticResource CenteredCellTextStyle}"
                                     Width="120" />
 
                 <DataGridTextColumn Header="Залог"
                                     Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
+                                    ElementStyle="{StaticResource CenteredCellTextStyle}"
                                     Width="120" />
 
-                <DataGridTemplateColumn Header="Статус" Width="130">
+                <DataGridTemplateColumn Header="Статус"
+                                        Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
+
                             <Border Background="#DCFCE7"
                                     CornerRadius="14"
-                                    Padding="12 6"
-                                    HorizontalAlignment="Center">
+                                    Height="32"
+                                    MinWidth="90"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+
                                 <TextBlock Text="{Binding StatusName}"
                                            Foreground="#15803D"
-                                           FontWeight="SemiBold" />
+                                           FontWeight="SemiBold"
+                                           FontSize="13"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+
                             </Border>
+
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -204,39 +238,47 @@
         <!-- Низ -->
         <Grid Grid.Row="8">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock VerticalAlignment="Center"
-                       Foreground="#6B7890">
-                <Run Text="Показано " />
-                <Run Text="{Binding CurrentPage, Mode=OneWay}" />
-                <Run Text=" из " />
-                <Run Text="{Binding TotalPages, Mode=OneWay}" />
-            </TextBlock>
-
-            <StackPanel Grid.Column="1"
-                        Orientation="Horizontal">
+            <!-- Пагинация справа -->
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
 
                 <Button Width="36"
                         Height="36"
                         Command="{Binding PreviousPageCommand}"
                         Style="{StaticResource MaterialDesignIconButton}">
-                    <materialDesign:PackIcon Kind="ChevronLeft" />
+                    <materialDesign:PackIcon Kind="ChevronLeft"
+                                             Width="20"
+                                             Height="20" />
                 </Button>
+
+                <TextBlock VerticalAlignment="Center"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="#6B7890"
+                           Margin="12 0">
+                    <Run Text="{Binding CurrentPage, Mode=OneWay}" />
+                    <Run Text=" из " />
+                    <Run Text="{Binding TotalPages, Mode=OneWay}" />
+                </TextBlock>
 
                 <Button Width="36"
                         Height="36"
-                        Margin="6 0 0 0"
                         Command="{Binding NextPageCommand}"
                         Style="{StaticResource MaterialDesignIconButton}">
-                    <materialDesign:PackIcon Kind="ChevronRight" />
+                    <materialDesign:PackIcon Kind="ChevronRight"
+                                             Width="20"
+                                             Height="20" />
                 </Button>
 
                 <Button Height="42"
                         Padding="18 0"
-                        Margin="24 0 0 0"
+                        Margin="28 0 0 0"
                         Click="Cancel_OnClick"
                         Style="{StaticResource MaterialDesignOutlinedButton}">
                     <TextBlock Text="Отмена" />

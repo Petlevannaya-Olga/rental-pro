@@ -19,10 +19,16 @@ public partial class SelectToolsDialogViewModel(
     private CancellationTokenSource? _searchCts;
 
     [ObservableProperty]
-    private List<ToolDto> tools = [];
+    private List<SelectableToolModel> tools = [];
 
     [ObservableProperty]
     private HashSet<Guid> selectedToolIds = [];
+
+    private readonly Dictionary<Guid, SelectedToolModel> _selectedTools = [];
+
+    public List<SelectedToolModel> Result { get; private set; } = [];
+
+    public int SelectedToolsCount => _selectedTools.Count;
 
     [ObservableProperty]
     private string? search;
@@ -42,18 +48,27 @@ public partial class SelectToolsDialogViewModel(
     [ObservableProperty]
     private bool descending;
 
-    public List<ToolDto> Result { get; private set; } = [];
-
-    public int SelectedToolsCount => SelectedToolIds.Count;
-
     public int TotalPages =>
         TotalCount <= 0
             ? 1
             : (int)Math.Ceiling(TotalCount / (double)PageSize);
 
-    public async Task LoadAsync(IEnumerable<Guid> selectedIds)
+    public async Task LoadAsync(IEnumerable<OrderToolEditModel> selectedTools)
     {
-        SelectedToolIds = selectedIds.ToHashSet();
+        _selectedTools.Clear();
+
+        foreach (var tool in selectedTools)
+        {
+            _selectedTools[tool.ToolId] = new SelectedToolModel
+            {
+                ToolId = tool.ToolId,
+                ToolName = tool.ToolName,
+                RentalPricePerDay = tool.RentalPricePerDay,
+                DepositAmount = tool.DepositAmount
+            };
+        }
+
+        SelectedToolIds = _selectedTools.Keys.ToHashSet();
 
         await LoadAvailableStatusAsync();
         await LoadToolsAsync();
@@ -62,13 +77,32 @@ public partial class SelectToolsDialogViewModel(
     }
 
     [RelayCommand]
-    private void ToggleTool(ToolDto? tool)
+    private void ToggleTool(SelectableToolModel? item)
     {
-        if (tool is null)
+        if (item is null)
             return;
 
-        if (!SelectedToolIds.Add(tool.Id))
-            SelectedToolIds.Remove(tool.Id);
+        item.IsSelected = !item.IsSelected;
+
+        if (item.IsSelected)
+        {
+            _selectedTools[item.Id] = new SelectedToolModel
+            {
+                ToolId = item.Id,
+                ToolName = item.Name,
+                RentalPricePerDay = item.RentalPricePerDay,
+                DepositAmount = item.DepositAmount,
+                InventoryNumber = item.InventoryNumber,
+                SerialNumber = item.SerialNumber
+            };
+
+            SelectedToolIds.Add(item.Id);
+        }
+        else
+        {
+            _selectedTools.Remove(item.Id);
+            SelectedToolIds.Remove(item.Id);
+        }
 
         SelectedToolIds = SelectedToolIds.ToHashSet();
 
@@ -98,9 +132,7 @@ public partial class SelectToolsDialogViewModel(
     [RelayCommand]
     private void Confirm()
     {
-        Result = Tools
-            .Where(x => SelectedToolIds.Contains(x.Id))
-            .ToList();
+        Result = _selectedTools.Values.ToList();
     }
 
     public bool IsSelected(Guid toolId)
@@ -161,7 +193,12 @@ public partial class SelectToolsDialogViewModel(
             return;
         }
 
-        Tools = result.Value.Items.ToList();
+        Tools = result.Value.Items
+            .Select(x => new SelectableToolModel(
+                x,
+                SelectedToolIds.Contains(x.Id)))
+            .ToList();
+        
         TotalCount = result.Value.TotalCount;
 
         OnPropertyChanged(nameof(TotalPages));
