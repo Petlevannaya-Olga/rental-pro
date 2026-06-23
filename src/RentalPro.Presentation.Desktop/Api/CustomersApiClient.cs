@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using CSharpFunctionalExtensions;
 using RentalPro.Contracts.Customers;
+using RentalPro.Contracts.Orders;
 using RentalPro.Shared;
 
 namespace RentalPro.Presentation.Desktop.Api;

@@ -770,584 +770,588 @@
             </Grid>
 
             <!-- Просмотр -->
-            <!-- Просмотр -->
-            <Grid Grid.Row="2"
-                  Visibility="{Binding IsViewMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ScrollViewer Grid.Row="2"
+                          Visibility="{Binding IsViewMode, Converter={StaticResource BooleanToVisibilityConverter}}"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Grid>
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="18" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="18" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="18" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="18" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="18" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="18" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="18" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="18" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="18" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="18" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <!-- Клиент / менеджер -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="18" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                    <!-- Клиент / менеджер -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="18" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0"
-                            Style="{StaticResource SummaryCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0"
+                                Style="{StaticResource SummaryCardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <Border Width="46"
-                                    Height="46"
-                                    CornerRadius="13"
-                                    Background="#EAF3FF">
-                                <materialDesign:PackIcon Kind="AccountOutline"
-                                                         Width="24"
-                                                         Height="24"
-                                                         Foreground="#1E73FF"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center" />
-                            </Border>
-
-                            <StackPanel Grid.Column="1"
-                                        Margin="14 0 0 0"
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="Клиент"
-                                           Style="{StaticResource MutedTextStyle}" />
-
-                                <TextBlock Text="{Binding Details.CustomerFullName}"
-                                           Style="{StaticResource StrongTextStyle}"
-                                           Margin="0 5 0 0" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Border Grid.Column="2"
-                            Style="{StaticResource SummaryCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Border Width="46"
-                                    Height="46"
-                                    CornerRadius="13"
-                                    Background="#EAF3FF">
-                                <materialDesign:PackIcon Kind="AccountTie"
-                                                         Width="24"
-                                                         Height="24"
-                                                         Foreground="#1E73FF"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center" />
-                            </Border>
-
-                            <StackPanel Grid.Column="1"
-                                        Margin="14 0 0 0"
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="Менеджер"
-                                           Style="{StaticResource MutedTextStyle}" />
-
-                                <TextBlock Text="{Binding Details.UserFullName}"
-                                           Style="{StaticResource StrongTextStyle}"
-                                           Margin="0 5 0 0" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </Grid>
-
-                <!-- Платежи / документы -->
-                <Grid Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="18" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Платежи -->
-                    <Border Grid.Column="0"
-                            Style="{StaticResource SummaryCardStyle}">
-
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="12" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="42"
-                                        Height="42"
-                                        CornerRadius="12"
-                                        Background="#DCFCE7">
-                                    <materialDesign:PackIcon Kind="CreditCardOutline"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Foreground="#16A34A"
-                                                             HorizontalAlignment="Center"
-                                                             VerticalAlignment="Center" />
-                                </Border>
-
-                                <StackPanel Margin="12 0 0 0"
-                                            VerticalAlignment="Center">
-                                    <TextBlock Text="Платежи"
-                                               Style="{StaticResource StrongTextStyle}" />
-
-                                    <TextBlock Text="{Binding Details.Payments.Count, StringFormat=Всего записей: {0}}"
-                                               Style="{StaticResource MutedTextStyle}"
-                                               Margin="0 3 0 0" />
-                                </StackPanel>
-                            </StackPanel>
-
-                            <ItemsControl Grid.Row="2"
-                                          ItemsSource="{Binding Details.Payments}">
-
-                                <ItemsControl.Style>
-                                    <Style TargetType="ItemsControl">
-                                        <Setter Property="Visibility"
-                                                Value="Visible" />
-
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Details.Payments.Count}"
-                                                         Value="0">
-                                                <Setter Property="Visibility"
-                                                        Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ItemsControl.Style>
-
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Padding="0 8"
-                                                BorderBrush="#EEF2F7"
-                                                BorderThickness="0 0 0 1">
-
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding PaymentTypeName}"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="#071B39" />
-
-                                                    <TextBlock FontSize="12"
-                                                               Foreground="#6B7890"
-                                                               Margin="0 3 0 0">
-                                                        <Run Text="{Binding PaymentMethodName}" />
-                                                        <Run Text=" · " />
-                                                        <Run
-                                                            Text="{Binding PaymentDate, StringFormat={}{0:dd.MM.yyyy HH:mm}}" />
-                                                    </TextBlock>
-
-                                                    <TextBlock Text="{Binding Comment}"
-                                                               FontSize="12"
-                                                               Foreground="#6B7890"
-                                                               Margin="0 3 0 0"
-                                                               TextWrapping="Wrap" />
-                                                </StackPanel>
-
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding Amount, StringFormat={}{0:N0} ₽}"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#071B39"
-                                                           VerticalAlignment="Center"
-                                                           Margin="16 0 0 0" />
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <TextBlock Grid.Row="2"
-                                       Text="Платежи отсутствуют"
-                                       Foreground="#6B7890"
-                                       HorizontalAlignment="Left"
-                                       VerticalAlignment="Center">
-
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility"
-                                                Value="Collapsed" />
-
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Details.Payments.Count}"
-                                                         Value="0">
-                                                <Setter Property="Visibility"
-                                                        Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                    </Border>
-
-                    <!-- Документы -->
-                    <Border Grid.Column="2"
-                            Style="{StaticResource SummaryCardStyle}">
-
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="12" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="42"
-                                        Height="42"
-                                        CornerRadius="12"
+                                <Border Width="46"
+                                        Height="46"
+                                        CornerRadius="13"
                                         Background="#EAF3FF">
-                                    <materialDesign:PackIcon Kind="FileDocumentOutline"
-                                                             Width="22"
-                                                             Height="22"
+                                    <materialDesign:PackIcon Kind="AccountOutline"
+                                                             Width="24"
+                                                             Height="24"
                                                              Foreground="#1E73FF"
                                                              HorizontalAlignment="Center"
                                                              VerticalAlignment="Center" />
                                 </Border>
 
-                                <StackPanel Margin="12 0 0 0"
+                                <StackPanel Grid.Column="1"
+                                            Margin="14 0 0 0"
                                             VerticalAlignment="Center">
-                                    <TextBlock Text="Документы"
-                                               Style="{StaticResource StrongTextStyle}" />
+                                    <TextBlock Text="Клиент"
+                                               Style="{StaticResource MutedTextStyle}" />
 
-                                    <TextBlock Text="Договор и акты по заказу"
-                                               Style="{StaticResource MutedTextStyle}"
-                                               Margin="0 3 0 0" />
+                                    <TextBlock Text="{Binding Details.CustomerFullName}"
+                                               Style="{StaticResource StrongTextStyle}"
+                                               Margin="0 5 0 0" />
                                 </StackPanel>
-                            </StackPanel>
+                            </Grid>
+                        </Border>
 
-                            <ItemsControl Grid.Row="2"
-                                          ItemsSource="{Binding OrderDocuments}">
+                        <Border Grid.Column="2"
+                                Style="{StaticResource SummaryCardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Padding="0 8"
-                                                BorderBrush="#EEF2F7"
-                                                BorderThickness="0 0 0 1">
+                                <Border Width="46"
+                                        Height="46"
+                                        CornerRadius="13"
+                                        Background="#EAF3FF">
+                                    <materialDesign:PackIcon Kind="AccountTie"
+                                                             Width="24"
+                                                             Height="24"
+                                                             Foreground="#1E73FF"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
 
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="1"
+                                            Margin="14 0 0 0"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="Менеджер"
+                                               Style="{StaticResource MutedTextStyle}" />
 
-                                                <TextBlock Text="{Binding Title}"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#071B39"
-                                                           VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Details.UserFullName}"
+                                               Style="{StaticResource StrongTextStyle}"
+                                               Margin="0 5 0 0" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
 
-                                                <StackPanel Grid.Column="1"
-                                                            Orientation="Horizontal"
-                                                            Margin="16 0 0 0">
-
-                                                    <Button Width="32"
-                                                            Height="32"
-                                                            Command="{Binding DataContext.DownloadDocumentCommand,
-                                                              RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            Style="{StaticResource MaterialDesignIconButton}">
-                                                        <materialDesign:PackIcon Kind="FileWordOutline"
-                                                                Width="20"
-                                                                Height="20"
-                                                                Foreground="#1E73FF" />
-                                                    </Button>
-
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-                </Grid>
-
-                <!-- Комментарий -->
-                <Border Grid.Row="4"
-                        Style="{StaticResource SummaryCardStyle}">
-                    <Grid>
+                    <!-- Платежи / документы -->
+                    <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="18" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Width="46"
-                                Height="46"
-                                CornerRadius="13"
-                                Background="#EAF3FF">
-                            <materialDesign:PackIcon Kind="CommentTextOutline"
-                                                     Width="24"
-                                                     Height="24"
-                                                     Foreground="#1E73FF"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center" />
+                        <!-- Платежи -->
+                        <Border Grid.Column="0"
+                                Style="{StaticResource SummaryCardStyle}">
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="12" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="42"
+                                            Height="42"
+                                            CornerRadius="12"
+                                            Background="#DCFCE7">
+                                        <materialDesign:PackIcon Kind="CreditCardOutline"
+                                                                 Width="22"
+                                                                 Height="22"
+                                                                 Foreground="#16A34A"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <StackPanel Margin="12 0 0 0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Платежи"
+                                                   Style="{StaticResource StrongTextStyle}" />
+
+                                        <TextBlock
+                                            Text="{Binding Details.Payments.Count, StringFormat=Всего записей: {0}}"
+                                            Style="{StaticResource MutedTextStyle}"
+                                            Margin="0 3 0 0" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <ItemsControl Grid.Row="2"
+                                              ItemsSource="{Binding Details.Payments}">
+
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Details.Payments.Count}"
+                                                             Value="0">
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="0 8"
+                                                    BorderBrush="#EEF2F7"
+                                                    BorderThickness="0 0 0 1">
+
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding PaymentTypeName}"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#071B39" />
+
+                                                        <TextBlock FontSize="12"
+                                                                   Foreground="#6B7890"
+                                                                   Margin="0 3 0 0">
+                                                            <Run Text="{Binding PaymentMethodName}" />
+                                                            <Run Text=" · " />
+                                                            <Run
+                                                                Text="{Binding PaymentDate, StringFormat={}{0:dd.MM.yyyy HH:mm}}" />
+                                                        </TextBlock>
+
+                                                        <TextBlock Text="{Binding Comment}"
+                                                                   FontSize="12"
+                                                                   Foreground="#6B7890"
+                                                                   Margin="0 3 0 0"
+                                                                   TextWrapping="Wrap" />
+                                                    </StackPanel>
+
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Amount, StringFormat={}{0:N0} ₽}"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="#071B39"
+                                                               VerticalAlignment="Center"
+                                                               Margin="16 0 0 0" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Grid.Row="2"
+                                           Text="Платежи отсутствуют"
+                                           Foreground="#6B7890"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Center">
+
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Details.Payments.Count}"
+                                                             Value="0">
+                                                    <Setter Property="Visibility"
+                                                            Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </Border>
 
-                        <StackPanel Grid.Column="1"
-                                    Margin="14 0 0 0"
-                                    VerticalAlignment="Center">
-                            <TextBlock Text="Комментарий"
-                                       Style="{StaticResource MutedTextStyle}" />
+                        <!-- Документы -->
+                        <Border Grid.Column="2"
+                                Style="{StaticResource SummaryCardStyle}">
 
-                            <TextBlock Foreground="#071B39"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Margin="0 6 0 0"
-                                       TextWrapping="Wrap">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="12" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
 
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Text"
-                                                Value="{Binding Details.Comment}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="42"
+                                            Height="42"
+                                            CornerRadius="12"
+                                            Background="#EAF3FF">
+                                        <materialDesign:PackIcon Kind="FileDocumentOutline"
+                                                                 Width="22"
+                                                                 Height="22"
+                                                                 Foreground="#1E73FF"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center" />
+                                    </Border>
 
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Details.Comment}"
-                                                         Value="">
-                                                <Setter Property="Text"
-                                                        Value="Комментарий отсутствует" />
-                                            </DataTrigger>
+                                    <StackPanel Margin="12 0 0 0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Документы"
+                                                   Style="{StaticResource StrongTextStyle}" />
 
-                                            <DataTrigger Binding="{Binding Details.Comment}"
-                                                         Value="{x:Null}">
-                                                <Setter Property="Text"
-                                                        Value="Комментарий отсутствует" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
+                                        <TextBlock Text="Договор и акты по заказу"
+                                                   Style="{StaticResource MutedTextStyle}"
+                                                   Margin="0 3 0 0" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <ItemsControl Grid.Row="2"
+                                              ItemsSource="{Binding OrderDocuments}">
+
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="0 8"
+                                                    BorderBrush="#EEF2F7"
+                                                    BorderThickness="0 0 0 1">
+
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="#071B39"
+                                                               VerticalAlignment="Center" />
+
+                                                    <StackPanel Grid.Column="1"
+                                                                Orientation="Horizontal"
+                                                                Margin="16 0 0 0">
+
+                                                        <Button Width="32"
+                                                                Height="32"
+                                                                Command="{Binding DataContext.DownloadDocumentCommand,
+                                                              RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource MaterialDesignIconButton}">
+                                                            <materialDesign:PackIcon Kind="FileWordOutline"
+                                                                    Width="20"
+                                                                    Height="20"
+                                                                    Foreground="#1E73FF" />
+                                                        </Button>
+
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </Border>
                     </Grid>
-                </Border>
 
-                <!-- Таблица инструментов -->
-                <Border Grid.Row="6"
-                        Background="White"
-                        CornerRadius="12"
-                        BorderBrush="#EEF2F7"
-                        BorderThickness="1">
+                    <!-- Комментарий -->
+                    <Border Grid.Row="4"
+                            Style="{StaticResource SummaryCardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                    <DataGrid ItemsSource="{Binding ViewItems}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              IsReadOnly="True"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#EEF2F7"
-                              BorderThickness="0"
-                              RowHeight="68"
-                              VerticalScrollBarVisibility="Auto"
-                              Style="{StaticResource MaterialDesignDataGrid}">
-
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="VerticalContentAlignment"
-                                        Value="Center" />
-                            </Style>
-                        </DataGrid.RowStyle>
-
-                        <DataGrid.Columns>
-
-                            <DataGridTemplateColumn Header="Инструмент"
-                                                    Width="2*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding ToolName}"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="#071B39"
-                                                       TextTrimming="CharacterEllipsis" />
-
-                                            <TextBlock
-                                                Text="{Binding RentalPricePerDay, StringFormat={}{0:N0} ₽ / день}"
-                                                FontSize="12"
-                                                Foreground="#6B7890"
-                                                Margin="0 4 0 0" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <DataGridTextColumn Header="Начало"
-                                                Binding="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
-                                                Width="120"
-                                                ElementStyle="{StaticResource CenteredCellTextStyle}" />
-
-                            <DataGridTextColumn Header="План возврата"
-                                                Binding="{Binding PlannedReturnDate, StringFormat={}{0:dd.MM.yyyy}}"
-                                                Width="140"
-                                                ElementStyle="{StaticResource CenteredCellTextStyle}" />
-
-                            <DataGridTextColumn Header="Факт возврата"
-                                                Binding="{Binding ActualReturnedDate, StringFormat={}{0:dd.MM.yyyy}}"
-                                                Width="140"
-                                                ElementStyle="{StaticResource CenteredCellTextStyle}" />
-
-                            <DataGridTextColumn Header="Дней"
-                                                Binding="{Binding RentalDays, StringFormat={}{0} дн.}"
-                                                Width="100"
-                                                ElementStyle="{StaticResource CenteredCellTextStyle}" />
-
-                            <DataGridTextColumn Header="Аренда"
-                                                Binding="{Binding TotalAmount, StringFormat={}{0:N0} ₽}"
-                                                Width="130"
-                                                ElementStyle="{StaticResource CenteredCellTextStyle}" />
-
-                            <DataGridTextColumn Header="Залог"
-                                                Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
-                                                Width="130"
-                                                ElementStyle="{StaticResource CenteredCellTextStyle}" />
-
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-
-                <!-- Итоги -->
-                <Border Grid.Row="8"
-                        Style="{StaticResource SummaryCardStyle}">
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.1*" />
-                            <ColumnDefinition Width="1.1*" />
-                            <ColumnDefinition Width="1.1*" />
-                            <ColumnDefinition Width="1.1*" />
-                            <ColumnDefinition Width="1.4*" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0"
-                                    Orientation="Horizontal"
-                                    VerticalAlignment="Center">
                             <Border Width="46"
                                     Height="46"
                                     CornerRadius="13"
                                     Background="#EAF3FF">
-                                <materialDesign:PackIcon Kind="CalendarRange"
-                                                         Width="23"
-                                                         Height="23"
+                                <materialDesign:PackIcon Kind="CommentTextOutline"
+                                                         Width="24"
+                                                         Height="24"
                                                          Foreground="#1E73FF"
                                                          HorizontalAlignment="Center"
                                                          VerticalAlignment="Center" />
                             </Border>
 
-                            <StackPanel Margin="12 0 0 0">
-                                <TextBlock Text="Период"
+                            <StackPanel Grid.Column="1"
+                                        Margin="14 0 0 0"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="Комментарий"
                                            Style="{StaticResource MutedTextStyle}" />
-                                <TextBlock Text="{Binding ViewPeriodText}"
-                                           Style="{StaticResource StrongTextStyle}" />
+
+                                <TextBlock Foreground="#071B39"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Margin="0 6 0 0"
+                                           TextWrapping="Wrap">
+
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text"
+                                                    Value="{Binding Details.Comment}" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Details.Comment}"
+                                                             Value="">
+                                                    <Setter Property="Text"
+                                                            Value="Комментарий отсутствует" />
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding Details.Comment}"
+                                                             Value="{x:Null}">
+                                                    <Setter Property="Text"
+                                                            Value="Комментарий отсутствует" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
-                        </StackPanel>
+                        </Grid>
+                    </Border>
 
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    VerticalAlignment="Center">
-                            <Border Width="46"
-                                    Height="46"
-                                    CornerRadius="13"
-                                    Background="#DCFCE7">
-                                <materialDesign:PackIcon Kind="Tools"
-                                                         Width="23"
-                                                         Height="23"
-                                                         Foreground="#16A34A"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center" />
-                            </Border>
+                    <!-- Таблица инструментов -->
+                    <Border Grid.Row="6"
+                            Background="White"
+                            CornerRadius="12"
+                            BorderBrush="#EEF2F7"
+                            BorderThickness="1">
 
-                            <StackPanel Margin="12 0 0 0">
-                                <TextBlock Text="Инструментов"
-                                           Style="{StaticResource MutedTextStyle}" />
-                                <TextBlock Text="{Binding ViewToolsCount, StringFormat={}{0} шт.}"
-                                           Style="{StaticResource StrongTextStyle}" />
+                        <DataGrid ItemsSource="{Binding ViewItems}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#EEF2F7"
+                                  BorderThickness="0"
+                                  RowHeight="68"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Style="{StaticResource MaterialDesignDataGrid}">
+
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="VerticalContentAlignment"
+                                            Value="Center" />
+                                </Style>
+                            </DataGrid.RowStyle>
+
+                            <DataGrid.Columns>
+
+                                <DataGridTemplateColumn Header="Инструмент"
+                                                        Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ToolName}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#071B39"
+                                                           TextTrimming="CharacterEllipsis" />
+
+                                                <TextBlock
+                                                    Text="{Binding RentalPricePerDay, StringFormat={}{0:N0} ₽ / день}"
+                                                    FontSize="12"
+                                                    Foreground="#6B7890"
+                                                    Margin="0 4 0 0" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Начало"
+                                                    Binding="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                                    Width="120"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" />
+
+                                <DataGridTextColumn Header="План возврата"
+                                                    Binding="{Binding PlannedReturnDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                                    Width="140"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" />
+
+                                <DataGridTextColumn Header="Факт возврата"
+                                                    Binding="{Binding ActualReturnedDate, StringFormat={}{0:dd.MM.yyyy}}"
+                                                    Width="140"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" />
+
+                                <DataGridTextColumn Header="Дней"
+                                                    Binding="{Binding RentalDays, StringFormat={}{0} дн.}"
+                                                    Width="100"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" />
+
+                                <DataGridTextColumn Header="Аренда"
+                                                    Binding="{Binding TotalAmount, StringFormat={}{0:N0} ₽}"
+                                                    Width="130"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" />
+
+                                <DataGridTextColumn Header="Залог"
+                                                    Binding="{Binding DepositAmount, StringFormat={}{0:N0} ₽}"
+                                                    Width="130"
+                                                    ElementStyle="{StaticResource CenteredCellTextStyle}" />
+
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Итоги -->
+                    <Border Grid.Row="8"
+                            Style="{StaticResource SummaryCardStyle}">
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.1*" />
+                                <ColumnDefinition Width="1.1*" />
+                                <ColumnDefinition Width="1.1*" />
+                                <ColumnDefinition Width="1.1*" />
+                                <ColumnDefinition Width="1.4*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+                                <Border Width="46"
+                                        Height="46"
+                                        CornerRadius="13"
+                                        Background="#EAF3FF">
+                                    <materialDesign:PackIcon Kind="CalendarRange"
+                                                             Width="23"
+                                                             Height="23"
+                                                             Foreground="#1E73FF"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
+
+                                <StackPanel Margin="12 0 0 0">
+                                    <TextBlock Text="Период"
+                                               Style="{StaticResource MutedTextStyle}" />
+                                    <TextBlock Text="{Binding ViewPeriodText}"
+                                               Style="{StaticResource StrongTextStyle}" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
 
-                        <StackPanel Grid.Column="2"
-                                    Orientation="Horizontal"
-                                    VerticalAlignment="Center">
-                            <Border Width="46"
-                                    Height="46"
-                                    CornerRadius="13"
-                                    Background="#FEF3C7">
-                                <materialDesign:PackIcon Kind="WalletOutline"
-                                                         Width="23"
-                                                         Height="23"
-                                                         Foreground="#D97706"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center" />
-                            </Border>
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+                                <Border Width="46"
+                                        Height="46"
+                                        CornerRadius="13"
+                                        Background="#DCFCE7">
+                                    <materialDesign:PackIcon Kind="Tools"
+                                                             Width="23"
+                                                             Height="23"
+                                                             Foreground="#16A34A"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
 
-                            <StackPanel Margin="12 0 0 0">
-                                <TextBlock Text="Залог"
-                                           Style="{StaticResource MutedTextStyle}" />
-                                <TextBlock Text="{Binding ViewDepositAmount, StringFormat={}{0:N0} ₽}"
-                                           Style="{StaticResource StrongTextStyle}" />
+                                <StackPanel Margin="12 0 0 0">
+                                    <TextBlock Text="Инструментов"
+                                               Style="{StaticResource MutedTextStyle}" />
+                                    <TextBlock Text="{Binding ViewToolsCount, StringFormat={}{0} шт.}"
+                                               Style="{StaticResource StrongTextStyle}" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
 
-                        <StackPanel Grid.Column="3"
-                                    Orientation="Horizontal"
-                                    VerticalAlignment="Center">
-                            <Border Width="46"
-                                    Height="46"
-                                    CornerRadius="13"
-                                    Background="#DCFCE7">
-                                <materialDesign:PackIcon Kind="Cash"
-                                                         Width="23"
-                                                         Height="23"
-                                                         Foreground="#16A34A"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center" />
-                            </Border>
+                            <StackPanel Grid.Column="2"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+                                <Border Width="46"
+                                        Height="46"
+                                        CornerRadius="13"
+                                        Background="#FEF3C7">
+                                    <materialDesign:PackIcon Kind="WalletOutline"
+                                                             Width="23"
+                                                             Height="23"
+                                                             Foreground="#D97706"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
 
-                            <StackPanel Margin="12 0 0 0">
-                                <TextBlock Text="Аренда"
-                                           Style="{StaticResource MutedTextStyle}" />
-                                <TextBlock Text="{Binding ViewRentalAmount, StringFormat={}{0:N0} ₽}"
-                                           Style="{StaticResource StrongTextStyle}" />
+                                <StackPanel Margin="12 0 0 0">
+                                    <TextBlock Text="Залог"
+                                               Style="{StaticResource MutedTextStyle}" />
+                                    <TextBlock Text="{Binding ViewDepositAmount, StringFormat={}{0:N0} ₽}"
+                                               Style="{StaticResource StrongTextStyle}" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
 
-                        <StackPanel Grid.Column="4"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center">
-                            <TextBlock Text="К оплате"
-                                       Foreground="#6B7890"
-                                       FontSize="13"
-                                       HorizontalAlignment="Right" />
+                            <StackPanel Grid.Column="3"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+                                <Border Width="46"
+                                        Height="46"
+                                        CornerRadius="13"
+                                        Background="#DCFCE7">
+                                    <materialDesign:PackIcon Kind="Cash"
+                                                             Width="23"
+                                                             Height="23"
+                                                             Foreground="#16A34A"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Border>
 
-                            <TextBlock Text="{Binding ViewTotalToPay, StringFormat={}{0:N0} ₽}"
-                                       Foreground="#071B39"
-                                       FontSize="28"
-                                       FontWeight="Bold"
-                                       Margin="0 4 0 0" />
-                        </StackPanel>
+                                <StackPanel Margin="12 0 0 0">
+                                    <TextBlock Text="Аренда"
+                                               Style="{StaticResource MutedTextStyle}" />
+                                    <TextBlock Text="{Binding ViewRentalAmount, StringFormat={}{0:N0} ₽}"
+                                               Style="{StaticResource StrongTextStyle}" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="К оплате"
+                                           Foreground="#6B7890"
+                                           FontSize="13"
+                                           HorizontalAlignment="Right" />
+
+                                <TextBlock Text="{Binding ViewTotalToPay, StringFormat={}{0:N0} ₽}"
+                                           Foreground="#071B39"
+                                           FontSize="28"
+                                           FontWeight="Bold"
+                                           Margin="0 4 0 0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Кнопки -->
+                    <Grid Grid.Row="10">
+                        <Button Height="42"
+                                Padding="18 0"
+                                HorizontalAlignment="Right"
+                                Command="{Binding BackCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}">
+                            <TextBlock Text="Назад" />
+                        </Button>
                     </Grid>
-                </Border>
 
-                <!-- Кнопки -->
-                <Grid Grid.Row="10">
-                    <Button Height="42"
-                            Padding="18 0"
-                            HorizontalAlignment="Right"
-                            Command="{Binding BackCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}">
-                        <TextBlock Text="Назад" />
-                    </Button>
                 </Grid>
-
-            </Grid>
+            </ScrollViewer>
         </Grid>
     </Border>
 </UserControl>

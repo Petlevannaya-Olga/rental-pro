@@ -340,4 +340,107 @@ public sealed class OrdersApiClient(IHttpClientFactory httpClientFactory)
                 .ToErrors();
         }
     }
+    
+    public async Task<Result<IReadOnlyList<OrderDocumentDto>, Errors>> GetDocumentsAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"api/orders/{orderId}/documents",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "order.documents.load.failed",
+                    "Не удалось загрузить документы заказа",
+                    cancellationToken);
+            }
+
+            var documents = await response.Content
+                .ReadFromJsonAsync<IReadOnlyList<OrderDocumentDto>>(cancellationToken);
+
+            return Result.Success<IReadOnlyList<OrderDocumentDto>, Errors>(
+                documents ?? []);
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "order.documents.load.failed",
+                    "Не удалось загрузить документы заказа")
+                .ToErrors();
+        }
+    }
+    
+    public async Task<Result<byte[], Errors>> ExportContractAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        return await DownloadFileAsync(
+            $"api/orders/{orderId}/contract",
+            "order.contract.download.failed",
+            "Не удалось скачать договор",
+            cancellationToken);
+    }
+
+    public async Task<Result<byte[], Errors>> ExportTransferActAsync(
+        Guid orderId,
+        DateOnly date,
+        CancellationToken cancellationToken = default)
+    {
+        return await DownloadFileAsync(
+            $"api/orders/{orderId}/transfer-act?date={date:yyyy-MM-dd}",
+            "order.transfer-act.download.failed",
+            "Не удалось скачать акт выдачи",
+            cancellationToken);
+    }
+
+    public async Task<Result<byte[], Errors>> ExportReturnActAsync(
+        Guid orderId,
+        DateOnly date,
+        CancellationToken cancellationToken = default)
+    {
+        return await DownloadFileAsync(
+            $"api/orders/{orderId}/return-act?date={date:yyyy-MM-dd}",
+            "order.return-act.download.failed",
+            "Не удалось скачать акт возврата",
+            cancellationToken);
+    }
+
+    private async Task<Result<byte[], Errors>> DownloadFileAsync(
+        string url,
+        string fallbackCode,
+        string fallbackMessage,
+        CancellationToken cancellationToken)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.GetAsync(url, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    fallbackCode,
+                    fallbackMessage,
+                    cancellationToken);
+            }
+
+            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(fallbackCode, fallbackMessage)
+                .ToErrors();
+        }
+    }
 }

@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;
 using RentalPro.Contracts.Customers;
 using RentalPro.Contracts.Orders;
@@ -12,6 +14,7 @@ using RentalPro.Presentation.Desktop.Common;
 using RentalPro.Presentation.Desktop.Models;
 using RentalPro.Presentation.Desktop.Services;
 using RentalPro.Presentation.Desktop.Views;
+using RentalPro.Shared;
 
 namespace RentalPro.Presentation.Desktop.ViewModels;
 
@@ -206,6 +209,7 @@ public partial class OrderEditViewModel(
             }
 
             Details = result.Value;
+            await LoadOrderDocumentsAsync(id);
             RefreshState();
         }
         finally
@@ -332,6 +336,8 @@ public partial class OrderEditViewModel(
         var previousTools = Order.Tools
             .ToDictionary(x => x.ToolId);
 
+        UnsubscribeTools();
+        
         Order.Tools = new ObservableCollection<OrderToolEditModel>(
             selectedTools.Select(x =>
             {
@@ -349,10 +355,9 @@ public partial class OrderEditViewModel(
                 };
             }));
 
-        foreach (var tool in Order.Tools)
-            tool.PropertyChanged += ToolOnPropertyChanged;
-        
-        RefreshTotals();
+        SubscribeTools();
+
+        RefreshState();
         SaveCommand.NotifyCanExecuteChanged();
     }
 
@@ -431,6 +436,73 @@ public partial class OrderEditViewModel(
         notificationService.Success("Тестовые данные заполнены");
     }
 
+    [RelayCommand]
+    private async Task DownloadDocumentAsync(OrderDocumentDto? document)
+    {
+        if (document is null)
+            return;
+
+        if (Details is null)
+        {
+            notificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        Result<byte[], Errors> result;
+
+        if (document.Type == OrderDocumentType.Contract)
+        {
+            result = await ordersApiClient.ExportContractAsync(Details.Id);
+        }
+        else if (document.Type == OrderDocumentType.TransferAct && document.Date is not null)
+        {
+            result = await ordersApiClient.ExportTransferActAsync(
+                Details.Id,
+                document.Date.Value);
+        }
+        else if (document.Type == OrderDocumentType.ReturnAct && document.Date is not null)
+        {
+            result = await ordersApiClient.ExportReturnActAsync(
+                Details.Id,
+                document.Date.Value);
+        }
+        else
+        {
+            notificationService.Error("Не удалось определить тип документа");
+            return;
+        }
+
+        if (result.IsFailure)
+        {
+            notificationService.Error(result.Error.Message);
+            return;
+        }
+
+        var fileName = GetDocumentFileName(document);
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = fileName,
+            Filter = "Документ Word (*.docx)|*.docx|Все файлы (*.*)|*.*"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        await File.WriteAllBytesAsync(dialog.FileName, result.Value);
+
+        notificationService.Success("Документ успешно сохранен");
+    }
+
+    private static string GetDocumentFileName(OrderDocumentDto document)
+    {
+        var title = document.Title
+            .Replace(" ", "_")
+            .Replace("№", "N");
+
+        return $"{title}.docx";
+    }
+    
     private void SetOrder(OrderEditModel newOrder)
     {
         Order.PropertyChanged -= OrderOnPropertyChanged;
@@ -495,6 +567,7 @@ public partial class OrderEditViewModel(
         OnPropertyChanged(nameof(ViewToolsCount));
         OnPropertyChanged(nameof(ViewPeriodText));
         OnPropertyChanged(nameof(ViewItems));
+        OnPropertyChanged(nameof(OrderDocuments));
 
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
@@ -547,5 +620,21 @@ public partial class OrderEditViewModel(
     {
         foreach (var tool in Order.Tools)
             tool.PropertyChanged -= ToolOnPropertyChanged;
+    }
+    
+    private async Task LoadOrderDocumentsAsync(Guid orderId)
+    {
+        var result = await ordersApiClient.GetDocumentsAsync(orderId);
+
+        if (result.IsFailure)
+        {
+            _orderDocuments = [];
+            notificationService.Error(result.Error.Message);
+            OnPropertyChanged(nameof(OrderDocuments));
+            return;
+        }
+
+        _orderDocuments = result.Value;
+        OnPropertyChanged(nameof(OrderDocuments));
     }
 }
