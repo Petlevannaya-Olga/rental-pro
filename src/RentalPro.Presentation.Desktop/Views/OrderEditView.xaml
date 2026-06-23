@@ -1355,6 +1355,48 @@
                                     Style="{StaticResource MaterialDesignOutlinedButton}">
                                 <TextBlock Text="Назад" />
                             </Button>
+                            
+                            <Button Height="42"
+                                    Width="180"
+                                    Padding="22 0"
+                                    Margin="12 0 0 0"
+                                    Command="{Binding OpenReturnCommand}"
+                                    Visibility="{Binding CanReturnTools, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    Style="{StaticResource PrimaryActionButtonStyle}">
+
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="KeyboardReturn"
+                                                             Width="18"
+                                                             Height="18"
+                                                             Margin="0 0 8 0"
+                                                             Foreground="White" />
+
+                                    <TextBlock Text="Оформить возврат"
+                                               Foreground="White"
+                                               FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Height="42"
+                                    Width="180"
+                                    Padding="22 0"
+                                    Margin="12 0 0 0"
+                                    Command="{Binding IssueToolsCommand}"
+                                    Visibility="{Binding CanIssueTools, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    Style="{StaticResource PrimaryActionButtonStyle}">
+
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="PackageVariantClosedCheck"
+                                                             Width="18"
+                                                             Height="18"
+                                                             Margin="0 0 8 0"
+                                                             Foreground="White" />
+
+                                    <TextBlock Text="Выдать инструменты"
+                                               Foreground="White"
+                                               FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
 
                             <Button Height="42"
                                     Padding="22 0"

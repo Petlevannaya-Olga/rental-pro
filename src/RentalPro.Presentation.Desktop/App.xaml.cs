@@ -109,5 +109,8 @@ public partial class App : Application
         
         services.AddTransient<PaymentDialogViewModel>();
         services.AddTransient<PaymentDialog>();
+        
+        services.AddTransient<ReturnDialogViewModel>();
+        services.AddTransient<ReturnDialog>();
     }
 }

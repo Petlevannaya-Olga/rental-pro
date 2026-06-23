@@ -443,4 +443,73 @@ public sealed class OrdersApiClient(IHttpClientFactory httpClientFactory)
                 .ToErrors();
         }
     }
+    
+    public async Task<UnitResult<Errors>> IssueAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.PostAsync(
+                $"api/orders/{orderId}/issue",
+                null,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "order.issue.failed",
+                    "Не удалось выдать инструменты",
+                    cancellationToken);
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "order.issue.failed",
+                    "Не удалось выдать инструменты")
+                .ToErrors();
+        }
+    }
+    
+    public async Task<UnitResult<Errors>> ReturnItemsAsync(
+        Guid orderId,
+        ReturnOrderItemsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var httpClient = httpClientFactory.CreateClient("Api");
+
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                $"api/orders/{orderId}/return-items",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ReadErrorsAsync(
+                    response,
+                    "order.return.failed",
+                    "Не удалось оформить возврат",
+                    cancellationToken);
+            }
+
+            return UnitResult.Success<Errors>();
+        }
+        catch (HttpRequestException)
+        {
+            return CommonErrors
+                .Failure(
+                    "order.return.failed",
+                    "Не удалось оформить возврат")
+                .ToErrors();
+        }
+    }
 }

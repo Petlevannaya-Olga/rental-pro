@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CSharpFunctionalExtensions;
@@ -33,8 +34,15 @@ public partial class OrderEditViewModel(
     private Guid? _currentUserId;
     private Guid? _confirmedStatusId;
     private Guid? _availableToolStatusId;
-    
     private IReadOnlyList<OrderDocumentDto> _orderDocuments = [];
+    
+    public bool CanReturnTools =>
+        Details is not null
+        && Details.StatusName == "Выполняется";
+    
+    public bool CanIssueTools =>
+        Details is not null
+        && Details.StatusName == "Готов к выдаче";
     
     public IReadOnlyList<OrderDocumentDto> OrderDocuments =>
         Details?.StatusName == "Отменен"
@@ -522,6 +530,49 @@ public partial class OrderEditViewModel(
         notificationService.Success("Данные заказа обновлены");
     }
 
+    [RelayCommand]
+    private async Task IssueToolsAsync()
+    {
+        if (Details is null)
+        {
+            notificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var result = await ordersApiClient.IssueAsync(Details.Id);
+
+        if (result.IsFailure)
+        {
+            notificationService.Error(result.Error.Message);
+            return;
+        }
+
+        notificationService.Success("Инструменты успешно выданы");
+
+        await OpenViewAsync(Details.Id);
+    }
+    
+    [RelayCommand]
+    private async Task OpenReturnAsync()
+    {
+        if (Details is null)
+        {
+            notificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var dialog = serviceProvider.GetRequiredService<ReturnDialog>();
+
+        dialog.Open(Details);
+
+        var result = dialog.ShowDialog();
+
+        if (result != true)
+            return;
+
+        await OpenViewAsync(Details.Id);
+    }
+    
     private static string GetDocumentFileName(OrderDocumentDto document)
     {
         var title = document.Title
@@ -598,6 +649,9 @@ public partial class OrderEditViewModel(
         OnPropertyChanged(nameof(OrderDocuments));
         
         OnPropertyChanged(nameof(CanAcceptPayment));
+        OnPropertyChanged(nameof(CanIssueTools));
+        
+        OnPropertyChanged(nameof(CanReturnTools));
 
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();
