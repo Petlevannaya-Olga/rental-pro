@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using System.Security.Claims;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using RentalPro.Contracts.Orders;
 using RentalPro.Presentation.Desktop.Api;
 using RentalPro.Presentation.Desktop.Auth;
@@ -17,6 +17,7 @@ public partial class OrderEditViewModel(
     NavigationService navigationService,
     DictionariesApiClient dictionariesApiClient,
     TokenStorage tokenStorage,
+    IServiceProvider serviceProvider,
     NotificationService notificationService)
     : ObservableObject
 {
@@ -237,13 +238,54 @@ public partial class OrderEditViewModel(
     [RelayCommand]
     private void SelectCustomer()
     {
-        notificationService.Info("Выбор клиента добавим следующим шагом");
+        var dialog = serviceProvider.GetRequiredService<SelectCustomerDialog>();
+
+        var result = dialog.ShowDialog();
+
+        if (result != true)
+            return;
+
+        var customer = dialog.ViewModel.Result;
+
+        if (customer is null)
+            return;
+
+        Order.CustomerId = customer.Id;
+        Order.CustomerName = customer.FullName;
+
+        RefreshState();
+        SaveCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
-    private void SelectTools()
+    private async Task SelectToolsAsync()
     {
-        notificationService.Info("Выбор инструментов добавим следующим шагом");
+        var dialog = serviceProvider.GetRequiredService<SelectToolsDialog>();
+
+        await dialog.LoadAsync(
+            Order.Tools.Select(x => x.ToolId));
+
+        var result = dialog.ShowDialog();
+
+        if (result != true)
+            return;
+
+        var selectedTools = dialog.ViewModel.Result;
+
+        Order.Tools = selectedTools
+            .Select(x => new OrderToolEditModel
+            {
+                ToolId = x.Id,
+                ToolName = x.Name,
+                RentalPricePerDay = x.RentalPricePerDay,
+                DepositAmount = x.DepositAmount,
+                StartDate = Order.OrderDate,
+                EndDate = Order.OrderDate.AddDays(3)
+            })
+            .ToList();
+
+        RefreshTotals();
+        SaveCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]

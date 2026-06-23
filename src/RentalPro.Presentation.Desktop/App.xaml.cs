@@ -91,5 +91,11 @@ public partial class App : Application
         
         services.AddSingleton<OrderEditViewModel>();
         services.AddSingleton<OrderEditView>();
+        
+        services.AddTransient<SelectCustomerDialogViewModel>();
+        services.AddTransient<SelectCustomerDialog>();
+        
+        services.AddTransient<SelectToolsDialogViewModel>();
+        services.AddTransient<SelectToolsDialog>();
     }
 }
