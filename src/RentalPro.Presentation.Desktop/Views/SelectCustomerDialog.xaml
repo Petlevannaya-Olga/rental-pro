@@ -156,9 +156,24 @@
                         <TextBlock Text="Отмена" />
                     </StackPanel>
                 </Button>
+                
+                <Button Height="42"
+                        Padding="18 0"
+                        Margin="12 0 12 0"
+                        Click="CreateCustomer_OnClick"
+                        Style="{StaticResource MaterialDesignOutlinedButton}">
 
-                <Button Margin="12 0 0 0"
-                        Click="Select_OnClick"
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus"
+                                                 Width="18"
+                                                 Height="18"
+                                                 Margin="0 0 8 0" />
+
+                        <TextBlock Text="Новый клиент" />
+                    </StackPanel>
+                </Button>
+
+                <Button Click="Select_OnClick"
                         Style="{StaticResource PrimaryDialogButtonStyle}">
 
                     <StackPanel Orientation="Horizontal">

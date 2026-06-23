@@ -118,7 +118,7 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
         }
     }
 
-    public async Task<UnitResult<Errors>> CreateCustomerAsync(
+    public async Task<Result<CreateCustomerResponse, Errors>> CreateCustomerAsync(
         CreateCustomerRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -140,7 +140,19 @@ public sealed class CustomersApiClient(IHttpClientFactory httpClientFactory)
                     cancellationToken);
             }
 
-            return UnitResult.Success<Errors>();
+            var createdCustomer = await response.Content
+                .ReadFromJsonAsync<CreateCustomerResponse>(cancellationToken);
+
+            if (createdCustomer is null)
+            {
+                return CommonErrors
+                    .Failure(
+                        "customers.create.empty.response",
+                        "Сервер не вернул данные созданного клиента")
+                    .ToErrors();
+            }
+
+            return createdCustomer;
         }
         catch (HttpRequestException)
         {

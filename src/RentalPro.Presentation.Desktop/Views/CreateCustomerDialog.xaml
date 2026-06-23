@@ -1,0 +1,285 @@
+<Window x:Class="RentalPro.Presentation.Desktop.Views.CreateCustomerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Новый клиент"
+        Width="980"
+        Height="720"
+        WindowStartupLocation="CenterOwner"
+        Background="#F5F7FB">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <Style x:Key="PrimaryDialogButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1E73FF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="22 0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Resources>
+
+    <Border Margin="20"
+            Padding="24"
+            Background="White"
+            CornerRadius="16">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="20" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="20" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Верх -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Новый клиент"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="#071B39" />
+
+                    <TextBlock Text="Заполните данные клиента для оформления заказа"
+                               FontSize="13"
+                               Foreground="#6B7890"
+                               Margin="0 6 0 0" />
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Click="Cancel_OnClick"
+                        Style="{StaticResource MaterialDesignIconButton}">
+                    <materialDesign:PackIcon Kind="Close"
+                                             Width="22"
+                                             Height="22"
+                                             Foreground="#64748B" />
+                </Button>
+            </Grid>
+
+            <!-- Форма -->
+            <ScrollViewer Grid.Row="2"
+                          VerticalScrollBarVisibility="Auto">
+
+                <StackPanel>
+
+                    <TextBlock Text="ФИО"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="#071B39"
+                               Margin="0 0 0 12" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Height="56"
+                                 Text="{Binding Customer.LastName, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Фамилия"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="2"
+                                 Height="56"
+                                 Text="{Binding Customer.FirstName, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Имя"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="4"
+                                 Height="56"
+                                 Text="{Binding Customer.MiddleName, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Отчество"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </Grid>
+
+                    <TextBlock Text="Контакты и паспорт"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="#071B39"
+                               Margin="0 24 0 12" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Height="56"
+                                 Text="{Binding Customer.PhoneNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Телефон"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="2"
+                                 Height="56"
+                                 Text="{Binding Customer.Email, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Email"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </Grid>
+
+                    <Grid Margin="0 16 0 0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Height="56"
+                                 Text="{Binding Customer.PassportSeries, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Серия паспорта"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="2"
+                                 Height="56"
+                                 Text="{Binding Customer.PassportNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Номер паспорта"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </Grid>
+
+                    <TextBlock Text="Адрес"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="#071B39"
+                               Margin="0 24 0 12" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Height="56"
+                                 Text="{Binding Customer.PostalCode, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Индекс"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="2"
+                                 Height="56"
+                                 Text="{Binding Customer.Region, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Регион"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="4"
+                                 Height="56"
+                                 Text="{Binding Customer.City, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Город"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </Grid>
+
+                    <Grid Margin="0 16 0 0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="140" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Height="56"
+                                 Text="{Binding Customer.Street, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Улица"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="2"
+                                 Height="56"
+                                 Text="{Binding Customer.House, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Дом"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="4"
+                                 Height="56"
+                                 Text="{Binding Customer.Building, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Корпус"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                        <TextBox Grid.Column="6"
+                                 Height="56"
+                                 Text="{Binding Customer.Apartment, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Квартира"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </Grid>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Низ -->
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="#DC2626"
+                           FontSize="13"
+                           VerticalAlignment="Center" />
+
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal">
+
+                    <Button Height="42"
+                            Padding="18 0"
+                            Command="{Binding FillTestDataCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="DatabasePlusOutline"
+                                                     Width="18"
+                                                     Height="18"
+                                                     Margin="0 0 8 0" />
+                            <TextBlock Text="Тестовые данные" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Height="42"
+                            Padding="18 0"
+                            Margin="12 0 0 0"
+                            Click="Cancel_OnClick"
+                            Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <TextBlock Text="Отмена" />
+                    </Button>
+
+                    <Button Margin="12 0 0 0"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource PrimaryDialogButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Check"
+                                                     Width="18"
+                                                     Height="18"
+                                                     Margin="0 0 8 0"
+                                                     Foreground="White" />
+
+                            <TextBlock Text="Создать клиента"
+                                       Foreground="White"
+                                       FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+
+                </StackPanel>
+            </Grid>
+
+        </Grid>
+    </Border>
+</Window>

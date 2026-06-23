@@ -18,20 +18,19 @@ public partial class CustomerEditViewModel(
     NotificationService notificationService)
     : ObservableObject
 {
-    [ObservableProperty]
-    private Models.CustomerEditModel customer = new();
+    [ObservableProperty] private Models.CustomerEditModel customer = new();
 
-    [ObservableProperty]
-    private FormMode mode = FormMode.Create;
+    [ObservableProperty] private FormMode mode = FormMode.Create;
 
-    [ObservableProperty]
-    private Guid? customerId;
+    [ObservableProperty] private Guid? customerId;
 
-    [ObservableProperty]
-    private string errorMessage = string.Empty;
+    [ObservableProperty] private string errorMessage = string.Empty;
 
-    [ObservableProperty]
-    private bool isSaving;
+    [ObservableProperty] private bool isSaving;
+
+    private bool _isDialogCreateMode;
+
+    public CreateCustomerResponse? CreatedCustomer { get; private set; }
 
     public bool IsCreateMode => Mode == FormMode.Create;
 
@@ -125,28 +124,41 @@ public partial class CustomerEditViewModel(
             IsSaving = true;
             ErrorMessage = string.Empty;
 
-            UnitResult<Errors> result;
-
-            if (Mode == FormMode.Edit)
-                result = await UpdateAsync();
-            else if (Mode == FormMode.Create)
-                result = await CreateAsync();
-            else
-                return;
-
-            if (result.IsFailure)
+            if (Mode == FormMode.Create)
             {
-                ErrorMessage = result.Error.Message;
-                notificationService.Error(result.Error.Message);
+                var createResult = await CreateAsync();
+
+                if (createResult.IsFailure)
+                {
+                    ErrorMessage = createResult.Error.Message;
+                    notificationService.Error(createResult.Error.Message);
+                    return;
+                }
+
+                CreatedCustomer = createResult.Value;
+                OnPropertyChanged(nameof(CreatedCustomer));
+
+                notificationService.Success("Клиент добавлен");
+
+                navigationService.NavigateTo<CustomersView>("Клиенты");
                 return;
             }
 
-            notificationService.Success(
-                Mode == FormMode.Edit
-                    ? "Данные клиента обновлены"
-                    : "Клиент добавлен");
+            if (Mode == FormMode.Edit)
+            {
+                var updateResult = await UpdateAsync();
 
-            navigationService.NavigateTo<CustomersView>("Клиенты");
+                if (updateResult.IsFailure)
+                {
+                    ErrorMessage = updateResult.Error.Message;
+                    notificationService.Error(updateResult.Error.Message);
+                    return;
+                }
+
+                notificationService.Success("Данные клиента обновлены");
+
+                navigationService.NavigateTo<CustomersView>("Клиенты");
+            }
         }
         catch (Exception ex)
         {
@@ -231,7 +243,7 @@ public partial class CustomerEditViewModel(
         SaveCommand.NotifyCanExecuteChanged();
     }
 
-    private async Task<UnitResult<Errors>> CreateAsync()
+    private async Task<Result<CreateCustomerResponse, Errors>> CreateAsync()
     {
         var request = new CreateCustomerRequest(
             Customer.LastName.Trim(),
@@ -300,5 +312,19 @@ public partial class CustomerEditViewModel(
     {
         RefreshSaveState();
         FillTestDataCommand.NotifyCanExecuteChanged();
+    }
+
+    public void OpenDialogCreate()
+    {
+        _isDialogCreateMode = true;
+        CreatedCustomer = null;
+
+        Mode = FormMode.Create;
+        CustomerId = null;
+        ErrorMessage = string.Empty;
+        IsSaving = false;
+
+        SetCustomer(new Models.CustomerEditModel());
+        RefreshState();
     }
 }

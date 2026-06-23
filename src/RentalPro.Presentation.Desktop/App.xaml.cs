@@ -97,5 +97,10 @@ public partial class App : Application
         
         services.AddTransient<SelectToolsDialogViewModel>();
         services.AddTransient<SelectToolsDialog>();
+        
+        services.AddTransient<CreateCustomerDialog>();
+        
+        services.AddTransient<CreateCustomerDialogViewModel>();
+        services.AddTransient<CreateCustomerDialog>();
     }
 }

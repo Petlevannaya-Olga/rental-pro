@@ -12,7 +12,7 @@ public partial class SelectCustomerDialogViewModel(
     : ObservableObject
 {
     private const int PageSize = 5;
-    
+
     private CancellationTokenSource? _searchCts;
 
     [ObservableProperty]
@@ -41,8 +41,28 @@ public partial class SelectCustomerDialogViewModel(
 
     public CustomerDto? Result { get; private set; }
 
+    public Guid? SelectedCustomerId { get; private set; }
+
+    public string? SelectedCustomerName { get; private set; }
+
     public int TotalPages =>
-        TotalCount <= 0 ? 1 : (int)Math.Ceiling(TotalCount / (double)PageSize);
+        TotalCount <= 0
+            ? 1
+            : (int)Math.Ceiling(TotalCount / (double)PageSize);
+
+    public int PageStart =>
+        TotalCount == 0
+            ? 0
+            : ((CurrentPage - 1) * PageSize) + 1;
+
+    public int PageEnd =>
+        Math.Min(CurrentPage * PageSize, TotalCount);
+
+    public bool CanGoPrevious =>
+        CurrentPage > 1;
+
+    public bool CanGoNext =>
+        CurrentPage < TotalPages;
 
     public async Task LoadAsync()
     {
@@ -66,9 +86,11 @@ public partial class SelectCustomerDialogViewModel(
         }
 
         Result = SelectedCustomer;
+        SelectedCustomerId = SelectedCustomer.Id;
+        SelectedCustomerName = SelectedCustomer.FullName;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoNext))]
     private async Task NextPageAsync()
     {
         if (CurrentPage >= TotalPages)
@@ -78,7 +100,7 @@ public partial class SelectCustomerDialogViewModel(
         await LoadCustomersAsync();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoPrevious))]
     private async Task PreviousPageAsync()
     {
         if (CurrentPage <= 1)
@@ -86,6 +108,17 @@ public partial class SelectCustomerDialogViewModel(
 
         CurrentPage--;
         await LoadCustomersAsync();
+    }
+
+    public void SelectCreatedCustomer(
+        Guid customerId,
+        string fullName)
+    {
+        Result = null;
+        SelectedCustomer = null;
+
+        SelectedCustomerId = customerId;
+        SelectedCustomerName = fullName;
     }
 
     private async Task LoadCustomersAsync()
@@ -110,16 +143,38 @@ public partial class SelectCustomerDialogViewModel(
         {
             Customers = [];
             TotalCount = 0;
+
+            RefreshPaging();
+
             notificationService.Error(result.Error.Message);
             return;
         }
 
         Customers = result.Value.Items.ToList();
         TotalCount = result.Value.TotalCount;
-        
-        OnPropertyChanged(nameof(TotalPages));
+
+        if (CurrentPage > TotalPages)
+        {
+            CurrentPage = TotalPages;
+            await LoadCustomersAsync();
+            return;
+        }
+
+        RefreshPaging();
     }
-    
+
+    private void RefreshPaging()
+    {
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageStart));
+        OnPropertyChanged(nameof(PageEnd));
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnSearchChanged(string? value)
     {
         _ = SearchWithDelayAsync();

@@ -38,13 +38,66 @@
         </Style>
 
         <Style x:Key="PrimaryActionButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource MaterialDesignFlatButton}">
+               TargetType="Button">
+
             <Setter Property="Background" Value="#1E73FF" />
             <Setter Property="Foreground" Value="White" />
-            <Setter Property="Height" Value="42" />
-            <Setter Property="Padding" Value="22 0" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="24 0" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="5">
+
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#1664E8" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#0F56C9" />
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#AFC9FF" />
+
+                                <Setter Property="Foreground"
+                                        Value="White" />
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
+
         </Style>
         
         <Style x:Key="CenteredCellTextStyle"
@@ -508,7 +561,7 @@
                                     Padding="18 0"
                                     Margin="0 18 0 0"
                                     Command="{Binding SelectToolsCommand}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}">
+                                    Style="{StaticResource PrimaryActionButtonStyle}">
 
                                 <StackPanel Orientation="Horizontal">
 
@@ -698,6 +751,7 @@
                         </Button>
 
                         <Button Margin="12 0 0 0"
+                                Width="160"
                                 Command="{Binding SaveCommand}"
                                 Style="{StaticResource PrimaryActionButtonStyle}">
 

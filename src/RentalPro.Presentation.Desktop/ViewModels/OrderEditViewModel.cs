@@ -246,13 +246,16 @@ public partial class OrderEditViewModel(
         if (result != true)
             return;
 
-        var customer = dialog.ViewModel.Result;
-
-        if (customer is null)
-            return;
-
-        Order.CustomerId = customer.Id;
-        Order.CustomerName = customer.FullName;
+        if (dialog.ViewModel.SelectedCustomerId is not null)
+        {
+            Order.CustomerId = dialog.ViewModel.SelectedCustomerId;
+            Order.CustomerName = dialog.ViewModel.SelectedCustomerName ?? string.Empty;
+        }
+        else if (dialog.ViewModel.Result is not null)
+        {
+            Order.CustomerId = dialog.ViewModel.Result.Id;
+            Order.CustomerName = dialog.ViewModel.Result.FullName;
+        }
 
         RefreshState();
         SaveCommand.NotifyCanExecuteChanged();
