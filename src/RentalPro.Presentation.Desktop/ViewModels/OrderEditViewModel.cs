@@ -105,6 +105,11 @@ public partial class OrderEditViewModel(
     public int ViewToolsCount =>
         Details?.Items.Count ?? 0;
     
+    public bool CanAcceptPayment =>
+        Details is not null
+        && Details.TotalRemainingAmount > 0
+        && Details.StatusName == "Подтвержден";
+    
     public List<OrderItemViewModel> ViewItems =>
         Details?.Items
             .Select(x => new OrderItemViewModel
@@ -493,6 +498,29 @@ public partial class OrderEditViewModel(
 
         notificationService.Success("Документ успешно сохранен");
     }
+    
+    [RelayCommand]
+    private async Task OpenPaymentAsync()
+    {
+        if (Details is null)
+        {
+            notificationService.Error("Заказ не выбран");
+            return;
+        }
+
+        var dialog = serviceProvider.GetRequiredService<PaymentDialog>();
+
+        await dialog.OpenAsync(Details);
+
+        var result = dialog.ShowDialog();
+
+        if (result != true)
+            return;
+
+        await OpenViewAsync(Details.Id);
+
+        notificationService.Success("Данные заказа обновлены");
+    }
 
     private static string GetDocumentFileName(OrderDocumentDto document)
     {
@@ -568,6 +596,8 @@ public partial class OrderEditViewModel(
         OnPropertyChanged(nameof(ViewPeriodText));
         OnPropertyChanged(nameof(ViewItems));
         OnPropertyChanged(nameof(OrderDocuments));
+        
+        OnPropertyChanged(nameof(CanAcceptPayment));
 
         RefreshTotals();
         SaveCommand.NotifyCanExecuteChanged();

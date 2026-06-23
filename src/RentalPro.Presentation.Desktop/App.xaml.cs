@@ -104,5 +104,10 @@ public partial class App : Application
         services.AddTransient<CreateCustomerDialog>();
         
         services.AddSingleton<FakeOrderGeneratorService>();
+        
+        services.AddTransient<PaymentsApiClient>();
+        
+        services.AddTransient<PaymentDialogViewModel>();
+        services.AddTransient<PaymentDialog>();
     }
 }
