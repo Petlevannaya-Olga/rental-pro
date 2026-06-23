@@ -31,6 +31,13 @@ public partial class OrderEditViewModel(
     private Guid? _confirmedStatusId;
     private Guid? _availableToolStatusId;
     
+    private IReadOnlyList<OrderDocumentDto> _orderDocuments = [];
+    
+    public IReadOnlyList<OrderDocumentDto> OrderDocuments =>
+        Details?.StatusName == "Отменен"
+            ? []
+            : _orderDocuments;
+    
     [ObservableProperty]
     private OrderEditModel order = new();
 
